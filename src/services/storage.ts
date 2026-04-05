@@ -144,7 +144,7 @@ export const messageRepo = {
     const database = await getDb();
     if (database) {
       const rows: any[] = await database.select(
-        'SELECT id, chat_id as chatId, role, content, type, meta, created_at as createdAt FROM messages WHERE chat_id = $1 ORDER BY created_at ASC',
+        'SELECT id, chat_id as chatId, role, content, COALESCE(type, \'text\') as type, meta, created_at as createdAt FROM messages WHERE chat_id = $1 ORDER BY created_at ASC',
         [chatId]
       );
       return rows.map(r => ({ ...r, meta: r.meta ? JSON.parse(r.meta) : undefined }));

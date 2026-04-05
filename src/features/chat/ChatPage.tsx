@@ -438,10 +438,12 @@ function ChatItem({
 function ChatMessage({ message, t }: { message: any; t: any }) {
   const isUser = message.role === 'user';
   const [copied, setCopied] = useState(false);
-  const projects = useProjectStore((s) => s.projects);
-  const chat = useChatStore((s) => s.chats.find(c => c.id === message.chatId));
+  
+  const projects = useProjectStore((s) => s.projects || []);
+  const chats = useChatStore((s) => s.chats || []);
+  const chat = chats.find(c => c.id === message.chatId);
   const project = projects.find(p => p.id === chat?.projectId);
-  const workspacePath = project?.workspacePath || undefined;
+  const workspacePath = project?.workspacePath;
 
   const handleCopy = () => {
     navigator.clipboard.writeText(message.content);

@@ -130,11 +130,14 @@ pub fn run() {
         },
         Migration {
             version: 4,
-            description: "add message type and metadata",
-            sql: "
-                ALTER TABLE messages ADD COLUMN type TEXT DEFAULT 'text';
-                ALTER TABLE messages ADD COLUMN meta TEXT;
-            ",
+            description: "add message type",
+            sql: "ALTER TABLE messages ADD COLUMN type TEXT DEFAULT 'text';",
+            kind: MigrationKind::Up,
+        },
+        Migration {
+            version: 5,
+            description: "add message metadata",
+            sql: "ALTER TABLE messages ADD COLUMN meta TEXT;",
             kind: MigrationKind::Up,
         },
     ];
