@@ -506,7 +506,9 @@ function PreBlock({ children, t, chatId, cwd }: { children: React.ReactNode; t: 
   const runCode = useTerminalStore((s) => s.runCode);
 
   const handleCopy = () => {
-    const text = ref.current?.textContent || '';
+    if (!ref.current) return;
+    const codeEl = ref.current.querySelector('code');
+    const text = codeEl?.textContent || ref.current.textContent || '';
     navigator.clipboard.writeText(text);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
@@ -514,11 +516,12 @@ function PreBlock({ children, t, chatId, cwd }: { children: React.ReactNode; t: 
 
   const handleRun = () => {
     if (!ref.current) return;
-    const code = ref.current.textContent || '';
-    if (!code.trim()) return;
-
-    const codeEl = ref.current.querySelector('code[data-language]');
+    
+    const codeEl = ref.current.querySelector('code');
     const language = codeEl?.getAttribute('data-language') || 'shell';
+    const code = codeEl?.textContent || ref.current.textContent || '';
+    
+    if (!code.trim()) return;
 
     runCode(code, language, { chatId, cwd });
     toast.success(`${t.chat.starting || 'Starting'} ${language || 'code'}-block`, {
