@@ -120,12 +120,16 @@ export interface OllamaGenerateResponse {
 
 export interface ToolDefinition {
   id: string;
-  titleKey: string;
-  descriptionKey: string;
+  title?: string;
+  description?: string;
+  titleKey?: string;
+  descriptionKey?: string;
   icon: string;
   systemPrompt: string;
-  inputPlaceholderKey: string;
+  inputPlaceholder?: string;
+  inputPlaceholderKey?: string;
   hasTargetLanguage?: boolean;
+  isCustom?: boolean;
 }
 
 export interface ToolRun {

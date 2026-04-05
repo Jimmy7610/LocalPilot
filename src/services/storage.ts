@@ -2,7 +2,7 @@
 // LocalPilot — Storage Service (SQLite + localStorage fallback)
 // ──────────────────────────────────────────
 
-import type { Chat, Message, Project, PromptTemplate, Document } from '@/types';
+import type { Chat, Message, Project, PromptTemplate, Document, ToolDefinition } from '@/types';
 
 // Detect if running inside Tauri
 function isTauri(): boolean {
@@ -367,6 +367,64 @@ export const documentRepo = {
   },
 };
 
+// ── Custom Tools Repository ──
+
+export const toolRepo = {
+  async getAll(): Promise<ToolDefinition[]> {
+    const database = await getDb();
+    if (database) {
+      const rows: any[] = await database.select(
+        'SELECT id, title, description, icon, system_prompt as systemPrompt, input_placeholder as inputPlaceholder, has_target_language as hasTargetLanguage, is_custom as isCustom FROM custom_tools'
+      );
+      return rows.map(r => ({ 
+        ...r, 
+        hasTargetLanguage: !!r.hasTargetLanguage,
+        isCustom: !!r.isCustom
+      }));
+    }
+    return lsGet<ToolDefinition[]>('custom_tools', []);
+  },
+
+  async create(tool: ToolDefinition): Promise<void> {
+    const database = await getDb();
+    if (database) {
+      await database.execute(
+        'INSERT INTO custom_tools (id, title, description, icon, system_prompt, input_placeholder, has_target_language, is_custom) VALUES ($1, $2, $3, $4, $5, $6, $7, $8)',
+        [tool.id, tool.title, tool.description, tool.icon, tool.systemPrompt, tool.inputPlaceholder, tool.hasTargetLanguage ? 1 : 0, 1]
+      );
+    } else {
+      const tools = lsGet<ToolDefinition[]>('custom_tools', []);
+      tools.unshift({ ...tool, isCustom: true });
+      lsSet('custom_tools', tools);
+    }
+  },
+
+  async update(tool: ToolDefinition): Promise<void> {
+    const database = await getDb();
+    if (database) {
+      await database.execute(
+        'UPDATE custom_tools SET title = $1, description = $2, icon = $3, system_prompt = $4, input_placeholder = $5, has_target_language = $6 WHERE id = $7',
+        [tool.title, tool.description, tool.icon, tool.systemPrompt, tool.inputPlaceholder, tool.hasTargetLanguage ? 1 : 0, tool.id]
+      );
+    } else {
+      const tools = lsGet<ToolDefinition[]>('custom_tools', []);
+      const idx = tools.findIndex(t => t.id === tool.id);
+      if (idx !== -1) tools[idx] = { ...tool, isCustom: true };
+      lsSet('custom_tools', tools);
+    }
+  },
+
+  async delete(id: string): Promise<void> {
+    const database = await getDb();
+    if (database) {
+      await database.execute('DELETE FROM custom_tools WHERE id = $1', [id]);
+    } else {
+      const tools = lsGet<ToolDefinition[]>('custom_tools', []);
+      lsSet('custom_tools', tools.filter(t => t.id !== id));
+    }
+  },
+};
+
 // ── Reset All ──
 
 export async function resetAllData(): Promise<void> {
@@ -377,9 +435,7 @@ export async function resetAllData(): Promise<void> {
     await database.execute('DELETE FROM projects');
     await database.execute('DELETE FROM prompts');
     await database.execute('DELETE FROM documents');
-    await database.execute('DELETE FROM project_prompts');
-    await database.execute('DELETE FROM project_documents');
-    await database.execute('DELETE FROM project_chats');
+    await database.execute('DELETE FROM custom_tools');
     await database.execute('DELETE FROM settings');
   } else {
     const keys = Object.keys(localStorage).filter(k => k.startsWith('lp_'));

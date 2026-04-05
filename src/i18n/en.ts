@@ -199,6 +199,15 @@ const en = {
     socialDesc: 'Create engaging social media content.',
     cleanup: 'Clean Up Notes',
     cleanupDesc: 'Organize and clean up rough notes.',
+    
+    createTitle: 'Create New AI Tool',
+    editTitle: 'Edit AI Tool',
+    toolTitle: 'Title',
+    toolDesc: 'Description',
+    toolIcon: 'Icon',
+    toolPrompt: 'Instruction (System Prompt)',
+    toolPlaceholder: 'Input Placeholder',
+    saveTool: 'Save Tool',
   },
 
   // ── Overlay ──

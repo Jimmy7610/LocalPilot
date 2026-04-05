@@ -201,6 +201,15 @@ const sv: TranslationKeys = {
     socialDesc: 'Skapa engagerande innehåll för sociala medier.',
     cleanup: 'Rensa anteckningar',
     cleanupDesc: 'Organisera och rensa ostrukturerade anteckningar.',
+
+    createTitle: 'Skapa nytt AI-verktyg',
+    editTitle: 'Redigera AI-verktyg',
+    toolTitle: 'Titel',
+    toolDesc: 'Beskrivning',
+    toolIcon: 'Ikon',
+    toolPrompt: 'Instruktion (System Prompt)',
+    toolPlaceholder: 'Platshållare för textinmatning',
+    saveTool: 'Spara verktyg',
   },
 
   // ── Overlay ──

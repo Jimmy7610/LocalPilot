@@ -1,8 +1,4 @@
-// ──────────────────────────────────────────
-// LocalPilot — Tools Page
-// ──────────────────────────────────────────
-
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router';
 import {
   FileText,
@@ -19,22 +15,39 @@ import {
   ChevronLeft,
   MessageSquare,
   Save,
+  Plus,
+  Zap,
+  Sparkles,
+  Shield,
+  Cpu,
+  Code,
+  Search,
+  Image,
+  Music,
+  Video,
+  Layers,
+  Settings,
+  Pencil,
+  Trash2,
 } from 'lucide-react';
 import { useT } from '@/i18n';
 import { useOllamaStore } from '@/store/ollama-store';
 import { useSettingsStore } from '@/store/settings-store';
 import { useChatStore } from '@/store/chat-store';
 import { useDocumentStore } from '@/store/document-store';
+import { useToolStore } from '@/store/tool-store';
 import { generate } from '@/services/ollama';
-import { toolDefinitions } from './tools-config';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent } from '@/components/ui/card';
 import { cn } from '@/lib/utils';
+import { ToolDialog } from './ToolDialog';
+import { ToolDefinition } from '@/types';
 
 const ICON_MAP: Record<string, any> = {
   FileText, RefreshCw, Languages, Lightbulb, Mail, Share2, Eraser,
+  Zap, Sparkles, Shield, Cpu, Code, Search, Image, Music, Video, Layers, Settings,
 };
 
 export function ToolsPage() {
@@ -44,6 +57,7 @@ export function ToolsPage() {
   const { defaultModel } = useSettingsStore();
   const chatStore = useChatStore();
   const docStore = useDocumentStore();
+  const toolStore = useToolStore();
 
   const [activeTool, setActiveTool] = useState<string | null>(null);
   const [input, setInput] = useState('');
@@ -51,8 +65,16 @@ export function ToolsPage() {
   const [result, setResult] = useState('');
   const [loading, setLoading] = useState(false);
   const [copied, setCopied] = useState(false);
+  
+  // Custom tools logic
+  const [dialogOpen, setDialogOpen] = useState(false);
+  const [editTarget, setEditTarget] = useState<ToolDefinition | null>(null);
 
-  const tool = toolDefinitions.find(t => t.id === activeTool);
+  useEffect(() => {
+    toolStore.load();
+  }, []);
+
+  const tool = toolStore.tools.find(t => t.id === activeTool);
 
   const handleRun = async () => {
     if (!tool || !input.trim() || !connected) return;
@@ -83,24 +105,31 @@ export function ToolsPage() {
     setTimeout(() => setCopied(false), 2000);
   };
 
-  const handleSendToChat = async () => {
-    const model = defaultModel || models[0]?.name || '';
-    const chat = await chatStore.createChat(model);
-    // The result is pre-loaded but user navigates to chat
-    navigate('/chat');
-  };
-
   const handleSaveAsDoc = async () => {
     if (!result || !tool) return;
-    const toolTitle = (t.tools as any)[tool.titleKey] || tool.id;
-    await docStore.createDocument({ title: `${toolTitle} - Result`, content: result });
+    const toolTitle = tool.isCustom ? tool.title : (t.tools as any)[tool.titleKey!] || tool.id;
+    await docStore.createDocument({ 
+      title: `${toolTitle} - Result`, 
+      content: result,
+      projectId: null // Explicitly setting for types
+    });
     navigate('/documents');
+  };
+
+  const onSaveTool = async (data: any) => {
+    if (data.id) {
+      await toolStore.updateTool(data as ToolDefinition);
+    } else {
+      await toolStore.addTool(data);
+    }
+    setEditTarget(null);
   };
 
   // Tool runner view
   if (activeTool && tool) {
     const Icon = ICON_MAP[tool.icon] || Wrench;
-    const toolTitle = (t.tools as any)[tool.titleKey] || tool.id;
+    const toolTitle = tool.isCustom ? tool.title : (t.tools as any)[tool.titleKey!] || tool.id;
+    const toolDesc = tool.isCustom ? tool.description : (t.tools as any)[tool.descriptionKey!] || '';
 
     return (
       <div className="h-full overflow-y-auto">
@@ -115,7 +144,7 @@ export function ToolsPage() {
           </div>
           <div>
             <h2 className="text-lg font-bold">{toolTitle}</h2>
-            <p className="text-sm text-muted-foreground">{(t.tools as any)[tool.descriptionKey]}</p>
+            <p className="text-sm text-muted-foreground">{toolDesc}</p>
           </div>
         </div>
 
@@ -124,7 +153,7 @@ export function ToolsPage() {
             <Textarea
               value={input}
               onChange={e => setInput(e.target.value)}
-              placeholder={(t.tools as any)[tool.inputPlaceholderKey] || t.tools.inputPlaceholder}
+              placeholder={tool.isCustom ? tool.inputPlaceholder : ((t.tools as any)[tool.inputPlaceholderKey!] || t.tools.inputPlaceholder)}
               className="min-h-[150px] text-sm"
             />
           </div>
@@ -180,24 +209,52 @@ export function ToolsPage() {
   // Tool grid
   return (
     <div className="h-full overflow-y-auto">
-      <div className="max-w-5xl mx-auto p-6 animate-fade-in">
-      <h2 className="text-xl font-bold mb-6">{t.tools.title}</h2>
+      <div className="max-w-5xl mx-auto p-6 animate-fade-in pb-24">
+      <div className="flex items-center justify-between mb-6">
+        <h2 className="text-xl font-bold">{t.tools.title}</h2>
+        <Button size="sm" className="gap-1.5" onClick={() => { setEditTarget(null); setDialogOpen(true); }}>
+          <Plus className="w-4 h-4" /> {t.common.create}
+        </Button>
+      </div>
 
-      <div className="grid grid-cols-3 gap-3">
-        {toolDefinitions.map(td => {
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
+        {toolStore.tools.map(td => {
           const Icon = ICON_MAP[td.icon] || Wrench;
-          const toolTitle = (t.tools as any)[td.titleKey] || td.id;
-          const toolDesc = (t.tools as any)[td.descriptionKey] || '';
+          const toolTitle = td.isCustom ? td.title : (t.tools as any)[td.titleKey!] || td.id;
+          const toolDesc = td.isCustom ? td.description : (t.tools as any)[td.descriptionKey!] || '';
 
           return (
             <Card
               key={td.id}
-              className="cursor-pointer hover:border-primary/30 transition-colors group"
+              className="cursor-pointer hover:border-primary/30 transition-all hover:translate-y-[-2px] group relative overflow-hidden"
               onClick={() => setActiveTool(td.id)}
             >
               <CardContent className="pt-4">
-                <div className="p-2 rounded-lg bg-primary/10 w-fit mb-3 group-hover:bg-primary/15 transition-colors">
-                  <Icon className="w-4.5 h-4.5 text-primary" />
+                <div className="flex justify-between items-start mb-3">
+                  <div className="p-2 rounded-lg bg-primary/10 group-hover:bg-primary/15 transition-colors">
+                    <Icon className="w-4.5 h-4.5 text-primary" />
+                  </div>
+                  
+                  {td.isCustom && (
+                    <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="w-7 h-7 hover:bg-primary/10 hover:text-primary"
+                        onClick={(e) => { e.stopPropagation(); setEditTarget(td); setDialogOpen(true); }}
+                      >
+                        <Pencil className="w-3.5 h-3.5" />
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="w-7 h-7 hover:bg-destructive/10 hover:text-destructive"
+                        onClick={(e) => { e.stopPropagation(); toolStore.deleteTool(td.id); }}
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
+                      </Button>
+                    </div>
+                  )}
                 </div>
                 <h3 className="text-sm font-semibold mb-0.5">{toolTitle}</h3>
                 <p className="text-xs text-muted-foreground line-clamp-2">{toolDesc}</p>
@@ -205,8 +262,28 @@ export function ToolsPage() {
             </Card>
           );
         })}
+
+        {/* Create Card */}
+        <Card
+          className="cursor-pointer border-dashed hover:border-primary/50 hover:bg-primary/5 transition-all flex flex-col items-center justify-center p-6 text-center group min-h-[120px]"
+          onClick={() => { setEditTarget(null); setDialogOpen(true); }}
+        >
+          <div className="p-3 rounded-full bg-muted group-hover:bg-primary/20 mb-3 transition-colors">
+            <Plus className="w-5 h-5 text-muted-foreground group-hover:text-primary" />
+          </div>
+          <p className="text-sm font-medium text-muted-foreground group-hover:text-primary">
+            {t.common.create} AI Tool
+          </p>
+        </Card>
       </div>
     </div>
+
+    <ToolDialog 
+      open={dialogOpen} 
+      onClose={() => setDialogOpen(false)} 
+      onSave={onSaveTool}
+      editTool={editTarget}
+    />
     </div>
   );
 }
