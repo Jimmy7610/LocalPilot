@@ -10,6 +10,7 @@ import { chatStream } from '@/services/ollama';
 import { useProjectStore } from './project-store';
 import { useDocumentStore } from './document-store';
 import { useTerminalStore } from './terminal-store';
+import { searchWorkspace } from '@/services/rag-service';
 
 interface ChatState {
   chats: Chat[];
@@ -147,13 +148,21 @@ export const useChatStore = create<ChatState>((set, get) => ({
           dynamicSystemPrompt += `Project Description: ${project.description}\n`;
         }
         
-        // Fetch linked documents
+        // 1. Fetch linked manual documents
         const docs = useDocumentStore.getState().documents.filter(d => d.projectId === chat.projectId);
         if (docs.length > 0) {
           dynamicSystemPrompt += `\n--- KNOWN PROJECT DOCUMENTS ---\n`;
           docs.forEach(doc => {
             dynamicSystemPrompt += `Document [${doc.title}]:\n${doc.content}\n\n`;
           });
+        }
+
+        // 2. Fetch Workspace RAG context (Automated search)
+        if (project.workspacePath) {
+          const workspaceContext = await searchWorkspace(project.id, content);
+          if (workspaceContext) {
+            dynamicSystemPrompt += workspaceContext;
+          }
         }
       }
     }

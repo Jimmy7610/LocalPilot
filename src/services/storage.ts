@@ -2,7 +2,7 @@
 // LocalPilot — Storage Service (SQLite + localStorage fallback)
 // ──────────────────────────────────────────
 
-import type { Chat, Message, Project, PromptTemplate, Document, ToolDefinition } from '@/types';
+import type { Chat, Message, Project, PromptTemplate, Document, ToolDefinition, WorkspaceFile, WorkspaceChunk } from '@/types';
 
 // Detect if running inside Tauri
 function isTauri(): boolean {
@@ -188,7 +188,7 @@ export const projectRepo = {
     const database = await getDb();
     if (database) {
       return database.select(
-        'SELECT id, name, description, color, icon, preferred_model as preferredModel, created_at as createdAt, updated_at as updatedAt FROM projects ORDER BY updated_at DESC'
+        'SELECT id, name, description, color, icon, preferred_model as preferredModel, workspace_path as workspacePath, created_at as createdAt, updated_at as updatedAt FROM projects ORDER BY updated_at DESC'
       );
     }
     return lsGet<Project[]>('projects', []);
@@ -198,7 +198,7 @@ export const projectRepo = {
     const database = await getDb();
     if (database) {
       const rows: any[] = await database.select(
-        'SELECT id, name, description, color, icon, preferred_model as preferredModel, created_at as createdAt, updated_at as updatedAt FROM projects WHERE id = $1',
+        'SELECT id, name, description, color, icon, preferred_model as preferredModel, workspace_path as workspacePath, created_at as createdAt, updated_at as updatedAt FROM projects WHERE id = $1',
         [id]
       );
       return rows.length ? rows[0] : null;
@@ -211,8 +211,8 @@ export const projectRepo = {
     const database = await getDb();
     if (database) {
       await database.execute(
-        'INSERT INTO projects (id, name, description, color, icon, preferred_model, created_at, updated_at) VALUES ($1, $2, $3, $4, $5, $6, $7, $8)',
-        [project.id, project.name, project.description, project.color, project.icon, project.preferredModel, project.createdAt, project.updatedAt]
+        'INSERT INTO projects (id, name, description, color, icon, preferred_model, workspace_path, created_at, updated_at) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)',
+        [project.id, project.name, project.description, project.color, project.icon, project.preferredModel, project.workspacePath, project.createdAt, project.updatedAt]
       );
     } else {
       const projects = lsGet<Project[]>('projects', []);
@@ -225,8 +225,8 @@ export const projectRepo = {
     const database = await getDb();
     if (database) {
       await database.execute(
-        'UPDATE projects SET name = $1, description = $2, color = $3, icon = $4, preferred_model = $5, updated_at = $6 WHERE id = $7',
-        [project.name, project.description, project.color, project.icon, project.preferredModel, project.updatedAt, project.id]
+        'UPDATE projects SET name = $1, description = $2, color = $3, icon = $4, preferred_model = $5, workspace_path = $6, updated_at = $7 WHERE id = $8',
+        [project.name, project.description, project.color, project.icon, project.preferredModel, project.workspacePath, project.updatedAt, project.id]
       );
     } else {
       const projects = lsGet<Project[]>('projects', []);
@@ -240,9 +240,97 @@ export const projectRepo = {
     const database = await getDb();
     if (database) {
       await database.execute('DELETE FROM projects WHERE id = $1', [id]);
+      await database.execute('DELETE FROM workspace_files WHERE project_id = $1', [id]);
+      await database.execute('DELETE FROM workspace_chunks WHERE project_id = $1', [id]);
     } else {
       const projects = lsGet<Project[]>('projects', []);
       lsSet('projects', projects.filter(p => p.id !== id));
+      const files = lsGet<WorkspaceFile[]>('workspace_files', []);
+      lsSet('workspace_files', files.filter(f => f.projectId !== id));
+      const chunks = lsGet<WorkspaceChunk[]>('workspace_chunks', []);
+      lsSet('workspace_chunks', chunks.filter(c => c.projectId !== id));
+    }
+  },
+};
+
+// ── Workspace Files Repository ──
+
+export const workspaceFileRepo = {
+  async getByProject(projectId: string): Promise<WorkspaceFile[]> {
+    const database = await getDb();
+    if (database) {
+      return database.select(
+        'SELECT id, project_id as projectId, path, last_modified as lastModified, size FROM workspace_files WHERE project_id = $1',
+        [projectId]
+      );
+    }
+    return lsGet<WorkspaceFile[]>('workspace_files', []).filter(f => f.projectId === projectId);
+  },
+
+  async create(file: WorkspaceFile): Promise<void> {
+    const database = await getDb();
+    if (database) {
+      await database.execute(
+        'INSERT INTO workspace_files (id, project_id, path, last_modified, size) VALUES ($1, $2, $3, $4, $5)',
+        [file.id, file.projectId, file.path, file.lastModified, file.size]
+      );
+    } else {
+      const files = lsGet<WorkspaceFile[]>('workspace_files', []);
+      files.push(file);
+      lsSet('workspace_files', files);
+    }
+  },
+
+  async deleteByProject(projectId: string): Promise<void> {
+    const database = await getDb();
+    if (database) {
+      await database.execute('DELETE FROM workspace_files WHERE project_id = $1', [projectId]);
+    } else {
+      const files = lsGet<WorkspaceFile[]>('workspace_files', []);
+      lsSet('workspace_files', files.filter(f => f.projectId !== projectId));
+    }
+  },
+};
+
+// ── Workspace Chunks Repository ──
+
+export const workspaceChunkRepo = {
+  async search(projectId: string, query: string, limit = 5): Promise<WorkspaceChunk[]> {
+    const database = await getDb();
+    if (database) {
+      // Basic keyword search using LIKE - later can use FTS5 if enabled
+      return database.select(
+        'SELECT id, file_id as fileId, project_id as projectId, content, index_order as indexOrder FROM workspace_chunks WHERE project_id = $1 AND content LIKE $2 LIMIT $3',
+        [projectId, `%${query}%`, limit]
+      );
+    }
+    const chunks = lsGet<WorkspaceChunk[]>('workspace_chunks', []).filter(c => c.projectId === projectId);
+    return chunks.filter(c => c.content.toLowerCase().includes(query.toLowerCase())).slice(0, limit);
+  },
+
+  async createMany(chunks: WorkspaceChunk[]): Promise<void> {
+    const database = await getDb();
+    if (database) {
+      for (const chunk of chunks) {
+        await database.execute(
+          'INSERT INTO workspace_chunks (id, file_id, project_id, content, index_order) VALUES ($1, $2, $3, $4, $5)',
+          [chunk.id, chunk.fileId, chunk.projectId, chunk.content, chunk.indexOrder]
+        );
+      }
+    } else {
+      const allChunks = lsGet<WorkspaceChunk[]>('workspace_chunks', []);
+      allChunks.push(...chunks);
+      lsSet('workspace_chunks', allChunks);
+    }
+  },
+
+  async deleteByProject(projectId: string): Promise<void> {
+    const database = await getDb();
+    if (database) {
+      await database.execute('DELETE FROM workspace_chunks WHERE project_id = $1', [projectId]);
+    } else {
+      const chunks = lsGet<WorkspaceChunk[]>('workspace_chunks', []);
+      lsSet('workspace_chunks', chunks.filter(c => c.projectId !== projectId));
     }
   },
 };

@@ -101,6 +101,33 @@ pub fn run() {
             ",
             kind: MigrationKind::Up,
         },
+        Migration {
+            version: 3,
+            description: "add workspace RAG support",
+            sql: "
+                ALTER TABLE projects ADD COLUMN workspace_path TEXT;
+                
+                CREATE TABLE IF NOT EXISTS workspace_files (
+                    id TEXT PRIMARY KEY,
+                    project_id TEXT NOT NULL,
+                    path TEXT NOT NULL,
+                    last_modified TEXT,
+                    size INTEGER,
+                    FOREIGN KEY (project_id) REFERENCES projects(id) ON DELETE CASCADE
+                );
+
+                CREATE TABLE IF NOT EXISTS workspace_chunks (
+                    id TEXT PRIMARY KEY,
+                    file_id TEXT NOT NULL,
+                    project_id TEXT NOT NULL,
+                    content TEXT NOT NULL,
+                    index_order INTEGER,
+                    FOREIGN KEY (file_id) REFERENCES workspace_files(id) ON DELETE CASCADE,
+                    FOREIGN KEY (project_id) REFERENCES projects(id) ON DELETE CASCADE
+                );
+            ",
+            kind: MigrationKind::Up,
+        },
     ];
 
     tauri::Builder::default()
@@ -113,6 +140,7 @@ pub fn run() {
         .plugin(tauri_plugin_fs::init())
         .plugin(tauri_plugin_opener::init())
         .plugin(tauri_plugin_process::init())
+        .plugin(tauri_plugin_dialog::init())
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
 }

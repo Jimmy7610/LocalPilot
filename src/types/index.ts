@@ -42,8 +42,27 @@ export interface Project {
   color: string;
   icon: string;
   preferredModel: string;
+  workspacePath: string | null;
   createdAt: string;
   updatedAt: string;
+}
+
+// ── Workspace RAG ──────────────────────────
+
+export interface WorkspaceFile {
+  id: string;
+  projectId: string;
+  path: string;
+  lastModified: string;
+  size: number;
+}
+
+export interface WorkspaceChunk {
+  id: string;
+  fileId: string;
+  projectId: string;
+  content: string;
+  indexOrder: number;
 }
 
 // ── Prompt ────────────────────────────────

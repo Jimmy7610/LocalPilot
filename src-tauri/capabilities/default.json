@@ -12,6 +12,7 @@
     "sql:allow-execute",
     "sql:allow-select",
     "sql:allow-close",
+    "dialog:default",
     "fs:default",
     {
       "identifier": "fs:allow-mkdir",
@@ -23,11 +24,19 @@
     },
     {
       "identifier": "fs:allow-read-text-file",
-      "allow": [{ "path": "$DOCUMENT/**" }]
+      "allow": [{ "path": "**" }]
+    },
+    {
+      "identifier": "fs:allow-read-dir",
+      "allow": [{ "path": "**" }]
+    },
+    {
+      "identifier": "fs:allow-stat",
+      "allow": [{ "path": "**" }]
     },
     {
       "identifier": "fs:allow-exists",
-      "allow": [{ "path": "$DOCUMENT/**" }]
+      "allow": [{ "path": "**" }]
     },
     "shell:default",
     {

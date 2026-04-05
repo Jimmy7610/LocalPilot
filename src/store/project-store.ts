@@ -11,7 +11,7 @@ interface ProjectState {
   projects: Project[];
   loaded: boolean;
   load: () => Promise<void>;
-  createProject: (data: { name: string; description: string; color: string; icon: string; preferredModel: string }) => Promise<Project>;
+  createProject: (data: { name: string; description: string; color: string; icon: string; preferredModel: string; workspacePath: string | null }) => Promise<Project>;
   updateProject: (project: Project) => Promise<void>;
   deleteProject: (id: string) => Promise<void>;
 }
