@@ -3,7 +3,7 @@
 // ──────────────────────────────────────────
 
 import { useLocation } from 'react-router';
-import { Sun, Moon, Globe, Wifi, WifiOff, Loader2, TerminalSquare, X, Info } from 'lucide-react';
+import { Sun, Moon, Globe, Wifi, WifiOff, Loader2, TerminalSquare, X, Info, MessageSquare, FolderKanban, BookTemplate, FileText, Wrench } from 'lucide-react';
 import { useT, useLanguage } from '@/i18n';
 import { useSettingsStore } from '@/store/settings-store';
 import { useOllamaStore } from '@/store/ollama-store';
@@ -23,6 +23,7 @@ import {
   DialogTrigger,
 } from '@/components/ui/dialog';
 import { Badge } from '@/components/ui/badge';
+import { ScrollArea } from '@/components/ui/scroll-area';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { Separator } from '@/components/ui/separator';
 import { cn } from '@/lib/utils';
@@ -131,47 +132,99 @@ export function TopBar() {
               <Info className="w-4 h-4" />
             </Button>
           </DialogTrigger>
-          <DialogContent className="max-w-md bg-card border-border">
-            <DialogHeader>
-              <DialogTitle className="text-xl">Om LocalPilot</DialogTitle>
+          <DialogContent className="max-w-2xl bg-card border-border max-h-[85vh] p-0 flex flex-col">
+            <DialogHeader className="px-6 py-4 border-b border-border shrink-0">
+              <DialogTitle className="text-xl">Välkommen till LocalPilot</DialogTitle>
             </DialogHeader>
-            <div className="space-y-4 text-sm mt-3">
-              <p className="text-muted-foreground">
-                <strong className="text-foreground">LocalPilot</strong> är ett oberoende, lokalt kontrollcenter för generativ AI, helt och hållet drivet och processat isolerat på din egen dators hårdvara via Ollama. 
-              </p>
-              
-              <div className="space-y-3 bg-muted/50 p-4 rounded-lg border border-border">
-                <h4 className="font-semibold text-foreground text-xs uppercase tracking-wider">Premium-Funktioner:</h4>
-                <ul className="list-none space-y-3 m-0 p-0 text-muted-foreground">
-                  <li className="flex gap-2">
-                    <div className="w-1.5 h-1.5 rounded-full bg-primary mt-1.5 shrink-0" />
-                    <span><strong className="text-foreground font-medium">Agentisk Arkitektur:</strong> AI:n kan självständigt exekvera mjukvara direkt på ditt operativsystem och underhålla processer i din inbyggda terminal.</span>
-                  </li>
-                  <li className="flex gap-2">
-                    <div className="w-1.5 h-1.5 rounded-full bg-primary mt-1.5 shrink-0" />
-                    <span><strong className="text-foreground font-medium">Fullständig Integritet:</strong> 100% kryptosäkert. Din konversation eller källkod skickas aldrig till internet. Allt stannar i burken.</span>
-                  </li>
-                  <li className="flex gap-2">
-                    <div className="w-1.5 h-1.5 rounded-full bg-primary mt-1.5 shrink-0" />
-                    <span><strong className="text-foreground font-medium">Workspace Engine:</strong> Motorn extraherar snabbt koden i den pågående konversationen och bygger automagiskt riktiga mappar (<code>Dokument/LocalPilot</code>).</span>
-                  </li>
-                  <li className="flex gap-2">
-                    <div className="w-1.5 h-1.5 rounded-full bg-primary mt-1.5 shrink-0" />
-                    <span><strong className="text-foreground font-medium">Sammanlänkat Kontext:</strong> Fäst skräddarsydda globala direktiv till projekt så att kontextfönstret minns projektkraven.</span>
-                  </li>
-                </ul>
-              </div>
-
-              <div className="flex justify-between items-end pt-4 border-t border-border">
-                <p className="text-muted-foreground text-[10px] uppercase tracking-widest font-mono">
-                  LocalPilot v0.1.0-beta<br/>
-                  Byggt med React + Tauri
+            <ScrollArea className="flex-1 overflow-y-auto">
+              <div className="px-6 py-5 space-y-6 text-sm">
+                <p className="text-muted-foreground">
+                  <strong className="text-foreground">LocalPilot</strong> är ditt personliga, oberoende kontrollcenter för lokal AI. Det drivs isolerat på din egen dators hårdvara (via Ollama), vilket innebär 100% kryptosäker integritet utan moln-servrar.
                 </p>
-                <div className="text-[10px] uppercase tracking-widest text-primary/80 font-bold">
-                  Skyddad av Antigravity
+
+                <div className="space-y-4">
+                  <h4 className="font-semibold text-foreground text-xs uppercase tracking-wider">Moduler & Funktioner</h4>
+                  <div className="grid gap-3">
+                    
+                    {/* Chatt */}
+                    <div className="flex gap-3 bg-muted/30 p-3 rounded-lg border border-border/50">
+                      <div className="mt-0.5 bg-primary/10 p-1.5 rounded-md text-primary shrink-0 h-fit">
+                        <MessageSquare className="w-4 h-4" />
+                      </div>
+                      <div>
+                        <h5 className="font-semibold text-foreground">Chatt & Workspace Engine</h5>
+                        <p className="text-muted-foreground text-xs mt-1 leading-relaxed">
+                          Här pratar du med AI:n. Om AI:n skriver kod (t.ex. en webbserver eller ett frontend-projekt), extraherar Workspace-motorn automatiskt denna kod och bygger ihop en riktig mappstruktur på din webb i realtid under <code>Dokument/LocalPilot/Workspace/</code>. Ber du sedan AI:n <em>"starta appen"</em>, så spinner terminalen upp filerna i bakgrunden.
+                        </p>
+                      </div>
+                    </div>
+
+                    {/* Projekt */}
+                    <div className="flex gap-3 bg-muted/30 p-3 rounded-lg border border-border/50">
+                      <div className="mt-0.5 bg-primary/10 p-1.5 rounded-md text-primary shrink-0 h-fit">
+                        <FolderKanban className="w-4 h-4" />
+                      </div>
+                      <div>
+                        <h5 className="font-semibold text-foreground">Projekt</h5>
+                        <p className="text-muted-foreground text-xs mt-1 leading-relaxed">
+                          Hörnstenen i ditt arbetsflöde. Du kan skapa ett Projekt ("Ny Hemsida") och sedermera knyta samman specifika chattar och uppladdade texter/källkod till detta projekt. AI-motorn bygger då upp ett dedikerat minne så den aldrig glömmer bort kravspecifikationen under tidens gång.
+                        </p>
+                      </div>
+                    </div>
+
+                    {/* Promptbibliotek */}
+                    <div className="flex gap-3 bg-muted/30 p-3 rounded-lg border border-border/50">
+                      <div className="mt-0.5 bg-primary/10 p-1.5 rounded-md text-primary shrink-0 h-fit">
+                        <BookTemplate className="w-4 h-4" />
+                      </div>
+                      <div>
+                        <h5 className="font-semibold text-foreground">Promptbibliotek</h5>
+                        <p className="text-muted-foreground text-xs mt-1 leading-relaxed">
+                          Spara dina mest potenta prompts. Om du ofta befaller maskineriet i en specifik ton (t.ex. "Skriv detta i professionell svensk stil...") så kan du spara denna hook här som en mall för snabbåtkomst nästa gång.
+                        </p>
+                      </div>
+                    </div>
+
+                    {/* Dokument */}
+                    <div className="flex gap-3 bg-muted/30 p-3 rounded-lg border border-border/50">
+                      <div className="mt-0.5 bg-primary/10 p-1.5 rounded-md text-primary shrink-0 h-fit">
+                        <FileText className="w-4 h-4" />
+                      </div>
+                      <div>
+                        <h5 className="font-semibold text-foreground">Dokument</h5>
+                        <p className="text-muted-foreground text-xs mt-1 leading-relaxed">
+                          Ladda upp systemkrav, träningsdata eller företagshemligheter som textreferenser (även kallat RAG). Dessa fästs vid dina "Projekt" och fungerar som AI:ns personliga facit som den slår upp information i. Allt bearbetas 100% lokalt i din maskin.
+                        </p>
+                      </div>
+                    </div>
+
+                    {/* Verktyg */}
+                    <div className="flex gap-3 bg-muted/30 p-3 rounded-lg border border-border/50">
+                      <div className="mt-0.5 bg-primary/10 p-1.5 rounded-md text-primary shrink-0 h-fit">
+                        <Wrench className="w-4 h-4" />
+                      </div>
+                      <div>
+                        <h5 className="font-semibold text-foreground">Verktyg & Background Tasks</h5>
+                        <p className="text-muted-foreground text-xs mt-1 leading-relaxed">
+                          Terminalhanteraren (som du även når via ikonen uppe i menyraden). Här loggas alla agentiska bakgrundsprocesser som AI:n startat i din dator. Du kan säkert övervaka CPU-körningar, portar, och stänga av dem sekventiellt härifrån vid behov.
+                        </p>
+                      </div>
+                    </div>
+
+                  </div>
+                </div>
+
+                <div className="flex justify-between items-end pt-5 border-t border-border mt-6 pb-2">
+                  <p className="text-muted-foreground text-[10px] uppercase tracking-widest font-mono">
+                    LocalPilot v0.1.0-beta<br/>
+                    Byggt med React + Tauri
+                  </p>
+                  <div className="text-[10px] uppercase tracking-widest text-primary/80 font-bold bg-primary/5 px-2.5 py-1.5 rounded border border-primary/20">
+                    Skyddad av Antigravity
+                  </div>
                 </div>
               </div>
-            </div>
+            </ScrollArea>
           </DialogContent>
         </Dialog>
 
