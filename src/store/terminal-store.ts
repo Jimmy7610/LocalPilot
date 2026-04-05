@@ -146,22 +146,54 @@ export const useTerminalStore = create<TerminalState>((set, get) => ({
         }));
       });
 
-      command.on('close', (data) => {
+      command.on('close', async (data) => {
         taskProcesses.delete(id);
+        const status = data.code === 0 ? 'completed' : 'error';
+        
         set((state) => ({
           tasks: state.tasks.map((t) =>
-            t.id === id ? { ...t, status: data.code === 0 ? 'completed' : 'error' } : t
+            t.id === id ? { ...t, status } : t
           ),
         }));
+
+        // Feedback loop
+        if (chatId) {
+          try {
+            const { useChatStore } = await import('./chat-store');
+            await useChatStore.getState().addTerminalMessage(chatId, outputBuffer, { 
+              taskId: id, 
+              status,
+              exitCode: data.code 
+            });
+          } catch (e) {
+            console.error("Failed to post feedback to chat", e);
+          }
+        }
       });
 
-      command.on('error', (error) => {
+      command.on('error', async (error) => {
         taskProcesses.delete(id);
+        const finalOutput = outputBuffer + '\n[Error]: ' + error;
+        
         set((state) => ({
           tasks: state.tasks.map((t) =>
-            t.id === id ? { ...t, status: 'error', output: t.output + '\n[Error]: ' + error } : t
+            t.id === id ? { ...t, status: 'error', output: finalOutput } : t
           ),
         }));
+
+        // Feedback loop
+        if (chatId) {
+          try {
+            const { useChatStore } = await import('./chat-store');
+            await useChatStore.getState().addTerminalMessage(chatId, finalOutput, { 
+              taskId: id, 
+              status: 'error',
+              error: String(error)
+            });
+          } catch (e) {
+            console.error("Failed to post feedback to chat", e);
+          }
+        }
       });
 
       const child = await command.spawn();
