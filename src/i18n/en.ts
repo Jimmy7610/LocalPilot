@@ -7,7 +7,7 @@ const en = {
   app: {
     name: 'LocalPilot',
     tagline: 'Your local AI control center',
-    description: 'Your personal, local AI assistant. Powerful, secure, and completely private.',
+    description: 'Your personal, local AI assistant. Powerful, secure, and completely private—now with local workspace analysis (RAG).',
   },
 
   // ── Navigation ──
@@ -253,7 +253,7 @@ const en = {
     resetDataConfirm: 'Are you sure? This action cannot be undone.',
     appInfo: 'About LocalPilot',
     version: 'Version',
-    about: 'A premium local AI control center powered by Ollama.',
+    about: 'A premium local AI control center powered by Ollama—now with private workspace RAG analysis.',
     english: 'English',
     swedish: 'Swedish',
     appearance: 'Appearance',
@@ -300,6 +300,7 @@ const en = {
     featurePrivat: '100% Private',
     featureLokalt: 'Runs Locally',
     featureGranser: 'No Limits',
+    featureSmart: 'Smart Context',
   },
 };
 

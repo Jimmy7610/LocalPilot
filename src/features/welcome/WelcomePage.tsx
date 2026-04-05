@@ -95,7 +95,7 @@ export function WelcomePage({ onComplete }: WelcomePageProps) {
             LocalPilot
           </h1>
           <p className="text-lg md:text-xl text-muted-foreground mb-12 leading-relaxed max-w-lg mx-auto">
-            {t.app.description || "Din personliga, lokala AI-assistent. Kraftfull, säker och helt privat."}
+            {t.app.description}
           </p>
         </motion.div>
 
@@ -109,7 +109,8 @@ export function WelcomePage({ onComplete }: WelcomePageProps) {
           {[
             { icon: Shield, text: t.welcome.featurePrivat },
             { icon: Cpu, text: t.welcome.featureLokalt },
-            { icon: Sparkles, text: t.welcome.featureGranser }
+            { icon: Sparkles, text: t.welcome.featureGranser },
+            { icon: Zap, text: t.welcome.featureSmart }
           ].map((feature, i) => (
             <div key={i} className="flex items-center gap-2 px-4 py-2 rounded-full bg-white/5 border border-white/10 text-xs font-medium text-white/70 backdrop-blur-sm">
               <feature.icon className="w-3.5 h-3.5 text-primary" />

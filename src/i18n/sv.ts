@@ -9,7 +9,7 @@ const sv: TranslationKeys = {
   app: {
     name: 'LocalPilot',
     tagline: 'Ditt lokala AI-kontrollcenter',
-    description: 'Din personliga, lokala AI-assistent. Kraftfull, säker och helt privat.',
+    description: 'Din personliga, lokala AI-assistent. Kraftfull, säker och helt privat – nu med lokal källkodsanalys (RAG).',
   },
 
   // ── Navigation ──
@@ -255,7 +255,7 @@ const sv: TranslationKeys = {
     resetDataConfirm: 'Är du säker? Denna åtgärd kan inte ångras.',
     appInfo: 'Om LocalPilot',
     version: 'Version',
-    about: 'Ett premium lokalt AI-kontrollcenter drivet av Ollama.',
+    about: 'Ett premium lokalt AI-kontrollcenter drivet av Ollama – nu med privat RAG-analys av dina projekt.',
     english: 'Engelska',
     swedish: 'Svenska',
     appearance: 'Utseende',
@@ -302,6 +302,7 @@ const sv: TranslationKeys = {
     featurePrivat: '100% Privat',
     featureLokalt: 'Körs Lokalt',
     featureGranser: 'Inga Gränser',
+    featureSmart: 'Smart Kontext',
   },
 };
 
