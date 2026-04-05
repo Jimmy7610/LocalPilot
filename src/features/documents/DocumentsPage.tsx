@@ -338,28 +338,34 @@ export function DocumentsPage() {
 
       {/* Create Dialog */}
       <Dialog open={formOpen} onOpenChange={setFormOpen}>
-        <DialogContent>
+        <DialogContent className="sm:max-w-[600px] border-border/50 shadow-2xl backdrop-blur-xl">
           <DialogHeader>
             <DialogTitle>{t.documents.newDocument}</DialogTitle>
           </DialogHeader>
-          <div className="space-y-3">
+          
+          <div className="max-h-[70vh] overflow-y-auto pr-4 -mr-4 py-4 space-y-4 scrollbar-thin scrollbar-thumb-primary/20 scrollbar-track-transparent">
             <div>
-              <label className="text-xs font-medium mb-1 block">{t.common.title}</label>
-              <Input value={formTitle} onChange={e => setFormTitle(e.target.value)} />
+              <label className="text-xs font-medium mb-1.5 block">{t.common.title}</label>
+              <Input 
+                value={formTitle} 
+                onChange={e => setFormTitle(e.target.value)}
+                className="bg-background/50" 
+              />
             </div>
             <div>
-              <label className="text-xs font-medium mb-1 block">{t.common.content}</label>
+              <label className="text-xs font-medium mb-1.5 block">{t.common.content}</label>
               <Textarea
                 value={formContent}
                 onChange={e => setFormContent(e.target.value)}
                 placeholder={t.documents.contentPlaceholder}
-                rows={8}
+                className="min-h-[400px] bg-background/50 resize-y text-sm font-sans"
               />
             </div>
           </div>
-          <DialogFooter>
+
+          <DialogFooter className="pt-4 border-t border-border/50">
             <Button variant="outline" onClick={() => setFormOpen(false)}>{t.common.cancel}</Button>
-            <Button onClick={handleCreate}>{t.common.create}</Button>
+            <Button onClick={handleCreate} className="shadow-lg shadow-primary/20">{t.common.create}</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
