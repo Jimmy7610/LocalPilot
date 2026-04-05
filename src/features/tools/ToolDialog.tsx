@@ -94,7 +94,7 @@ export function ToolDialog({ open, onClose, onSave, editTool }: ToolDialogProps)
           </DialogTitle>
         </DialogHeader>
 
-        <div className="space-y-5 py-4">
+        <div className="max-h-[70vh] overflow-y-auto pr-4 -mr-4 py-4 space-y-5 scrollbar-thin scrollbar-thumb-primary/20 scrollbar-track-transparent">
           <div className="space-y-2">
             <Label htmlFor="title">{t.tools.toolTitle}</Label>
             <Input 
@@ -108,18 +108,18 @@ export function ToolDialog({ open, onClose, onSave, editTool }: ToolDialogProps)
 
           <div className="space-y-2">
             <Label htmlFor="description">{t.tools.toolDesc}</Label>
-            <Input 
+            <Textarea 
               id="description" 
               placeholder="What does it do?" 
               value={description} 
               onChange={e => setDescription(e.target.value)}
-              className="bg-background/50"
+              className="bg-background/50 min-h-[80px] resize-y text-sm"
             />
           </div>
 
           <div className="space-y-2">
             <Label>{t.tools.toolIcon}</Label>
-            <div className="grid grid-cols-6 gap-2 p-3 rounded-xl bg-muted/30 border border-border/50 max-h-[160px] overflow-y-auto scrollbar-none">
+            <div className="grid grid-cols-6 gap-2 p-3 rounded-xl bg-muted/30 border border-border/50">
               {ICONS.map((item) => (
                 <button
                   key={item.id}
@@ -145,7 +145,7 @@ export function ToolDialog({ open, onClose, onSave, editTool }: ToolDialogProps)
               placeholder="t.ex. You are an expert at..." 
               value={systemPrompt} 
               onChange={e => setSystemPrompt(e.target.value)}
-              className="min-h-[120px] bg-background/50 resize-none text-sm"
+              className="min-h-[200px] bg-background/50 resize-y text-sm"
             />
           </div>
         </div>
