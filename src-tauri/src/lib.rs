@@ -92,6 +92,7 @@ pub fn run() {
                 .add_migrations("sqlite:localpilot.db", migrations)
                 .build(),
         )
+        .plugin(tauri_plugin_shell::init())
         .plugin(tauri_plugin_opener::init())
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

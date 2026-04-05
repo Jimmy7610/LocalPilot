@@ -18,11 +18,14 @@ import {
   Check,
   Settings2,
   Loader2,
+  Play,
+  TerminalSquare
 } from 'lucide-react';
 import { useT } from '@/i18n';
 import { useChatStore } from '@/store/chat-store';
 import { useOllamaStore } from '@/store/ollama-store';
 import { useSettingsStore } from '@/store/settings-store';
+import { useTerminalStore } from '@/store/terminal-store';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -434,6 +437,7 @@ function ChatMessage({ message, t }: { message: any; t: any }) {
 function PreBlock({ children, t }: { children: React.ReactNode; t: any }) {
   const [copied, setCopied] = useState(false);
   const ref = useRef<HTMLPreElement>(null);
+  const runCommand = useTerminalStore((s) => s.runCommand);
 
   const handleCopy = () => {
     const text = ref.current?.textContent || '';
@@ -442,15 +446,32 @@ function PreBlock({ children, t }: { children: React.ReactNode; t: any }) {
     setTimeout(() => setCopied(false), 2000);
   };
 
+  const handleRun = () => {
+    const text = ref.current?.textContent || '';
+    if (text) {
+      runCommand(text);
+    }
+  };
+
   return (
     <div className="relative group">
       <pre ref={ref}>{children}</pre>
-      <button
-        onClick={handleCopy}
-        className="absolute top-2 right-2 p-1.5 rounded-md bg-background/80 border border-border opacity-0 group-hover:opacity-100 transition-opacity"
-      >
-        {copied ? <Check className="w-3 h-3 text-success" /> : <Copy className="w-3 h-3 text-muted-foreground" />}
-      </button>
+      <div className="absolute top-2 right-2 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+        <button
+          onClick={handleRun}
+          title="Run in Background"
+          className="p-1.5 rounded-md bg-background/80 border border-border text-muted-foreground hover:text-primary transition-colors"
+        >
+          <Play className="w-3 h-3" />
+        </button>
+        <button
+          onClick={handleCopy}
+          title="Copy code"
+          className="p-1.5 rounded-md bg-background/80 border border-border transition-colors"
+        >
+          {copied ? <Check className="w-3 h-3 text-success" /> : <Copy className="w-3 h-3 text-muted-foreground hover:text-foreground" />}
+        </button>
+      </div>
     </div>
   );
 }

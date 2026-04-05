@@ -3,7 +3,7 @@
 // ──────────────────────────────────────────
 
 import { useLocation } from 'react-router';
-import { Sun, Moon, Globe, Wifi, WifiOff, Loader2 } from 'lucide-react';
+import { Sun, Moon, Globe, Wifi, WifiOff, Loader2, TerminalSquare, X } from 'lucide-react';
 import { useT, useLanguage } from '@/i18n';
 import { useSettingsStore } from '@/store/settings-store';
 import { useOllamaStore } from '@/store/ollama-store';
@@ -12,11 +12,14 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuLabel,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { Badge } from '@/components/ui/badge';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
+import { Separator } from '@/components/ui/separator';
 import { cn } from '@/lib/utils';
+import { useTerminalStore } from '@/store/terminal-store';
 
 function usePageTitle(): string {
   const t = useT();
@@ -39,6 +42,8 @@ export function TopBar() {
   const { language } = useLanguage();
   const settings = useSettingsStore();
   const { connected, checking } = useOllamaStore();
+  const terminalStore = useTerminalStore();
+  const runningTasks = terminalStore.tasks.filter(t => t.status === 'running');
 
   return (
     <header className="flex items-center justify-between h-14 px-6 border-b border-border bg-background/80 backdrop-blur-sm">
@@ -72,6 +77,45 @@ export function TopBar() {
             {connected ? t.ollama.connected : `${t.ollama.connectionErrorHint} ${settings.ollamaBaseUrl}`}
           </TooltipContent>
         </Tooltip>
+
+        {/* Active Tasks */}
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button variant="ghost" size="icon" className="h-8 w-8 relative">
+              <TerminalSquare className="w-4 h-4" />
+              {runningTasks.length > 0 && (
+                <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-success rounded-full ring-2 ring-background"></span>
+              )}
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end" className="w-[300px]">
+            <DropdownMenuLabel className="text-xs">Active Background Tasks</DropdownMenuLabel>
+            <Separator className="my-1" />
+            {runningTasks.length === 0 ? (
+              <div className="px-2 py-3 text-xs text-muted-foreground text-center">
+                No active tasks
+              </div>
+            ) : (
+              runningTasks.map(task => (
+                <div key={task.id} className="flex items-center justify-between px-2 py-1.5 hover:bg-muted/50 rounded-sm">
+                  <div className="flex flex-col min-w-0 pr-2">
+                    <span className="text-xs font-mono truncate" title={task.command}>{task.command}</span>
+                    <span className="text-[10px] text-muted-foreground">PID: {task.pid || 'starting...'}</span>
+                  </div>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-6 w-6 text-destructive shrink-0 hover:bg-destructive/10"
+                    onClick={() => terminalStore.terminateTask(task.id)}
+                    title="Terminate"
+                  >
+                    <X className="w-3.5 h-3.5" />
+                  </Button>
+                </div>
+              ))
+            )}
+          </DropdownMenuContent>
+        </DropdownMenu>
 
         {/* Model badge */}
         {settings.defaultModel && (
