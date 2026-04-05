@@ -271,6 +271,15 @@ const sv: TranslationKeys = {
     cancel: 'Avbryt',
     confirm: 'Ta bort',
   },
+
+  // ── Welcome ──
+  welcome: {
+    button: 'Välkommen till framtiden',
+    subtext: 'Tryck för att starta',
+    featurePrivat: '100% Privat',
+    featureLokalt: 'Körs Lokalt',
+    featureGranser: 'Inga Gränser',
+  },
 };
 
 export default sv;

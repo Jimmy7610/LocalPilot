@@ -1,7 +1,8 @@
 import { motion, AnimatePresence } from 'framer-motion';
-import { Zap, ArrowRight, Sparkles, Shield, Cpu } from 'lucide-react';
+import { Zap, ArrowRight, Sparkles, Shield, Cpu, Globe } from 'lucide-react';
 import { useT } from '@/i18n';
 import { Button } from '@/components/ui/button';
+import { useSettingsStore } from '@/store/settings-store';
 
 interface WelcomePageProps {
   onComplete: () => void;
@@ -9,6 +10,7 @@ interface WelcomePageProps {
 
 export function WelcomePage({ onComplete }: WelcomePageProps) {
   const t = useT();
+  const settings = useSettingsStore();
 
   return (
     <motion.div 
@@ -17,6 +19,31 @@ export function WelcomePage({ onComplete }: WelcomePageProps) {
       exit={{ opacity: 0 }}
       className="fixed inset-0 z-[100] flex flex-col items-center justify-center overflow-hidden bg-[#020203]"
     >
+      {/* Language Switcher Overlay */}
+      <div className="absolute top-8 right-8 z-20 flex items-center gap-4 animate-fade-in">
+        <div className="flex bg-white/5 p-1 rounded-full border border-white/10 backdrop-blur-md">
+          <button
+            onClick={() => settings.setLanguage('sv')}
+            className={`px-3 py-1 text-[10px] uppercase font-bold tracking-widest rounded-full transition-all duration-300 ${
+              settings.language === 'sv' 
+                ? 'bg-primary text-primary-foreground shadow-lg shadow-primary/20' 
+                : 'text-white/40 hover:text-white/70'
+            }`}
+          >
+            SV
+          </button>
+          <button
+            onClick={() => settings.setLanguage('en')}
+            className={`px-3 py-1 text-[10px] uppercase font-bold tracking-widest rounded-full transition-all duration-300 ${
+              settings.language === 'en' 
+                ? 'bg-primary text-primary-foreground shadow-lg shadow-primary/20' 
+                : 'text-white/40 hover:text-white/70'
+            }`}
+          >
+            EN
+          </button>
+        </div>
+      </div>
       {/* Animated Aurora Background */}
       <div className="absolute inset-0 z-0">
         <motion.div
@@ -80,9 +107,9 @@ export function WelcomePage({ onComplete }: WelcomePageProps) {
           className="flex flex-wrap justify-center gap-4 mb-16"
         >
           {[
-            { icon: Shield, text: "100% Privat" },
-            { icon: Cpu, text: "Körs Lokalt" },
-            { icon: Sparkles, text: "Inga Gränser" }
+            { icon: Shield, text: t.welcome.featurePrivat },
+            { icon: Cpu, text: t.welcome.featureLokalt },
+            { icon: Sparkles, text: t.welcome.featureGranser }
           ].map((feature, i) => (
             <div key={i} className="flex items-center gap-2 px-4 py-2 rounded-full bg-white/5 border border-white/10 text-xs font-medium text-white/70 backdrop-blur-sm">
               <feature.icon className="w-3.5 h-3.5 text-primary" />
@@ -102,11 +129,11 @@ export function WelcomePage({ onComplete }: WelcomePageProps) {
             onClick={onComplete}
             className="h-16 px-10 rounded-full bg-primary text-primary-foreground text-lg font-bold shadow-[0_0_40px_rgba(var(--primary),0.3)] hover:shadow-[0_0_60px_rgba(var(--primary),0.5)] transition-all duration-300 group"
           >
-            <span>Välkommen till framtiden</span>
+            <span>{t.welcome.button}</span>
             <ArrowRight className="ml-3 w-5 h-5 group-hover:translate-x-1 transition-transform" />
           </Button>
           <p className="mt-4 text-[10px] uppercase tracking-[0.2em] text-muted-foreground/50 font-bold">
-            Tryck för att starta
+            {t.welcome.subtext}
           </p>
         </motion.div>
       </div>

@@ -269,6 +269,15 @@ const en = {
     cancel: 'Cancel',
     confirm: 'Delete',
   },
+
+  // ── Welcome ──
+  welcome: {
+    button: 'Welcome to the future',
+    subtext: 'Press to start',
+    featurePrivat: '100% Private',
+    featureLokalt: 'Runs Locally',
+    featureGranser: 'No Limits',
+  },
 };
 
 // Deep type that preserves structure but uses string values (not literals)
