@@ -235,6 +235,11 @@ const en = {
     appearance: 'Appearance',
     connection: 'Connection',
     data: 'Data & Storage',
+    restart: 'Restart App',
+    restartTooltip: 'Restart the entire application',
+    restartConfirmTitle: 'Restart LocalPilot?',
+    restartConfirmDesc: 'This will close and restart the application. Unsaved state may be lost.',
+    restartConfirmBtn: 'Yes, restart now',
   },
 
   // ── Ollama ──

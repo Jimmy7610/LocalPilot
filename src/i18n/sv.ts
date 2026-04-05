@@ -237,6 +237,11 @@ const sv: TranslationKeys = {
     appearance: 'Utseende',
     connection: 'Anslutning',
     data: 'Data & Lagring',
+    restart: 'Starta om appen',
+    restartTooltip: 'Starta om hela applikationen',
+    restartConfirmTitle: 'Starta om LocalPilot?',
+    restartConfirmDesc: 'Appen stängs ner och startas om. Osparade ändringar kan gå förlorade.',
+    restartConfirmBtn: 'Ja, starta om nu',
   },
 
   // ── Ollama ──

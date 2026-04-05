@@ -2,8 +2,9 @@
 // LocalPilot — Top Bar
 // ──────────────────────────────────────────
 
+import { useState } from 'react';
 import { useLocation } from 'react-router';
-import { Sun, Moon, Globe, Wifi, WifiOff, Loader2, TerminalSquare, X, Info, MessageSquare, FolderKanban, BookTemplate, FileText, Wrench } from 'lucide-react';
+import { Sun, Moon, Globe, Wifi, WifiOff, Loader2, TerminalSquare, Info, MessageSquare, FolderKanban, BookTemplate, FileText, Wrench, RefreshCw, RotateCcw } from 'lucide-react';
 import { useT, useLanguage } from '@/i18n';
 import { useSettingsStore } from '@/store/settings-store';
 import { useOllamaStore } from '@/store/ollama-store';
@@ -52,6 +53,22 @@ export function TopBar() {
   const { connected, checking } = useOllamaStore();
   const terminalStore = useTerminalStore();
   const runningTasks = terminalStore.tasks.filter(t => t.status === 'running');
+  const [restartOpen, setRestartOpen] = useState(false);
+
+  const handleRestart = async () => {
+    try {
+      // @ts-ignore
+      const isTauri = typeof window !== 'undefined' && window.__TAURI_INTERNALS__ !== undefined;
+      if (isTauri) {
+        const { relaunch } = await import('@tauri-apps/plugin-process');
+        await relaunch();
+      } else {
+        window.location.reload();
+      }
+    } catch (e) {
+      window.location.reload();
+    }
+  };
 
   return (
     <header className="flex items-center justify-between h-14 shrink-0 px-6 border-b border-border bg-background/80 backdrop-blur-sm z-20">
@@ -204,6 +221,51 @@ export function TopBar() {
                 </div>
               </div>
             </ScrollArea>
+          </DialogContent>
+        </Dialog>
+
+        {/* Restart Button */}
+        <Dialog open={restartOpen} onOpenChange={setRestartOpen}>
+          <Tooltip delayDuration={0}>
+            <TooltipTrigger asChild>
+              <DialogTrigger asChild>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-8 w-8 text-muted-foreground hover:text-destructive transition-colors"
+                >
+                  <RotateCcw className="w-4 h-4" />
+                </Button>
+              </DialogTrigger>
+            </TooltipTrigger>
+            <TooltipContent>{t.settings.restartTooltip}</TooltipContent>
+          </Tooltip>
+          <DialogContent className="max-w-sm bg-card border-border">
+            <DialogHeader>
+              <DialogTitle className="flex items-center gap-2 text-base">
+                <RefreshCw className="w-4 h-4 text-destructive" />
+                {t.settings.restartConfirmTitle}
+              </DialogTitle>
+            </DialogHeader>
+            <div className="space-y-5 pt-2">
+              <p className="text-sm text-muted-foreground leading-relaxed">
+                {t.settings.restartConfirmDesc}
+              </p>
+              <div className="flex gap-2 justify-end">
+                <Button variant="outline" size="sm" onClick={() => setRestartOpen(false)}>
+                  {t.common.cancel}
+                </Button>
+                <Button
+                  variant="destructive"
+                  size="sm"
+                  className="gap-2"
+                  onClick={handleRestart}
+                >
+                  <RotateCcw className="w-3.5 h-3.5" />
+                  {t.settings.restartConfirmBtn}
+                </Button>
+              </div>
+            </div>
           </DialogContent>
         </Dialog>
 

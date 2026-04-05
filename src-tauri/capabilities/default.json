@@ -6,6 +6,8 @@
   "permissions": [
     "core:default",
     "opener:default",
+    "process:allow-exit",
+    "process:allow-relaunch",
     "sql:default",
     "sql:allow-load",
     "sql:allow-execute",
