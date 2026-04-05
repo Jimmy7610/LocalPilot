@@ -17,7 +17,7 @@ interface TerminalState {
   tasks: TerminalTask[];
   isOpen: boolean; // whether the terminal panel/sheet is open
   setIsOpen: (isOpen: boolean) => void;
-  runCommand: (fullCommand: string) => Promise<string>;
+  runCommand: (fullCommand: string, options?: { cwd?: string }) => Promise<string>;
   terminateTask: (id: string) => Promise<void>;
   clearTasks: () => void;
 }
@@ -31,7 +31,7 @@ export const useTerminalStore = create<TerminalState>((set, get) => ({
 
   setIsOpen: (isOpen) => set({ isOpen }),
 
-  runCommand: async (fullCommand) => {
+  runCommand: async (fullCommand, options) => {
     const id = uuidv4();
     const parts = fullCommand.trim().split(/\s+/);
     if (parts.length === 0) return '';
@@ -40,7 +40,7 @@ export const useTerminalStore = create<TerminalState>((set, get) => ({
     const args = parts.slice(1);
 
     try {
-      const command = Command.create(cmd, args);
+      const command = Command.create(cmd, args, options?.cwd ? { cwd: options.cwd } : undefined);
       let outputBuffer = '';
       let urlOpened = false;
 

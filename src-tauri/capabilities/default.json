@@ -11,6 +11,23 @@
     "sql:allow-execute",
     "sql:allow-select",
     "sql:allow-close",
+    "fs:default",
+    {
+      "identifier": "fs:allow-mkdir",
+      "allow": [{ "path": "$DOCUMENT/**" }]
+    },
+    {
+      "identifier": "fs:allow-write-text-file",
+      "allow": [{ "path": "$DOCUMENT/**" }]
+    },
+    {
+      "identifier": "fs:allow-read-text-file",
+      "allow": [{ "path": "$DOCUMENT/**" }]
+    },
+    {
+      "identifier": "fs:allow-exists",
+      "allow": [{ "path": "$DOCUMENT/**" }]
+    },
     "shell:default",
     {
       "identifier": "shell:allow-execute",
