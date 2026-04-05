@@ -147,6 +147,7 @@ export const useChatStore = create<ChatState>((set, get) => ({
       if (project) {
         dynamicSystemPrompt += `You are assisting the user within the context of a specific project.\n`;
         dynamicSystemPrompt += `Project Name: ${project.name}\n`;
+        dynamicSystemPrompt += `ENVIRONMENT: You have access to a terminal. You can suggest shell commands or scripts using \`\`\`bash or \`\`\`powershell code blocks. The user can execute these with a single click. Use this to help with file management, git, or running scripts.\n`;
         if (project.description) {
           dynamicSystemPrompt += `Project Description: ${project.description}\n`;
         }

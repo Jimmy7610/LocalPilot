@@ -438,6 +438,10 @@ function ChatItem({
 function ChatMessage({ message, t }: { message: any; t: any }) {
   const isUser = message.role === 'user';
   const [copied, setCopied] = useState(false);
+  const projects = useProjectStore((s) => s.projects);
+  const chat = useChatStore((s) => s.chats.find(c => c.id === message.chatId));
+  const project = projects.find(p => p.id === chat?.projectId);
+  const workspacePath = project?.workspacePath || undefined;
 
   const handleCopy = () => {
     navigator.clipboard.writeText(message.content);
@@ -463,7 +467,7 @@ function ChatMessage({ message, t }: { message: any; t: any }) {
           <div className="prose prose-sm dark:prose-invert max-w-none [&_pre]:bg-background/50 [&_pre]:rounded-lg [&_pre]:p-3 [&_pre]:my-2 [&_code]:text-xs [&_p]:my-1.5 [&_ul]:my-1.5 [&_ol]:my-1.5 [&_li]:my-0.5">
             <ReactMarkdown remarkPlugins={[remarkGfm]}
               components={{
-                pre: ({ children }) => <PreBlock t={t} chatId={message.chatId}>{children}</PreBlock>,
+                pre: ({ children }) => <PreBlock t={t} chatId={message.chatId} cwd={workspacePath}>{children}</PreBlock>,
                 code: ({ className, children, ...props }) => {
                   const match = /language-(\w+)/.exec(className || '');
                   const lang = match ? match[1] : '';
@@ -494,7 +498,7 @@ function ChatMessage({ message, t }: { message: any; t: any }) {
 
 // ── Code Block with Copy ──
 
-function PreBlock({ children, t, chatId }: { children: React.ReactNode; t: any; chatId: string }) {
+function PreBlock({ children, t, chatId, cwd }: { children: React.ReactNode; t: any; chatId: string; cwd?: string }) {
   const [copied, setCopied] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
   const runCode = useTerminalStore((s) => s.runCode);
@@ -514,7 +518,7 @@ function PreBlock({ children, t, chatId }: { children: React.ReactNode; t: any; 
     const codeEl = ref.current.querySelector('code[data-language]');
     const language = codeEl?.getAttribute('data-language') || 'shell';
 
-    runCode(code, language, { chatId });
+    runCode(code, language, { chatId, cwd });
     toast.success(`${t.chat.starting || 'Starting'} ${language || 'code'}-block`, {
       description: t.chat.terminalOpenHint || 'Open terminal in toolbar to see output.'
     });

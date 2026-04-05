@@ -19,7 +19,7 @@ interface TerminalState {
   isOpen: boolean;
   setIsOpen: (isOpen: boolean) => void;
   runCommand: (fullCommand: string, options?: { cwd?: string; chatId?: string }) => Promise<string>;
-  runCode: (code: string, language: string, options?: { chatId?: string }) => Promise<string>;
+  runCode: (code: string, language: string, options?: { cwd?: string; chatId?: string }) => Promise<string>;
   terminateTask: (id: string) => Promise<void>;
   sendInput: (id: string, input: string) => Promise<void>;
   clearTask: (id: string) => void;
@@ -114,7 +114,7 @@ export const useTerminalStore = create<TerminalState>((set, get) => ({
         }
       }
 
-      const command = Command.create(shellCmd, shellArgs);
+      const command = Command.create(shellCmd, shellArgs, { cwd: options?.cwd });
       let outputBuffer = '';
       let urlOpened = false;
 
