@@ -44,7 +44,8 @@ export function HomePage() {
   const recentDocs = documents.slice(0, 3);
 
   return (
-    <div className="max-w-6xl mx-auto p-6 space-y-6 animate-fade-in">
+    <div className="h-full overflow-y-auto">
+      <div className="max-w-6xl mx-auto p-6 space-y-6 animate-fade-in">
       {/* Welcome */}
       <div className="flex items-center justify-between">
         <div>
@@ -244,6 +245,7 @@ export function HomePage() {
             )}
           </CardContent>
         </Card>
+      </div>
       </div>
     </div>
   );

@@ -118,7 +118,8 @@ export function ProjectsPage() {
 
   if (selectedProject) {
     return (
-      <div className="max-w-4xl mx-auto p-6 animate-fade-in">
+      <div className="h-full overflow-y-auto">
+        <div className="max-w-4xl mx-auto p-6 animate-fade-in">
         <Button variant="ghost" size="sm" className="gap-1.5 mb-4" onClick={() => setSelectedProject(null)}>
           <ChevronLeft className="w-4 h-4" /> {t.common.back}
         </Button>
@@ -178,11 +179,13 @@ export function ProjectsPage() {
           </Card>
         </div>
       </div>
-    );
+    </div>
+  );
   }
 
   return (
-    <div className="max-w-5xl mx-auto p-6 animate-fade-in">
+    <div className="h-full overflow-y-auto">
+      <div className="max-w-5xl mx-auto p-6 animate-fade-in">
       <div className="flex items-center justify-between mb-6">
         <h2 className="text-xl font-bold">{t.projects.title}</h2>
         <Button onClick={openCreate} size="sm" className="gap-1.5">
@@ -300,6 +303,7 @@ export function ProjectsPage() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+    </div>
     </div>
   );
 }

@@ -103,7 +103,8 @@ export function ToolsPage() {
     const toolTitle = (t.tools as any)[tool.titleKey] || tool.id;
 
     return (
-      <div className="max-w-3xl mx-auto p-6 animate-fade-in">
+      <div className="h-full overflow-y-auto">
+        <div className="max-w-3xl mx-auto p-6 animate-fade-in">
         <Button variant="ghost" size="sm" className="gap-1.5 mb-4" onClick={() => { setActiveTool(null); setResult(''); setInput(''); }}>
           <ChevronLeft className="w-4 h-4" /> {t.common.back}
         </Button>
@@ -171,13 +172,15 @@ export function ToolsPage() {
             <p className="text-sm text-muted-foreground">{t.tools.noResult}</p>
           ) : null}
         </div>
+        </div>
       </div>
     );
   }
 
   // Tool grid
   return (
-    <div className="max-w-5xl mx-auto p-6 animate-fade-in">
+    <div className="h-full overflow-y-auto">
+      <div className="max-w-5xl mx-auto p-6 animate-fade-in">
       <h2 className="text-xl font-bold mb-6">{t.tools.title}</h2>
 
       <div className="grid grid-cols-3 gap-3">
@@ -203,6 +206,7 @@ export function ToolsPage() {
           );
         })}
       </div>
+    </div>
     </div>
   );
 }

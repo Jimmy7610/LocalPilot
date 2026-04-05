@@ -116,7 +116,8 @@ export function PromptsPage() {
   };
 
   return (
-    <div className="max-w-5xl mx-auto p-6 animate-fade-in">
+    <div className="h-full overflow-y-auto">
+      <div className="max-w-5xl mx-auto p-6 animate-fade-in">
       <div className="flex items-center justify-between mb-6">
         <h2 className="text-xl font-bold">{t.prompts.title}</h2>
         <Button onClick={openCreate} size="sm" className="gap-1.5">
@@ -283,6 +284,7 @@ export function PromptsPage() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+    </div>
     </div>
   );
 }
