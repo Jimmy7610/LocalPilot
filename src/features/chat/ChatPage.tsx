@@ -58,6 +58,7 @@ import { cn } from '@/lib/utils';
 import { formatDistanceToNow } from 'date-fns';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
+import { toast } from 'sonner';
 
 export function ChatPage() {
   const t = useT();
@@ -499,6 +500,9 @@ function PreBlock({ children, t }: { children: React.ReactNode; t: any }) {
     const text = ref.current?.textContent || '';
     if (text) {
       runCommand(text);
+      toast.success('Started background task', {
+        description: 'Open the Terminal in the top bar to view output.'
+      });
     }
   };
 

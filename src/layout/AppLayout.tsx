@@ -6,6 +6,7 @@ import { Outlet } from 'react-router';
 import { Sidebar } from './Sidebar';
 import { TopBar } from './TopBar';
 import { TooltipProvider } from '@/components/ui/tooltip';
+import { TerminalPanel } from '@/components/TerminalPanel';
 
 export function AppLayout() {
   return (
@@ -18,6 +19,7 @@ export function AppLayout() {
             <Outlet />
           </main>
         </div>
+        <TerminalPanel />
       </div>
     </TooltipProvider>
   );

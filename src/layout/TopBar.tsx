@@ -87,43 +87,22 @@ export function TopBar() {
         </Tooltip>
 
         {/* Active Tasks */}
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button variant="ghost" size="icon" className="h-8 w-8 relative">
+        <Tooltip delayDuration={0}>
+          <TooltipTrigger asChild>
+            <Button 
+              variant={terminalStore.isOpen ? "secondary" : "ghost"} 
+              size="icon" 
+              className="h-8 w-8 relative"
+              onClick={() => terminalStore.setIsOpen(!terminalStore.isOpen)}
+            >
               <TerminalSquare className="w-4 h-4" />
               {runningTasks.length > 0 && (
-                <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-success rounded-full ring-2 ring-background"></span>
+                <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-success rounded-full ring-2 ring-background animate-pulse"></span>
               )}
             </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" className="w-[300px]">
-            <DropdownMenuLabel className="text-xs">Active Background Tasks</DropdownMenuLabel>
-            <Separator className="my-1" />
-            {runningTasks.length === 0 ? (
-              <div className="px-2 py-3 text-xs text-muted-foreground text-center">
-                No active tasks
-              </div>
-            ) : (
-              runningTasks.map(task => (
-                <div key={task.id} className="flex items-center justify-between px-2 py-1.5 hover:bg-muted/50 rounded-sm">
-                  <div className="flex flex-col min-w-0 pr-2">
-                    <span className="text-xs font-mono truncate" title={task.command}>{task.command}</span>
-                    <span className="text-[10px] text-muted-foreground">PID: {task.pid || 'starting...'}</span>
-                  </div>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="h-6 w-6 text-destructive shrink-0 hover:bg-destructive/10"
-                    onClick={() => terminalStore.terminateTask(task.id)}
-                    title="Terminate"
-                  >
-                    <X className="w-3.5 h-3.5" />
-                  </Button>
-                </div>
-              ))
-            )}
-          </DropdownMenuContent>
-        </DropdownMenu>
+          </TooltipTrigger>
+          <TooltipContent>Terminal & Bakgrundsprocesser</TooltipContent>
+        </Tooltip>
 
         {/* Info / About App */}
         <Dialog>

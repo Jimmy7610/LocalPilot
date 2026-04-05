@@ -19,6 +19,7 @@ interface TerminalState {
   setIsOpen: (isOpen: boolean) => void;
   runCommand: (fullCommand: string, options?: { cwd?: string }) => Promise<string>;
   terminateTask: (id: string) => Promise<void>;
+  sendInput: (id: string, input: string) => Promise<void>;
   clearTasks: () => void;
 }
 
@@ -146,6 +147,22 @@ export const useTerminalStore = create<TerminalState>((set, get) => ({
           t.id === id ? { ...t, status: 'error', output: t.output + '\n[Terminated by user]' } : t
         ),
       }));
+    }
+  },
+
+  sendInput: async (id, input) => {
+    const child = taskProcesses.get(id);
+    if (child) {
+      try {
+        await child.write(input + '\n');
+        set((state) => ({
+          tasks: state.tasks.map((t) =>
+            t.id === id ? { ...t, output: t.output + `> ${input}\n` } : t
+          ),
+        }));
+      } catch (e) {
+        console.error("Failed to send input:", e);
+      }
     }
   },
 
