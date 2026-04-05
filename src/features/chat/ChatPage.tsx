@@ -459,6 +459,11 @@ function ChatMessage({ message, t }: { message: any; t: any }) {
             <ReactMarkdown remarkPlugins={[remarkGfm]}
               components={{
                 pre: ({ children }) => <PreBlock t={t}>{children}</PreBlock>,
+                code: ({ className, children, ...props }) => {
+                  const match = /language-(\w+)/.exec(className || '');
+                  const lang = match ? match[1] : '';
+                  return <code className={className} data-language={lang} {...props}>{children}</code>;
+                }
               }}
             >
               {message.content || '...'}
@@ -486,8 +491,8 @@ function ChatMessage({ message, t }: { message: any; t: any }) {
 
 function PreBlock({ children, t }: { children: React.ReactNode; t: any }) {
   const [copied, setCopied] = useState(false);
-  const ref = useRef<HTMLPreElement>(null);
-  const runCommand = useTerminalStore((s) => s.runCommand);
+  const ref = useRef<HTMLDivElement>(null);
+  const runCode = useTerminalStore((s) => s.runCode);
 
   const handleCopy = () => {
     const text = ref.current?.textContent || '';
@@ -497,18 +502,23 @@ function PreBlock({ children, t }: { children: React.ReactNode; t: any }) {
   };
 
   const handleRun = () => {
-    const text = ref.current?.textContent || '';
-    if (text) {
-      runCommand(text);
-      toast.success('Started background task', {
-        description: 'Open the Terminal in the top bar to view output.'
-      });
-    }
+    if (!ref.current) return;
+    const code = ref.current.textContent || '';
+    if (!code.trim()) return;
+
+    // Detect language from the <code> element's data-language attribute
+    const codeEl = ref.current.querySelector('code[data-language]');
+    const language = codeEl?.getAttribute('data-language') || 'shell';
+
+    runCode(code, language);
+    toast.success(`Startar ${language || 'kod'}-block`, {
+      description: 'Öppna terminalen i menyraden för att se resultatet.'
+    });
   };
 
   return (
-    <div className="relative group">
-      <pre ref={ref}>{children}</pre>
+    <div className="relative group" ref={ref}>
+      <pre>{children}</pre>
       <div className="absolute top-2 right-2 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
         <button
           onClick={handleRun}

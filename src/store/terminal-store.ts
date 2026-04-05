@@ -15,9 +15,10 @@ export interface TerminalTask {
 
 interface TerminalState {
   tasks: TerminalTask[];
-  isOpen: boolean; // whether the terminal panel/sheet is open
+  isOpen: boolean;
   setIsOpen: (isOpen: boolean) => void;
   runCommand: (fullCommand: string, options?: { cwd?: string }) => Promise<string>;
+  runCode: (code: string, language: string) => Promise<string>;
   terminateTask: (id: string) => Promise<void>;
   sendInput: (id: string, input: string) => Promise<void>;
   clearTasks: () => void;
@@ -33,36 +34,86 @@ export const useTerminalStore = create<TerminalState>((set, get) => ({
   setIsOpen: (isOpen) => set({ isOpen }),
 
   runCommand: async (fullCommand, options) => {
-    const id = uuidv4();
-    const parts = fullCommand.trim().split(/\s+/);
-    if (parts.length === 0) return '';
+    return get().runCode(fullCommand, 'shell');
+  },
 
-    const cmd = parts[0];
-    const args = parts.slice(1);
+  runCode: async (code, language) => {
+    const id = uuidv4();
 
     try {
       // @ts-ignore
       const isTauri = typeof window !== 'undefined' && window.__TAURI_INTERNALS__ !== undefined;
       if (!isTauri) {
-        throw new Error("Terminal Execution requires the native LocalPilot Desktop App (Tauri).");
+        throw new Error('Terminal Execution requires the native LocalPilot Desktop App (Tauri).');
       }
 
       const isWindows = navigator.userAgent.includes('Windows');
-      const shellCmd = isWindows ? 'powershell' : 'sh';
-      const shellArgs = isWindows ? ['-NoLogo', '-Command', fullCommand] : ['-c', fullCommand];
 
-      const command = Command.create(shellCmd, shellArgs, options?.cwd ? { cwd: options.cwd } : undefined);
-      let outputBuffer = '';
-      let urlOpened = false;
+      // Map language → interpreter & file extension
+      const langMap: Record<string, { ext: string; runner: string[]; shellRunner?: boolean }> = {
+        python: { ext: 'py', runner: ['python'] },
+        python3: { ext: 'py', runner: ['python'] },
+        javascript: { ext: 'js', runner: ['node'] },
+        js: { ext: 'js', runner: ['node'] },
+        typescript: { ext: 'ts', runner: ['npx', 'ts-node'] },
+        ts: { ext: 'ts', runner: ['npx', 'ts-node'] },
+        shell: { ext: 'ps1', runner: [], shellRunner: true },
+        bash: { ext: 'sh', runner: [], shellRunner: true },
+        sh: { ext: 'sh', runner: [], shellRunner: true },
+        ps1: { ext: 'ps1', runner: [], shellRunner: true },
+        powershell: { ext: 'ps1', runner: [], shellRunner: true },
+      };
 
-      // Add task to state before spawn to show loading
+      const lang = language.toLowerCase().trim();
+      const config = langMap[lang] ?? { ext: 'txt', runner: [], shellRunner: true };
+
+      // Add task shown in UI immediately
+      const displayLabel = lang === 'shell' || config.shellRunner ? code.slice(0, 60) : `[${lang}] code block`;
       set((state) => ({
         tasks: [
-          { id, command: fullCommand, pid: 0, output: '', status: 'running', startedAt: Date.now() },
-          ...state.tasks.slice(0, 49) // Keep last 50 tasks
+          { id, command: displayLabel, pid: 0, output: '', status: 'running', startedAt: Date.now() },
+          ...state.tasks.slice(0, 49),
         ],
         isOpen: true,
       }));
+
+      let shellCmd: string;
+      let shellArgs: string[];
+
+      if (config.shellRunner) {
+        // Run the code directly via the shell (it IS a shell command/script)
+        if (isWindows) {
+          shellCmd = 'powershell';
+          shellArgs = ['-NoLogo', '-Command', code];
+        } else {
+          shellCmd = 'sh';
+          shellArgs = ['-c', code];
+        }
+      } else {
+        // Save code to a temp file, then run with the right interpreter
+        const tmpDir = isWindows ? 'C:\\Windows\\Temp' : '/tmp';
+        const sep = isWindows ? '\\' : '/';
+        const tmpFile = `${tmpDir}${sep}localpilot_run_${Date.now()}.${config.ext}`;
+
+        // Write the file via PowerShell / sh, then run it
+        const escaped = code.replace(/'/g, isWindows ? "''" : "'\\''")
+        const writeCmd = isWindows
+          ? `Set-Content -Path '${tmpFile}' -Value '${escaped}' -Encoding UTF8; ${config.runner.join(' ')} '${tmpFile}'`
+          : `cat > '${tmpFile}' << 'LOCALPILOT_EOF'\n${code}\nLOCALPILOT_EOF\n${config.runner.join(' ')} '${tmpFile}'`;
+
+        if (isWindows) {
+          shellCmd = 'powershell';
+          shellArgs = ['-NoLogo', '-Command', writeCmd];
+        } else {
+          shellCmd = 'sh';
+          shellArgs = ['-c', writeCmd];
+        }
+      }
+
+      const command = Command.create(shellCmd, shellArgs);
+      let outputBuffer = '';
+      let urlOpened = false;
+
 
       command.stdout.on('data', (line) => {
         outputBuffer += line + '\n';
