@@ -425,12 +425,19 @@ function ChatItem({
 
 function ChatMessage({ message, t }: { message: any; t: any }) {
   const isUser = message.role === 'user';
+  const [copied, setCopied] = useState(false);
+
+  const handleCopy = () => {
+    navigator.clipboard.writeText(message.content);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
 
   return (
-    <div className={cn('flex gap-3', isUser ? 'justify-end' : 'justify-start')}>
+    <div className={cn('group flex gap-3 relative', isUser ? 'justify-end' : 'justify-start')}>
       <div
         className={cn(
-          'max-w-[85%] rounded-xl px-4 py-3 text-sm animate-fade-in',
+          'max-w-[85%] rounded-xl px-4 py-3 text-sm animate-fade-in relative',
           isUser
             ? 'bg-primary text-primary-foreground'
             : 'bg-muted'
@@ -449,6 +456,18 @@ function ChatMessage({ message, t }: { message: any; t: any }) {
             </ReactMarkdown>
           </div>
         )}
+        
+        {/* Copy Full Message Button */}
+        <button
+          onClick={handleCopy}
+          className={cn(
+            "absolute -bottom-8 rounded-md p-1 border border-border bg-background/95 text-muted-foreground shadow-sm opacity-0 group-hover:opacity-100 transition-opacity z-10 hover:text-foreground",
+            isUser ? "right-2" : "left-2"
+          )}
+          title={t.common.copy || "Copy"}
+        >
+          {copied ? <Check className="w-3.5 h-3.5 text-success" /> : <Copy className="w-3.5 h-3.5" />}
+        </button>
       </div>
     </div>
   );
