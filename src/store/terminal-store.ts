@@ -11,16 +11,18 @@ export interface TerminalTask {
   status: 'running' | 'completed' | 'error';
   urlOpened?: string;
   startedAt: number;
+  chatId?: string; // Link to the chat that triggered this
 }
 
 interface TerminalState {
   tasks: TerminalTask[];
   isOpen: boolean;
   setIsOpen: (isOpen: boolean) => void;
-  runCommand: (fullCommand: string, options?: { cwd?: string }) => Promise<string>;
-  runCode: (code: string, language: string) => Promise<string>;
+  runCommand: (fullCommand: string, options?: { cwd?: string; chatId?: string }) => Promise<string>;
+  runCode: (code: string, language: string, options?: { chatId?: string }) => Promise<string>;
   terminateTask: (id: string) => Promise<void>;
   sendInput: (id: string, input: string) => Promise<void>;
+  clearTask: (id: string) => void;
   clearTasks: () => void;
 }
 
@@ -34,11 +36,12 @@ export const useTerminalStore = create<TerminalState>((set, get) => ({
   setIsOpen: (isOpen) => set({ isOpen }),
 
   runCommand: async (fullCommand, options) => {
-    return get().runCode(fullCommand, 'shell');
+    return get().runCode(fullCommand, 'shell', options);
   },
 
-  runCode: async (code, language) => {
+  runCode: async (code, language, options) => {
     const id = uuidv4();
+    const chatId = options?.chatId;
 
     try {
       // @ts-ignore
@@ -71,7 +74,7 @@ export const useTerminalStore = create<TerminalState>((set, get) => ({
       const displayLabel = lang === 'shell' || config.shellRunner ? code.slice(0, 60) : `[${lang}] code block`;
       set((state) => ({
         tasks: [
-          { id, command: displayLabel, pid: 0, output: '', status: 'running', startedAt: Date.now() },
+          { id, command: displayLabel, pid: 0, output: '', status: 'running', startedAt: Date.now(), chatId },
           ...state.tasks.slice(0, 49),
         ],
         isOpen: true,
@@ -216,6 +219,13 @@ export const useTerminalStore = create<TerminalState>((set, get) => ({
         console.error("Failed to send input:", e);
       }
     }
+  },
+
+  clearTask: (id) => {
+    taskProcesses.delete(id);
+    set((state) => ({
+      tasks: state.tasks.filter(t => t.id !== id)
+    }));
   },
 
   clearTasks: () => {

@@ -92,11 +92,12 @@ npm run dev
 
 ## 📝 Roadmap
 
-- [ ] Import av PDF-dokument
-- [ ] RAG-stöd för hela mappar (Workspace sync)
+- [x] Import av PDF-dokument
+- [x] RAG-stöd för hela mappar (Workspace-synk)
 - [ ] Export av chattar till Markdown/JSON
-- [ ] Fler agentiska verktyg i Terminalen
-- [ ] Global hotkey för system-tray minimize
+- [ ] Fler agentiska verktyg i Terminalen (t.ex. körning av skript)
+- [ ] Global hotkey för system-tray / snabb-minimering
+- [ ] Bildstöd i chatten (för multimodala modeller)
 
 ---
 
