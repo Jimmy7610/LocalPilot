@@ -3,7 +3,7 @@
 // ──────────────────────────────────────────
 
 import { useLocation } from 'react-router';
-import { Sun, Moon, Globe, Wifi, WifiOff, Loader2, TerminalSquare, X } from 'lucide-react';
+import { Sun, Moon, Globe, Wifi, WifiOff, Loader2, TerminalSquare, X, Info } from 'lucide-react';
 import { useT, useLanguage } from '@/i18n';
 import { useSettingsStore } from '@/store/settings-store';
 import { useOllamaStore } from '@/store/ollama-store';
@@ -15,6 +15,13 @@ import {
   DropdownMenuLabel,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from '@/components/ui/dialog';
 import { Badge } from '@/components/ui/badge';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { Separator } from '@/components/ui/separator';
@@ -116,6 +123,57 @@ export function TopBar() {
             )}
           </DropdownMenuContent>
         </DropdownMenu>
+
+        {/* Info / About App */}
+        <Dialog>
+          <DialogTrigger asChild>
+            <Button variant="ghost" size="icon" className="h-8 w-8 relative text-muted-foreground hover:text-foreground transition-colors group">
+              <Info className="w-4 h-4" />
+            </Button>
+          </DialogTrigger>
+          <DialogContent className="max-w-md bg-card border-border">
+            <DialogHeader>
+              <DialogTitle className="text-xl">Om LocalPilot</DialogTitle>
+            </DialogHeader>
+            <div className="space-y-4 text-sm mt-3">
+              <p className="text-muted-foreground">
+                <strong className="text-foreground">LocalPilot</strong> är ett oberoende, lokalt kontrollcenter för generativ AI, helt och hållet drivet och processat isolerat på din egen dators hårdvara via Ollama. 
+              </p>
+              
+              <div className="space-y-3 bg-muted/50 p-4 rounded-lg border border-border">
+                <h4 className="font-semibold text-foreground text-xs uppercase tracking-wider">Premium-Funktioner:</h4>
+                <ul className="list-none space-y-3 m-0 p-0 text-muted-foreground">
+                  <li className="flex gap-2">
+                    <div className="w-1.5 h-1.5 rounded-full bg-primary mt-1.5 shrink-0" />
+                    <span><strong className="text-foreground font-medium">Agentisk Arkitektur:</strong> AI:n kan självständigt exekvera mjukvara direkt på ditt operativsystem och underhålla processer i din inbyggda terminal.</span>
+                  </li>
+                  <li className="flex gap-2">
+                    <div className="w-1.5 h-1.5 rounded-full bg-primary mt-1.5 shrink-0" />
+                    <span><strong className="text-foreground font-medium">Fullständig Integritet:</strong> 100% kryptosäkert. Din konversation eller källkod skickas aldrig till internet. Allt stannar i burken.</span>
+                  </li>
+                  <li className="flex gap-2">
+                    <div className="w-1.5 h-1.5 rounded-full bg-primary mt-1.5 shrink-0" />
+                    <span><strong className="text-foreground font-medium">Workspace Engine:</strong> Motorn extraherar snabbt koden i den pågående konversationen och bygger automagiskt riktiga mappar (<code>Dokument/LocalPilot</code>).</span>
+                  </li>
+                  <li className="flex gap-2">
+                    <div className="w-1.5 h-1.5 rounded-full bg-primary mt-1.5 shrink-0" />
+                    <span><strong className="text-foreground font-medium">Sammanlänkat Kontext:</strong> Fäst skräddarsydda globala direktiv till projekt så att kontextfönstret minns projektkraven.</span>
+                  </li>
+                </ul>
+              </div>
+
+              <div className="flex justify-between items-end pt-4 border-t border-border">
+                <p className="text-muted-foreground text-[10px] uppercase tracking-widest font-mono">
+                  LocalPilot v0.1.0-beta<br/>
+                  Byggt med React + Tauri
+                </p>
+                <div className="text-[10px] uppercase tracking-widest text-primary/80 font-bold">
+                  Skyddad av Antigravity
+                </div>
+              </div>
+            </div>
+          </DialogContent>
+        </Dialog>
 
         {/* Model badge */}
         {settings.defaultModel && (
