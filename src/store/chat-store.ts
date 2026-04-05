@@ -192,23 +192,49 @@ export const useChatStore = create<ChatState>((set, get) => ({
         if (match && match[1]) {
           const command = match[1].trim();
           if (command.startsWith('node ') || command.startsWith('npm ') || command.startsWith('npx ') || command.startsWith('python ')) {
-            // Execute it
-            useTerminalStore.getState().runCommand(command);
             
-            // Synthetic response
-            assistantMsg.content = `🚀 Background execution triggered: \`${command}\``;
-            await messageRepo.create(assistantMsg);
-            
-            set(s => ({
-              messages: {
-                ...s.messages,
-                [chatId]: (s.messages[chatId] || []).map(m =>
-                  m.id === assistantMsg.id ? { ...m, content: assistantMsg.content } : m
-                ),
-              },
-              generating: false,
-            }));
-            return; // Exit early, do not call stream
+            try {
+              // 1. DYNAMICALLY pull the Workspace service
+              const { syncWorkspace } = await import('@/services/workspace');
+              
+              // 2. Extract & write ALL code files to the disk
+              const workspaceDir = await syncWorkspace(chatId, allMsgs);
+              
+              // 3. Execute terminal command securely mapped to that new directory context
+              useTerminalStore.getState().runCommand(command, { cwd: workspaceDir });
+              
+              // 4. Print synthetic success log
+              assistantMsg.content = `📦 **Workspace Synced** under Documents folder.\n🚀 Background execution triggered: \`${command}\``;
+              await messageRepo.create(assistantMsg);
+              
+              set(s => ({
+                messages: {
+                  ...s.messages,
+                  [chatId]: (s.messages[chatId] || []).map(m =>
+                    m.id === assistantMsg.id ? { ...m, content: assistantMsg.content } : m
+                  ),
+                },
+                generating: false,
+              }));
+              return; // Exit stream early
+              
+            } catch (fsError: any) {
+              console.error("Workspace Engine Failed", fsError);
+              
+              assistantMsg.content = `⚠️ Failed to sync workspace files: ${fsError.message}`;
+              await messageRepo.create(assistantMsg);
+              
+              set(s => ({
+                messages: {
+                  ...s.messages,
+                  [chatId]: (s.messages[chatId] || []).map(m =>
+                    m.id === assistantMsg.id ? { ...m, content: assistantMsg.content } : m
+                  ),
+                },
+                generating: false,
+              }));
+              return;
+            }
           }
         }
       }

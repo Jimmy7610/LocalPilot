@@ -3,6 +3,12 @@ import { documentDir, join } from '@tauri-apps/api/path';
 import type { Message } from '@/types';
 
 export async function syncWorkspace(chatId: string, messages: Message[]): Promise<string> {
+  // Gracefully handle browser execution
+  // @ts-ignore
+  if (typeof window !== 'undefined' && !window.__TAURI_INTERNALS__) {
+    throw new Error("Workspace Manager requires the native LocalPilot Desktop App to access the file system.");
+  }
+
   const workspaceRelativePath = `LocalPilot\\Workspace\\${chatId}`;
   
   // Ensure base directory exists

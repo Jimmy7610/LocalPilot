@@ -40,6 +40,12 @@ export const useTerminalStore = create<TerminalState>((set, get) => ({
     const args = parts.slice(1);
 
     try {
+      // @ts-ignore
+      const isTauri = typeof window !== 'undefined' && window.__TAURI_INTERNALS__ !== undefined;
+      if (!isTauri) {
+        throw new Error("Terminal Execution requires the native LocalPilot Desktop App (Tauri).");
+      }
+
       const command = Command.create(cmd, args, options?.cwd ? { cwd: options.cwd } : undefined);
       let outputBuffer = '';
       let urlOpened = false;
