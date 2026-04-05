@@ -32,6 +32,7 @@ interface ChatState {
   updateChatModel: (id: string, model: string) => Promise<void>;
   updateSystemPrompt: (id: string, prompt: string) => Promise<void>;
   updateChatProject: (id: string, projectId: string | null) => Promise<void>;
+  addTerminalMessage: (chatId: string, output: string, meta?: any) => Promise<void>;
 }
 
 export const useChatStore = create<ChatState>((set, get) => ({
@@ -111,6 +112,7 @@ export const useChatStore = create<ChatState>((set, get) => ({
       chatId,
       role: 'user',
       content,
+      type: 'text',
       createdAt: new Date().toISOString(),
     };
     await messageRepo.create(userMsg);
@@ -120,6 +122,7 @@ export const useChatStore = create<ChatState>((set, get) => ({
       chatId,
       role: 'assistant',
       content: '',
+      type: 'text',
       createdAt: new Date().toISOString(),
     };
 
@@ -334,5 +337,24 @@ export const useChatStore = create<ChatState>((set, get) => ({
     const updated = { ...chat, projectId, updatedAt: new Date().toISOString() };
     await chatRepo.update(updated);
     set(s => ({ chats: s.chats.map(c => c.id === id ? updated : c) }));
+  },
+
+  addTerminalMessage: async (chatId, output, meta) => {
+    const msg: Message = {
+      id: uuid(),
+      chatId,
+      role: 'system',
+      content: output,
+      type: 'terminal_output',
+      meta,
+      createdAt: new Date().toISOString(),
+    };
+    await messageRepo.create(msg);
+    set(s => ({
+      messages: {
+        ...s.messages,
+        [chatId]: [...(s.messages[chatId] || []), msg],
+      }
+    }));
   },
 }));

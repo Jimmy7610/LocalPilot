@@ -143,10 +143,11 @@ export const messageRepo = {
   async getByChatId(chatId: string): Promise<Message[]> {
     const database = await getDb();
     if (database) {
-      return database.select(
-        'SELECT id, chat_id as chatId, role, content, created_at as createdAt FROM messages WHERE chat_id = $1 ORDER BY created_at ASC',
+      const rows: any[] = await database.select(
+        'SELECT id, chat_id as chatId, role, content, type, meta, created_at as createdAt FROM messages WHERE chat_id = $1 ORDER BY created_at ASC',
         [chatId]
       );
+      return rows.map(r => ({ ...r, meta: r.meta ? JSON.parse(r.meta) : undefined }));
     }
     return lsGet<Message[]>('messages', []).filter(m => m.chatId === chatId);
   },
@@ -155,8 +156,8 @@ export const messageRepo = {
     const database = await getDb();
     if (database) {
       await database.execute(
-        'INSERT INTO messages (id, chat_id, role, content, created_at) VALUES ($1, $2, $3, $4, $5)',
-        [message.id, message.chatId, message.role, message.content, message.createdAt]
+        'INSERT INTO messages (id, chat_id, role, content, type, meta, created_at) VALUES ($1, $2, $3, $4, $5, $6, $7)',
+        [message.id, message.chatId, message.role, message.content, message.type || 'text', message.meta ? JSON.stringify(message.meta) : null, message.createdAt]
       );
     } else {
       const msgs = lsGet<Message[]>('messages', []);

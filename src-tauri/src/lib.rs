@@ -128,6 +128,15 @@ pub fn run() {
             ",
             kind: MigrationKind::Up,
         },
+        Migration {
+            version: 4,
+            description: "add message type and metadata",
+            sql: "
+                ALTER TABLE messages ADD COLUMN type TEXT DEFAULT 'text';
+                ALTER TABLE messages ADD COLUMN meta TEXT;
+            ",
+            kind: MigrationKind::Up,
+        },
     ];
 
     tauri::Builder::default()

@@ -30,6 +30,8 @@ export interface Message {
   chatId: string;
   role: 'user' | 'assistant' | 'system';
   content: string;
+  type?: 'text' | 'terminal_output' | 'action_proposal';
+  meta?: any;
   createdAt: string;
 }
 
