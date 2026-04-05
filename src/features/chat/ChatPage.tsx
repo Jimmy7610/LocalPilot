@@ -92,7 +92,7 @@ export function ChatPage() {
 
   // Auto-scroll to bottom
   useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    messagesEndRef.current?.scrollIntoView({ behavior: 'auto' });
   }, [chatMessages.length, chatMessages[chatMessages.length - 1]?.content]);
 
   // Filter chats
@@ -186,7 +186,7 @@ export function ChatPage() {
       </div>
 
       {/* Chat View */}
-      <div className="flex-1 flex flex-col min-w-0">
+      <div className="flex-1 flex flex-col min-w-0 min-h-0 relative">
         {activeChatId && activeChat ? (
           <>
             {/* Chat header */}
