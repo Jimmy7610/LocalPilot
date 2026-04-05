@@ -46,7 +46,11 @@ export const useTerminalStore = create<TerminalState>((set, get) => ({
         throw new Error("Terminal Execution requires the native LocalPilot Desktop App (Tauri).");
       }
 
-      const command = Command.create(cmd, args, options?.cwd ? { cwd: options.cwd } : undefined);
+      const isWindows = navigator.userAgent.includes('Windows');
+      const shellCmd = isWindows ? 'powershell' : 'sh';
+      const shellArgs = isWindows ? ['-NoLogo', '-Command', fullCommand] : ['-c', fullCommand];
+
+      const command = Command.create(shellCmd, shellArgs, options?.cwd ? { cwd: options.cwd } : undefined);
       let outputBuffer = '';
       let urlOpened = false;
 
