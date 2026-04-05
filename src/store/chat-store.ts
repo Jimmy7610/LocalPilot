@@ -175,6 +175,45 @@ export const useChatStore = create<ChatState>((set, get) => ({
       ollamaMessages.push({ role: m.role, content: m.content });
     }
 
+    // Auto-run interceptor BEFORE calling Ollama
+    const userIntent = content.toLowerCase();
+    if (
+      userIntent.includes('starta appen') || 
+      userIntent.includes('start app') || 
+      userIntent.includes('kör servern') ||
+      userIntent.includes('run the app') ||
+      userIntent.includes('start the server') ||
+      userIntent.includes('kör koden') ||
+      userIntent.includes('run it')
+    ) {
+      const lastAssistantMsg = allMsgs.slice().reverse().find(m => m.role === 'assistant' && m.content.includes('```'));
+      if (lastAssistantMsg) {
+        const match = lastAssistantMsg.content.match(/```(?:bash|sh|cmd|powershell|)\s*\n([\s\S]*?)```/);
+        if (match && match[1]) {
+          const command = match[1].trim();
+          if (command.startsWith('node ') || command.startsWith('npm ') || command.startsWith('npx ') || command.startsWith('python ')) {
+            // Execute it
+            useTerminalStore.getState().runCommand(command);
+            
+            // Synthetic response
+            assistantMsg.content = `🚀 Background execution triggered: \`${command}\``;
+            await messageRepo.create(assistantMsg);
+            
+            set(s => ({
+              messages: {
+                ...s.messages,
+                [chatId]: (s.messages[chatId] || []).map(m =>
+                  m.id === assistantMsg.id ? { ...m, content: assistantMsg.content } : m
+                ),
+              },
+              generating: false,
+            }));
+            return; // Exit early, do not call stream
+          }
+        }
+      }
+    }
+
     const abortController = new AbortController();
     set({ abortController });
 
@@ -209,25 +248,6 @@ export const useChatStore = create<ChatState>((set, get) => ({
           const updated = { ...chat, updatedAt: new Date().toISOString() };
           await chatRepo.update(updated);
           set(s => ({ chats: s.chats.map(c => c.id === chatId ? updated : c) }));
-        }
-
-        // Auto-run heuristic
-        const userIntent = content.toLowerCase();
-        if (
-          userIntent.includes('starta appen') || 
-          userIntent.includes('start app') || 
-          userIntent.includes('kör servern') ||
-          userIntent.includes('run the app') ||
-          userIntent.includes('start the server')
-        ) {
-          const match = fullResponse.match(/```(?:bash|sh|cmd|powershell|)\s*\n([\s\S]*?)```/);
-          if (match && match[1]) {
-            const command = match[1].trim();
-            // Don't auto-run arbitrary code unless it's mostly safe server start commands
-            if (command.startsWith('node ') || command.startsWith('npm ') || command.startsWith('npx ') || command.startsWith('python ')) {
-              useTerminalStore.getState().runCommand(command);
-            }
-          }
         }
 
         set({ generating: false, abortController: null });
