@@ -51,8 +51,8 @@ export const useTerminalStore = create<TerminalState>((set, get) => ({
 
       // Map language → interpreter & file extension
       const langMap: Record<string, { ext: string; runner: string[]; shellRunner?: boolean }> = {
-        python: { ext: 'py', runner: ['python'] },
-        python3: { ext: 'py', runner: ['python'] },
+        python: { ext: 'py', runner: ['python', '-u'] },
+        python3: { ext: 'py', runner: ['python', '-u'] },
         javascript: { ext: 'js', runner: ['node'] },
         js: { ext: 'js', runner: ['node'] },
         typescript: { ext: 'ts', runner: ['npx', 'ts-node'] },
@@ -97,9 +97,10 @@ export const useTerminalStore = create<TerminalState>((set, get) => ({
 
         // Write the file via PowerShell / sh, then run it
         const escaped = code.replace(/'/g, isWindows ? "''" : "'\\''")
+        const runner = config.runner.join(' ');
         const writeCmd = isWindows
-          ? `Set-Content -Path '${tmpFile}' -Value '${escaped}' -Encoding UTF8; ${config.runner.join(' ')} '${tmpFile}'`
-          : `cat > '${tmpFile}' << 'LOCALPILOT_EOF'\n${code}\nLOCALPILOT_EOF\n${config.runner.join(' ')} '${tmpFile}'`;
+          ? `$env:PYTHONUNBUFFERED=1; $env:PYTHONIOENCODING='utf-8'; Set-Content -Path '${tmpFile}' -Value '${escaped}' -Encoding UTF8; ${runner} '${tmpFile}'`
+          : `cat > '${tmpFile}' << 'LOCALPILOT_EOF'\n${code}\nLOCALPILOT_EOF\nPYTHONUNBUFFERED=1 ${runner} '${tmpFile}'`;
 
         if (isWindows) {
           shellCmd = 'powershell';
