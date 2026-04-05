@@ -84,6 +84,23 @@ pub fn run() {
             ",
             kind: MigrationKind::Up,
         },
+        Migration {
+            version: 2,
+            description: "add custom_tools table",
+            sql: "
+                CREATE TABLE IF NOT EXISTS custom_tools (
+                    id TEXT PRIMARY KEY,
+                    title TEXT NOT NULL,
+                    description TEXT,
+                    icon TEXT NOT NULL,
+                    system_prompt TEXT NOT NULL,
+                    input_placeholder TEXT,
+                    has_target_language INTEGER DEFAULT 0,
+                    is_custom INTEGER DEFAULT 1
+                );
+            ",
+            kind: MigrationKind::Up,
+        },
     ];
 
     tauri::Builder::default()
