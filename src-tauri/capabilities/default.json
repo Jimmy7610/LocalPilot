@@ -53,6 +53,31 @@
           "args": true
         }
       ]
+    },
+    {
+      "identifier": "shell:allow-spawn",
+      "allow": [
+        {
+          "name": "node",
+          "cmd": "node",
+          "args": true
+        },
+        {
+          "name": "npm",
+          "cmd": "npm",
+          "args": true
+        },
+        {
+          "name": "powershell",
+          "cmd": "powershell",
+          "args": true
+        },
+        {
+          "name": "sh",
+          "cmd": "sh",
+          "args": true
+        }
+      ]
     }
   ]
 }
