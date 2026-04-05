@@ -1,0 +1,388 @@
+// ──────────────────────────────────────────
+// LocalPilot — Storage Service (SQLite + localStorage fallback)
+// ──────────────────────────────────────────
+
+import type { Chat, Message, Project, PromptTemplate, Document } from '@/types';
+
+// Detect if running inside Tauri
+function isTauri(): boolean {
+  return typeof window !== 'undefined' && !!(window as any).__TAURI_INTERNALS__;
+}
+
+// ── SQLite Database (Tauri) ──
+
+let db: any = null;
+
+async function getDb() {
+  if (db) return db;
+  if (!isTauri()) return null;
+
+  try {
+    const { default: Database } = await import('@tauri-apps/plugin-sql');
+    db = await Database.load('sqlite:localpilot.db');
+    return db;
+  } catch (e) {
+    console.warn('SQLite not available, using localStorage fallback', e);
+    return null;
+  }
+}
+
+// ── localStorage Fallback ──
+
+function lsGet<T>(key: string, fallback: T): T {
+  try {
+    const val = localStorage.getItem(`lp_${key}`);
+    return val ? JSON.parse(val) : fallback;
+  } catch {
+    return fallback;
+  }
+}
+
+function lsSet<T>(key: string, value: T) {
+  localStorage.setItem(`lp_${key}`, JSON.stringify(value));
+}
+
+// ── Settings Repository ──
+
+export const settingsRepo = {
+  async get(key: string): Promise<string | null> {
+    const database = await getDb();
+    if (database) {
+      const rows: any[] = await database.select('SELECT value FROM settings WHERE key = $1', [key]);
+      return rows.length ? rows[0].value : null;
+    }
+    return localStorage.getItem(`lp_setting_${key}`);
+  },
+
+  async set(key: string, value: string): Promise<void> {
+    const database = await getDb();
+    if (database) {
+      await database.execute(
+        'INSERT OR REPLACE INTO settings (key, value) VALUES ($1, $2)',
+        [key, value]
+      );
+    } else {
+      localStorage.setItem(`lp_setting_${key}`, value);
+    }
+  },
+};
+
+// ── Chats Repository ──
+
+export const chatRepo = {
+  async getAll(): Promise<Chat[]> {
+    const database = await getDb();
+    if (database) {
+      const rows: any[] = await database.select(
+        'SELECT id, title, model, system_prompt as systemPrompt, pinned, project_id as projectId, created_at as createdAt, updated_at as updatedAt FROM chats ORDER BY updated_at DESC'
+      );
+      return rows.map(r => ({ ...r, pinned: !!r.pinned }));
+    }
+    return lsGet<Chat[]>('chats', []);
+  },
+
+  async getById(id: string): Promise<Chat | null> {
+    const database = await getDb();
+    if (database) {
+      const rows: any[] = await database.select(
+        'SELECT id, title, model, system_prompt as systemPrompt, pinned, project_id as projectId, created_at as createdAt, updated_at as updatedAt FROM chats WHERE id = $1',
+        [id]
+      );
+      return rows.length ? { ...rows[0], pinned: !!rows[0].pinned } : null;
+    }
+    const chats = lsGet<Chat[]>('chats', []);
+    return chats.find(c => c.id === id) || null;
+  },
+
+  async create(chat: Chat): Promise<void> {
+    const database = await getDb();
+    if (database) {
+      await database.execute(
+        'INSERT INTO chats (id, title, model, system_prompt, pinned, project_id, created_at, updated_at) VALUES ($1, $2, $3, $4, $5, $6, $7, $8)',
+        [chat.id, chat.title, chat.model, chat.systemPrompt, chat.pinned ? 1 : 0, chat.projectId, chat.createdAt, chat.updatedAt]
+      );
+    } else {
+      const chats = lsGet<Chat[]>('chats', []);
+      chats.unshift(chat);
+      lsSet('chats', chats);
+    }
+  },
+
+  async update(chat: Chat): Promise<void> {
+    const database = await getDb();
+    if (database) {
+      await database.execute(
+        'UPDATE chats SET title = $1, model = $2, system_prompt = $3, pinned = $4, project_id = $5, updated_at = $6 WHERE id = $7',
+        [chat.title, chat.model, chat.systemPrompt, chat.pinned ? 1 : 0, chat.projectId, chat.updatedAt, chat.id]
+      );
+    } else {
+      const chats = lsGet<Chat[]>('chats', []);
+      const idx = chats.findIndex(c => c.id === chat.id);
+      if (idx !== -1) chats[idx] = chat;
+      lsSet('chats', chats);
+    }
+  },
+
+  async delete(id: string): Promise<void> {
+    const database = await getDb();
+    if (database) {
+      await database.execute('DELETE FROM chats WHERE id = $1', [id]);
+      await database.execute('DELETE FROM messages WHERE chat_id = $1', [id]);
+    } else {
+      const chats = lsGet<Chat[]>('chats', []);
+      lsSet('chats', chats.filter(c => c.id !== id));
+      const msgs = lsGet<Message[]>('messages', []);
+      lsSet('messages', msgs.filter(m => m.chatId !== id));
+    }
+  },
+};
+
+// ── Messages Repository ──
+
+export const messageRepo = {
+  async getByChatId(chatId: string): Promise<Message[]> {
+    const database = await getDb();
+    if (database) {
+      return database.select(
+        'SELECT id, chat_id as chatId, role, content, created_at as createdAt FROM messages WHERE chat_id = $1 ORDER BY created_at ASC',
+        [chatId]
+      );
+    }
+    return lsGet<Message[]>('messages', []).filter(m => m.chatId === chatId);
+  },
+
+  async create(message: Message): Promise<void> {
+    const database = await getDb();
+    if (database) {
+      await database.execute(
+        'INSERT INTO messages (id, chat_id, role, content, created_at) VALUES ($1, $2, $3, $4, $5)',
+        [message.id, message.chatId, message.role, message.content, message.createdAt]
+      );
+    } else {
+      const msgs = lsGet<Message[]>('messages', []);
+      msgs.push(message);
+      lsSet('messages', msgs);
+    }
+  },
+
+  async update(message: Message): Promise<void> {
+    const database = await getDb();
+    if (database) {
+      await database.execute(
+        'UPDATE messages SET content = $1 WHERE id = $2',
+        [message.content, message.id]
+      );
+    } else {
+      const msgs = lsGet<Message[]>('messages', []);
+      const idx = msgs.findIndex(m => m.id === message.id);
+      if (idx !== -1) msgs[idx] = message;
+      lsSet('messages', msgs);
+    }
+  },
+};
+
+// ── Projects Repository ──
+
+export const projectRepo = {
+  async getAll(): Promise<Project[]> {
+    const database = await getDb();
+    if (database) {
+      return database.select(
+        'SELECT id, name, description, color, icon, preferred_model as preferredModel, created_at as createdAt, updated_at as updatedAt FROM projects ORDER BY updated_at DESC'
+      );
+    }
+    return lsGet<Project[]>('projects', []);
+  },
+
+  async getById(id: string): Promise<Project | null> {
+    const database = await getDb();
+    if (database) {
+      const rows: any[] = await database.select(
+        'SELECT id, name, description, color, icon, preferred_model as preferredModel, created_at as createdAt, updated_at as updatedAt FROM projects WHERE id = $1',
+        [id]
+      );
+      return rows.length ? rows[0] : null;
+    }
+    const projects = lsGet<Project[]>('projects', []);
+    return projects.find(p => p.id === id) || null;
+  },
+
+  async create(project: Project): Promise<void> {
+    const database = await getDb();
+    if (database) {
+      await database.execute(
+        'INSERT INTO projects (id, name, description, color, icon, preferred_model, created_at, updated_at) VALUES ($1, $2, $3, $4, $5, $6, $7, $8)',
+        [project.id, project.name, project.description, project.color, project.icon, project.preferredModel, project.createdAt, project.updatedAt]
+      );
+    } else {
+      const projects = lsGet<Project[]>('projects', []);
+      projects.unshift(project);
+      lsSet('projects', projects);
+    }
+  },
+
+  async update(project: Project): Promise<void> {
+    const database = await getDb();
+    if (database) {
+      await database.execute(
+        'UPDATE projects SET name = $1, description = $2, color = $3, icon = $4, preferred_model = $5, updated_at = $6 WHERE id = $7',
+        [project.name, project.description, project.color, project.icon, project.preferredModel, project.updatedAt, project.id]
+      );
+    } else {
+      const projects = lsGet<Project[]>('projects', []);
+      const idx = projects.findIndex(p => p.id === project.id);
+      if (idx !== -1) projects[idx] = project;
+      lsSet('projects', projects);
+    }
+  },
+
+  async delete(id: string): Promise<void> {
+    const database = await getDb();
+    if (database) {
+      await database.execute('DELETE FROM projects WHERE id = $1', [id]);
+    } else {
+      const projects = lsGet<Project[]>('projects', []);
+      lsSet('projects', projects.filter(p => p.id !== id));
+    }
+  },
+};
+
+// ── Prompts Repository ──
+
+export const promptRepo = {
+  async getAll(): Promise<PromptTemplate[]> {
+    const database = await getDb();
+    if (database) {
+      const rows: any[] = await database.select(
+        'SELECT id, title, description, category, tags, content, favorite, created_at as createdAt, updated_at as updatedAt FROM prompts ORDER BY updated_at DESC'
+      );
+      return rows.map(r => ({ ...r, tags: JSON.parse(r.tags || '[]'), favorite: !!r.favorite }));
+    }
+    return lsGet<PromptTemplate[]>('prompts', []);
+  },
+
+  async create(prompt: PromptTemplate): Promise<void> {
+    const database = await getDb();
+    if (database) {
+      await database.execute(
+        'INSERT INTO prompts (id, title, description, category, tags, content, favorite, created_at, updated_at) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)',
+        [prompt.id, prompt.title, prompt.description, prompt.category, JSON.stringify(prompt.tags), prompt.content, prompt.favorite ? 1 : 0, prompt.createdAt, prompt.updatedAt]
+      );
+    } else {
+      const prompts = lsGet<PromptTemplate[]>('prompts', []);
+      prompts.unshift(prompt);
+      lsSet('prompts', prompts);
+    }
+  },
+
+  async update(prompt: PromptTemplate): Promise<void> {
+    const database = await getDb();
+    if (database) {
+      await database.execute(
+        'UPDATE prompts SET title = $1, description = $2, category = $3, tags = $4, content = $5, favorite = $6, updated_at = $7 WHERE id = $8',
+        [prompt.title, prompt.description, prompt.category, JSON.stringify(prompt.tags), prompt.content, prompt.favorite ? 1 : 0, prompt.updatedAt, prompt.id]
+      );
+    } else {
+      const prompts = lsGet<PromptTemplate[]>('prompts', []);
+      const idx = prompts.findIndex(p => p.id === prompt.id);
+      if (idx !== -1) prompts[idx] = prompt;
+      lsSet('prompts', prompts);
+    }
+  },
+
+  async delete(id: string): Promise<void> {
+    const database = await getDb();
+    if (database) {
+      await database.execute('DELETE FROM prompts WHERE id = $1', [id]);
+    } else {
+      const prompts = lsGet<PromptTemplate[]>('prompts', []);
+      lsSet('prompts', prompts.filter(p => p.id !== id));
+    }
+  },
+};
+
+// ── Documents Repository ──
+
+export const documentRepo = {
+  async getAll(): Promise<Document[]> {
+    const database = await getDb();
+    if (database) {
+      return database.select(
+        'SELECT id, title, content, project_id as projectId, created_at as createdAt, updated_at as updatedAt FROM documents ORDER BY updated_at DESC'
+      );
+    }
+    return lsGet<Document[]>('documents', []);
+  },
+
+  async getById(id: string): Promise<Document | null> {
+    const database = await getDb();
+    if (database) {
+      const rows: any[] = await database.select(
+        'SELECT id, title, content, project_id as projectId, created_at as createdAt, updated_at as updatedAt FROM documents WHERE id = $1',
+        [id]
+      );
+      return rows.length ? rows[0] : null;
+    }
+    const docs = lsGet<Document[]>('documents', []);
+    return docs.find(d => d.id === id) || null;
+  },
+
+  async create(doc: Document): Promise<void> {
+    const database = await getDb();
+    if (database) {
+      await database.execute(
+        'INSERT INTO documents (id, title, content, project_id, created_at, updated_at) VALUES ($1, $2, $3, $4, $5, $6)',
+        [doc.id, doc.title, doc.content, doc.projectId, doc.createdAt, doc.updatedAt]
+      );
+    } else {
+      const docs = lsGet<Document[]>('documents', []);
+      docs.unshift(doc);
+      lsSet('documents', docs);
+    }
+  },
+
+  async update(doc: Document): Promise<void> {
+    const database = await getDb();
+    if (database) {
+      await database.execute(
+        'UPDATE documents SET title = $1, content = $2, project_id = $3, updated_at = $4 WHERE id = $5',
+        [doc.title, doc.content, doc.projectId, doc.updatedAt, doc.id]
+      );
+    } else {
+      const docs = lsGet<Document[]>('documents', []);
+      const idx = docs.findIndex(d => d.id === doc.id);
+      if (idx !== -1) docs[idx] = doc;
+      lsSet('documents', docs);
+    }
+  },
+
+  async delete(id: string): Promise<void> {
+    const database = await getDb();
+    if (database) {
+      await database.execute('DELETE FROM documents WHERE id = $1', [id]);
+    } else {
+      const docs = lsGet<Document[]>('documents', []);
+      lsSet('documents', docs.filter(d => d.id !== id));
+    }
+  },
+};
+
+// ── Reset All ──
+
+export async function resetAllData(): Promise<void> {
+  const database = await getDb();
+  if (database) {
+    await database.execute('DELETE FROM messages');
+    await database.execute('DELETE FROM chats');
+    await database.execute('DELETE FROM projects');
+    await database.execute('DELETE FROM prompts');
+    await database.execute('DELETE FROM documents');
+    await database.execute('DELETE FROM project_prompts');
+    await database.execute('DELETE FROM project_documents');
+    await database.execute('DELETE FROM project_chats');
+    await database.execute('DELETE FROM settings');
+  } else {
+    const keys = Object.keys(localStorage).filter(k => k.startsWith('lp_'));
+    keys.forEach(k => localStorage.removeItem(k));
+  }
+}
