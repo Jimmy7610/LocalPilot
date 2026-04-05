@@ -1,170 +1,98 @@
-# LocalPilot
+# LocalPilot 🚀
 
-A premium local-first AI control center powered by [Ollama](https://ollama.com). Built for power users who want a polished, private, and practical desktop workspace for AI-assisted work.
+**LocalPilot** är ditt personliga, oberoende kontrollcenter för lokal AI. Istället för att lita på molntjänster kör du kraftfulla AI-modeller (via Ollama) direkt på din egen hårdvara. 100% integritet, ingen spårning, och total kontroll.
 
-![LocalPilot Home](docs/home.png)
+Byggt för power-users som vill ha en polerad, privat och praktisk miljö för AI-stöttat arbete.
 
-## What is LocalPilot?
+---
 
-LocalPilot is a desktop application that brings together chat, prompt management, project organization, document workspace, and quick AI tools — all powered by your local Ollama instance. No cloud dependencies, no authentication, no tracking. Your data stays on your machine.
+## 🛠 Vad är LocalPilot?
 
-## Screenshots
+LocalPilot kombinerar chatt, projektorganisering, dokumenthantering och avancerade AI-verktyg i en och samma skrivbordsapplikation. Det är bryggan mellan dina lokala AI-modeller och ditt faktiska arbetsflöde.
 
-<p align="center">
-  <img src="docs/home.png" width="400" alt="Home Dashboard" />
-  <img src="docs/chat.png" width="400" alt="Chat Workspace" />
-  <img src="docs/documents.png" width="400" alt="Documents Workspace" />
-  <img src="docs/tools.png" width="400" alt="Quick Tools" />
-</p>
+### Nyckelfunktioner
 
-### Key Features
+- **🤖 Avancerad Chatt** — Fullfjädrad chattupplevelse med streaming, markdown, kod-highlighting och smart modellval.
+- **📂 Projekt-isolerat Minne** — Organisera ditt arbete i Projekt. AI:n "minns" kontexten för specifika uppdrag genom att knyta samman dokument och chattar.
+- **📟 Terminal Manager** — En modern, svävande (floating island) terminal där du kan köra kod och övervaka bakgrundsprocesser direkt i appen.
+- **📑 Dokument & RAG** — Ladda upp textreferenser som AI:n använder som facit (Retrieval-Augmented Generation).
+- **⚡ Snabbverktyg** — Färdiga verktyg för att sammanfatta, skriva om, översätta eller städa upp anteckningar med ett klick.
+- **🔄 Säker Omstart** — Inbyggd funktion för att starta om både frontend och backend med ett klick för att rensa minne eller synka ändringar.
+- **🌓 Dark & Light Mode** — Premium-design med stöd för både mörkt och ljust tema.
 
-- **Chat** — Full-featured chat workspace with streaming responses, markdown rendering, code highlighting, model selection, system prompts, and conversation management
-- **Prompt Library** — Create, organize, favorite, and reuse prompt templates with categories and tags
-- **Projects** — Organize work into projects with linked chats, prompts, and documents
-- **Documents** — Create and edit text documents with AI actions (summarize, rewrite, explain, bulletize)
-- **Quick Tools** — 7 practical AI tools: Summarize, Rewrite, Translate, Explain Simply, Generate Email, Generate Social Post, Clean Up Notes
-- **Overlay Popup** — Quick access panel (Ctrl+K) for fast AI interactions
-- **Bilingual** — Full English and Swedish localization with live switching
-- **Dark & Light** — Two polished themes with instant switching
-- **Local Persistence** — SQLite storage in Tauri, localStorage fallback for dev mode
+---
 
-### Design Philosophy
+## 🎨 Designfilosofi
 
-- Local-first and privacy-respecting
-- Calm, intelligent, focused UI
-- Premium desktop-quality design
-- Clean architecture ready for open-source contribution
-- No noisy gimmicks, no placeholder-heavy mockups
+- **Local-first:** Din data lämnar aldrig din maskin.
+- **Premium UX:** En ren, intelligent och fokuserad design som känns som en modern macOS/Windows-app.
+- **Transparens:** Övervaka exakt vad AI:n gör via den inbyggda terminalen.
 
-## Tech Stack
+---
 
-| Layer | Technology |
-|-------|-----------|
-| Desktop Shell | [Tauri 2](https://tauri.app) |
-| Frontend | [React 19](https://react.dev) + [TypeScript](https://typescriptlang.org) |
-| Build | [Vite 7](https://vite.dev) |
-| Styling | [Tailwind CSS 4](https://tailwindcss.com) |
-| Components | [shadcn/ui](https://ui.shadcn.com) |
-| Icons | [Lucide React](https://lucide.dev) |
-| State | [Zustand 5](https://zustand.docs.pmnd.rs) |
-| Persistence | SQLite via `tauri-plugin-sql` |
-| AI Backend | [Ollama](https://ollama.com) (local, `localhost:11434`) |
-| Routing | [React Router 7](https://reactrouter.com) |
+## 💻 Technical Stack
 
-## Prerequisites
+LocalPilot är byggt med den senaste tekniken för maximal prestanda och säkerhet:
 
-- [Node.js](https://nodejs.org) 18+ (LTS recommended)
-- [Rust](https://rustup.rs) (required for Tauri)
-- [Ollama](https://ollama.com/download) installed and running locally
+- **Desktop Shell:** [Tauri 2](https://tauri.app) (Rust-baserat för minsta möjliga footprint)
+- **Frontend:** React 19 + TypeScript + Vite 7
+- **Styling:** Tailwind CSS 4 (för den där premium-känslan)
+- **State Management:** Zustand 5
+- **Persistence:** SQLite via `tauri-plugin-sql`
+- **AI Backend:** [Ollama](https://ollama.com) (lokal instans på `localhost:11434`)
+- **Process Management:** `tauri-plugin-process` för kontroll av bakgrundskörningar
 
-## Getting Started
+---
 
-### 1. Install Ollama
+## 🚀 Kom igång
 
-Download and install [Ollama](https://ollama.com/download), then pull a model:
+### 1. Förutsättningar
+- [Node.js](https://nodejs.org) 18+
+- [Rust](https://rustup.rs) (för Tauri-kompilering)
+- [Ollama](https://ollama.com) installerat och igång
 
-```bash
-ollama pull llama3
-```
-
-Make sure Ollama is running (it runs at `http://localhost:11434` by default).
-
-### 2. Clone and Install
-
+### 2. Installation
 ```bash
 git clone https://github.com/Jimmy7610/LocalPilot.git
 cd LocalPilot
 npm install
 ```
 
-### 3. Run in Development
-
-**Frontend only** (browser mode, uses localStorage for persistence):
+### 3. Kör i utvecklingsläge
 ```bash
+# För desktop-appen (Tauri + SQLite)
+npm run tauri dev
+
+# Endast frontend (i webbläsaren)
 npm run dev
 ```
-Then open `http://localhost:1420`
 
-**Full desktop app** (Tauri + SQLite persistence):
-```bash
-npm run tauri dev
-```
+---
 
-### 4. Build for Production
+## ⌨️ Kortkommandon
 
-```bash
-npm run tauri build
-```
-
-The installer will be created in `src-tauri/target/release/bundle/`.
-
-## Project Structure
-
-```
-src/
-├── App.tsx                    # Main app with routing and providers
-├── index.css                  # Design system (tokens, themes, animations)
-├── main.tsx                   # Entry point
-├── types/                     # TypeScript type definitions
-├── i18n/                      # Internationalization (EN + SV)
-├── store/                     # Zustand state management
-│   ├── settings-store.ts      # Language, theme, model prefs
-│   ├── ollama-store.ts        # Connection status, models
-│   ├── chat-store.ts          # Chats and messages
-│   ├── project-store.ts       # Projects
-│   ├── prompt-store.ts        # Prompt templates
-│   └── document-store.ts      # Documents
-├── services/
-│   ├── ollama.ts              # Ollama API client (streaming)
-│   └── storage.ts             # SQLite + localStorage repository
-├── layout/
-│   ├── AppLayout.tsx           # Shell (sidebar + topbar + content)
-│   ├── Sidebar.tsx             # Navigation sidebar
-│   └── TopBar.tsx              # Top bar with status/controls
-├── features/
-│   ├── home/                   # Dashboard
-│   ├── chat/                   # Chat workspace
-│   ├── projects/               # Project management
-│   ├── prompts/                # Prompt library
-│   ├── documents/              # Document workspace
-│   ├── tools/                  # Quick AI tools
-│   ├── overlay/                # Quick access popup
-│   └── settings/               # App settings
-├── components/ui/              # shadcn/ui components
-└── lib/                        # Utilities
-
-src-tauri/
-├── src/lib.rs                  # Tauri backend with SQLite migrations
-├── Cargo.toml                  # Rust dependencies
-├── tauri.conf.json             # Tauri configuration
-└── capabilities/               # Security permissions
-```
-
-## Keyboard Shortcuts
-
-| Shortcut | Action |
+| Kommando | Aktion |
 |----------|--------|
-| `Ctrl+K` | Toggle overlay popup |
-| `Enter` | Send message in chat |
-| `Shift+Enter` | New line in chat input |
+| `Ctrl+K` | Öppna Overlay / Quick Access |
+| `Enter` | Skicka meddelande |
+| `Shift+Enter` | Ny rad i chatten |
 
-## Roadmap
+---
 
-- [ ] PDF document import
-- [ ] Global system tray with hotkey
-- [ ] RAG-style document context for chat
-- [ ] Advanced prompt variables/templates
-- [ ] Chat export (Markdown/JSON)
-- [ ] Project templates
-- [ ] Custom tool builder
-- [ ] Multi-window support
-- [ ] Ollama model management (pull/delete)
+## 📝 Roadmap
 
-## License
+- [ ] Import av PDF-dokument
+- [ ] RAG-stöd för hela mappar (Workspace sync)
+- [ ] Export av chattar till Markdown/JSON
+- [ ] Fler agentiska verktyg i Terminalen
+- [ ] Global hotkey för system-tray minimize
 
+---
+
+## Licens
 MIT
 
 ---
 
-Built with care for local-first AI workflows.
+**Utvecklad med omsorg av Jimmy.**
+*Local-first AI for the rest of us.*
