@@ -7,6 +7,8 @@ import { v4 as uuid } from 'uuid';
 import type { Chat, Message, OllamaChatMessage } from '@/types';
 import { chatRepo, messageRepo } from '@/services/storage';
 import { chatStream } from '@/services/ollama';
+import { useProjectStore } from './project-store';
+import { useDocumentStore } from './document-store';
 
 interface ChatState {
   chats: Chat[];
@@ -27,6 +29,7 @@ interface ChatState {
   stopGeneration: () => void;
   updateChatModel: (id: string, model: string) => Promise<void>;
   updateSystemPrompt: (id: string, prompt: string) => Promise<void>;
+  updateChatProject: (id: string, projectId: string | null) => Promise<void>;
 }
 
 export const useChatStore = create<ChatState>((set, get) => ({
@@ -131,8 +134,39 @@ export const useChatStore = create<ChatState>((set, get) => ({
     const allMsgs = get().messages[chatId] || [];
     const ollamaMessages: OllamaChatMessage[] = [];
 
+    let dynamicSystemPrompt = '';
+
+    // Inject Project Context if linked
+    if (chat?.projectId) {
+      const project = useProjectStore.getState().projects.find(p => p.id === chat.projectId);
+      if (project) {
+        dynamicSystemPrompt += `You are assisting the user within the context of a specific project.\n`;
+        dynamicSystemPrompt += `Project Name: ${project.name}\n`;
+        if (project.description) {
+          dynamicSystemPrompt += `Project Description: ${project.description}\n`;
+        }
+        
+        // Fetch linked documents
+        const docs = useDocumentStore.getState().documents.filter(d => d.projectId === chat.projectId);
+        if (docs.length > 0) {
+          dynamicSystemPrompt += `\n--- KNOWN PROJECT DOCUMENTS ---\n`;
+          docs.forEach(doc => {
+            dynamicSystemPrompt += `Document [${doc.title}]:\n${doc.content}\n\n`;
+          });
+        }
+      }
+    }
+
     if (chat?.systemPrompt) {
-      ollamaMessages.push({ role: 'system', content: chat.systemPrompt });
+      if (dynamicSystemPrompt) {
+        dynamicSystemPrompt += `\n--- USER SYSTEM PROMPT ---\n${chat.systemPrompt}`;
+      } else {
+        dynamicSystemPrompt = chat.systemPrompt;
+      }
+    }
+
+    if (dynamicSystemPrompt) {
+      ollamaMessages.push({ role: 'system', content: dynamicSystemPrompt.trim() });
     }
 
     for (const m of allMsgs) {
@@ -214,6 +248,14 @@ export const useChatStore = create<ChatState>((set, get) => ({
     const chat = get().chats.find(c => c.id === id);
     if (!chat) return;
     const updated = { ...chat, systemPrompt: prompt, updatedAt: new Date().toISOString() };
+    await chatRepo.update(updated);
+    set(s => ({ chats: s.chats.map(c => c.id === id ? updated : c) }));
+  },
+
+  updateChatProject: async (id, projectId) => {
+    const chat = get().chats.find(c => c.id === id);
+    if (!chat) return;
+    const updated = { ...chat, projectId, updatedAt: new Date().toISOString() };
     await chatRepo.update(updated);
     set(s => ({ chats: s.chats.map(c => c.id === id ? updated : c) }));
   },

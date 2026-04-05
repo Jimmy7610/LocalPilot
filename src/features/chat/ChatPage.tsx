@@ -26,6 +26,7 @@ import { useChatStore } from '@/store/chat-store';
 import { useOllamaStore } from '@/store/ollama-store';
 import { useSettingsStore } from '@/store/settings-store';
 import { useTerminalStore } from '@/store/terminal-store';
+import { useProjectStore } from '@/store/project-store';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -64,6 +65,7 @@ export function ChatPage() {
   const store = useChatStore();
   const { models, connected } = useOllamaStore();
   const { defaultModel } = useSettingsStore();
+  const { projects } = useProjectStore();
 
   const [searchQuery, setSearchQuery] = useState('');
   const [inputValue, setInputValue] = useState('');
@@ -194,6 +196,26 @@ export function ChatPage() {
                 {activeChat.model && (
                   <Badge variant="secondary" className="text-[10px] shrink-0">{activeChat.model}</Badge>
                 )}
+                
+                <Select
+                  value={activeChat.projectId || 'none'}
+                  onValueChange={(val) => store.updateChatProject(activeChatId, val === 'none' ? null : val)}
+                >
+                  <SelectTrigger className="h-6 text-[10px] bg-muted/50 w-[140px] ml-1">
+                    <SelectValue placeholder="No project linking" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="none" className="text-[10px] text-muted-foreground">{t.common.none || 'None'}</SelectItem>
+                    {projects.map(p => (
+                      <SelectItem key={p.id} value={p.id} className="text-[10px]">
+                        <div className="flex items-center gap-1.5">
+                          <div className="w-2 h-2 rounded-full" style={{ backgroundColor: p.color }} />
+                          <span className="truncate max-w-[100px]">{p.name}</span>
+                        </div>
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
               <div className="flex items-center gap-1">
                 <Select
