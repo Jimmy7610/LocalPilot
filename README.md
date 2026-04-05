@@ -8,6 +8,15 @@ A premium local-first AI control center powered by [Ollama](https://ollama.com).
 
 LocalPilot is a desktop application that brings together chat, prompt management, project organization, document workspace, and quick AI tools — all powered by your local Ollama instance. No cloud dependencies, no authentication, no tracking. Your data stays on your machine.
 
+## Screenshots
+
+<p align="center">
+  <img src="docs/home.png" width="400" alt="Home Dashboard" />
+  <img src="docs/chat.png" width="400" alt="Chat Workspace" />
+  <img src="docs/documents.png" width="400" alt="Documents Workspace" />
+  <img src="docs/tools.png" width="400" alt="Quick Tools" />
+</p>
+
 ### Key Features
 
 - **Chat** — Full-featured chat workspace with streaming responses, markdown rendering, code highlighting, model selection, system prompts, and conversation management
