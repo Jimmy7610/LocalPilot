@@ -6,6 +6,17 @@ Byggt för power-users som vill ha en polerad, privat och praktisk miljö för A
 
 ---
 
+### Skärmbilder
+
+<p align="center">
+  <img src="docs/home.png" width="400" alt="Hem - Översikt" />
+  <img src="docs/chat.png" width="400" alt="Chatt-gränssnitt" />
+  <img src="docs/projects.png" width="400" alt="Projekt-hantering" />
+  <img src="docs/terminal.png" width="400" alt="Terminal Manager" />
+</p>
+
+---
+
 ## 🛠 Vad är LocalPilot?
 
 LocalPilot kombinerar chatt, projektorganisering, dokumenthantering och avancerade AI-verktyg i en och samma skrivbordsapplikation. Det är bryggan mellan dina lokala AI-modeller och ditt faktiska arbetsflöde.

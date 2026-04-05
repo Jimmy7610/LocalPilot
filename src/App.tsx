@@ -19,7 +19,9 @@ import { PromptsPage } from '@/features/prompts/PromptsPage';
 import { DocumentsPage } from '@/features/documents/DocumentsPage';
 import { ToolsPage } from '@/features/tools/ToolsPage';
 import { SettingsPage } from '@/features/settings/SettingsPage';
+import { WelcomePage } from '@/features/welcome/WelcomePage';
 import { OverlayPanel } from '@/features/overlay/OverlayPanel';
+import { motion, AnimatePresence } from 'framer-motion';
 import { Toaster } from 'sonner';
 
 export default function App() {
@@ -31,6 +33,7 @@ export default function App() {
   const documentStore = useDocumentStore();
 
   const [overlayOpen, setOverlayOpen] = useState(false);
+  const [showWelcome, setShowWelcome] = useState(true);
 
   // Initialize app
   useEffect(() => {
@@ -78,26 +81,39 @@ export default function App() {
 
   return (
     <I18nProvider language={settings.language} setLanguage={settings.setLanguage}>
-      <BrowserRouter>
-        <Routes>
-          <Route element={<AppLayout />}>
-            <Route index element={<HomePage />} />
-            <Route path="chat" element={<ChatPage />} />
-            <Route path="projects" element={<ProjectsPage />} />
-            <Route path="prompts" element={<PromptsPage />} />
-            <Route path="documents" element={<DocumentsPage />} />
-            <Route path="tools" element={<ToolsPage />} />
-            <Route path="settings" element={<SettingsPage />} />
-          </Route>
-        </Routes>
-        <OverlayPanel open={overlayOpen} onClose={() => setOverlayOpen(false)} />
-        <Toaster
-          position="bottom-right"
-          toastOptions={{
-            className: 'bg-popover text-popover-foreground border border-border',
-          }}
-        />
-      </BrowserRouter>
+      <AnimatePresence mode="wait">
+        {showWelcome ? (
+          <WelcomePage key="welcome" onComplete={() => setShowWelcome(false)} />
+        ) : (
+          <motion.div
+            key="app"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            className="h-full w-full"
+          >
+            <BrowserRouter>
+              <Routes>
+                <Route element={<AppLayout />}>
+                  <Route index element={<HomePage />} />
+                  <Route path="chat" element={<ChatPage />} />
+                  <Route path="projects" element={<ProjectsPage />} />
+                  <Route path="prompts" element={<PromptsPage />} />
+                  <Route path="documents" element={<DocumentsPage />} />
+                  <Route path="tools" element={<ToolsPage />} />
+                  <Route path="settings" element={<SettingsPage />} />
+                </Route>
+              </Routes>
+              <OverlayPanel open={overlayOpen} onClose={() => setOverlayOpen(false)} />
+              <Toaster
+                position="bottom-right"
+                toastOptions={{
+                  className: 'bg-popover text-popover-foreground border border-border',
+                }}
+              />
+            </BrowserRouter>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </I18nProvider>
   );
 }

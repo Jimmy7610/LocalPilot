@@ -9,6 +9,7 @@ const sv: TranslationKeys = {
   app: {
     name: 'LocalPilot',
     tagline: 'Ditt lokala AI-kontrollcenter',
+    description: 'Din personliga, lokala AI-assistent. Kraftfull, säker och helt privat.',
   },
 
   // ── Navigation ──

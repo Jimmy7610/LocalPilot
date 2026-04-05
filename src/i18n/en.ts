@@ -7,6 +7,7 @@ const en = {
   app: {
     name: 'LocalPilot',
     tagline: 'Your local AI control center',
+    description: 'Your personal, local AI assistant. Powerful, secure, and completely private.',
   },
 
   // ── Navigation ──
