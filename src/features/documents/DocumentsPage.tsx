@@ -18,7 +18,7 @@ import {
   FilePlus,
   FileUp,
 } from 'lucide-react';
-import { useT } from '@/i18n';
+import { useT, useLanguage } from '@/i18n';
 import { useDocumentStore } from '@/store/document-store';
 import { useOllamaStore } from '@/store/ollama-store';
 import { useSettingsStore } from '@/store/settings-store';
@@ -49,6 +49,7 @@ import type { Document } from '@/types';
 
 export function DocumentsPage() {
   const t = useT();
+  const { language } = useLanguage();
   const { documents, loaded, load, createDocument, updateDocument, deleteDocument } = useDocumentStore();
   const { models, connected } = useOllamaStore();
   const { defaultModel } = useSettingsStore();
@@ -135,15 +136,24 @@ export function DocumentsPage() {
     setAiLoading(true);
     setAiResult('');
 
-    const prompts: Record<string, string> = {
+    const svPrompts: Record<string, string> = {
+      summarize: `Sammanfatta följande text kortfattat. VIKTIGT: Svara på samma språk som input-texten.\n\n${selectedDoc.content}`,
+      rewrite: `Skriv om följande text för att förbättra tydlighet och stil. VIKTIGT: Svara på samma språk som input-texten.\n\n${selectedDoc.content}`,
+      explain: `Förklara följande text på ett enkelt och lättförståeligt sätt. VIKTIGT: Svara på samma språk som input-texten.\n\n${selectedDoc.content}`,
+      bullets: `Gör om följande text till en välstrukturerad punktlista. VIKTIGT: Svara på samma språk som input-texten.\n\n${selectedDoc.content}`,
+    };
+
+    const enPrompts: Record<string, string> = {
       summarize: `Summarize the following text concisely. IMPORTANT: Respond in the same language as the input text.\n\n${selectedDoc.content}`,
       rewrite: `Rewrite the following text to improve clarity and style. IMPORTANT: Respond in the same language as the input text.\n\n${selectedDoc.content}`,
       explain: `Explain the following text in simple, easy-to-understand language. IMPORTANT: Respond in the same language as the input text.\n\n${selectedDoc.content}`,
       bullets: `Turn the following text into a well-organized bullet point list. IMPORTANT: Respond in the same language as the input text.\n\n${selectedDoc.content}`,
     };
 
+    const activePrompts = language === 'sv' ? svPrompts : enPrompts;
+
     try {
-      const result = await generate(model, prompts[action] || prompts.summarize);
+      const result = await generate(model, activePrompts[action] || activePrompts.summarize);
       setAiResult(result);
     } catch (err: any) {
       setAiResult(`⚠️ ${err.message}`);
