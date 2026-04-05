@@ -135,7 +135,7 @@ export function TopBar() {
             <ScrollArea className="flex-1 overflow-y-auto">
               <div className="px-6 py-5 space-y-6 text-sm">
                 <p className="text-muted-foreground">
-                  <strong className="text-foreground">LocalPilot</strong> är ditt personliga, oberoende kontrollcenter för lokal AI. Det drivs isolerat på din egen dators hårdvara (via Ollama), vilket innebär 100% kryptosäker integritet utan moln-servrar.
+                  <strong className="text-foreground">LocalPilot</strong> är ditt personliga, oberoende kontrollcenter för lokal AI. Det drivs isolerat på din egen dators hårdvara (via Ollama), vilket innebär 100% integritet – ingen data lämnar någonsin din maskin.
                 </p>
 
                 <div className="space-y-4">
@@ -148,9 +148,9 @@ export function TopBar() {
                         <MessageSquare className="w-4 h-4" />
                       </div>
                       <div>
-                        <h5 className="font-semibold text-foreground">Chatt & Workspace Engine</h5>
+                        <h5 className="font-semibold text-foreground">Chatt & AI-Arbetsyta</h5>
                         <p className="text-muted-foreground text-xs mt-1 leading-relaxed">
-                          Här pratar du med AI:n. Om AI:n skriver kod (t.ex. en webbserver eller ett frontend-projekt), extraherar Workspace-motorn automatiskt denna kod och bygger ihop en riktig mappstruktur på din webb i realtid under <code>Dokument/LocalPilot/Workspace/</code>. Ber du sedan AI:n <em>"starta appen"</em>, så spinner terminalen upp filerna i bakgrunden.
+                          Här pratar du med dina lokala modeller. När AI:n genererar kod eller filer, kan LocalPilot automatiskt synkronisera dessa till din disk under <code>Documents/LocalPilot/Workspace/</code>. Det är här magin händer när du ber AI:n att "bygga en app".
                         </p>
                       </div>
                     </div>
@@ -161,9 +161,9 @@ export function TopBar() {
                         <FolderKanban className="w-4 h-4" />
                       </div>
                       <div>
-                        <h5 className="font-semibold text-foreground">Projekt</h5>
+                        <h5 className="font-semibold text-foreground">Projekt-isolerat Minne</h5>
                         <p className="text-muted-foreground text-xs mt-1 leading-relaxed">
-                          Hörnstenen i ditt arbetsflöde. Du kan skapa ett Projekt ("Ny Hemsida") och sedermera knyta samman specifika chattar och uppladdade texter/källkod till detta projekt. AI-motorn bygger då upp ett dedikerat minne så den aldrig glömmer bort kravspecifikationen under tidens gång.
+                          Genom att gruppera chattar, dokument och promptar i ett Projekt ger du AI:n ett kontextuellt minne. Den kommer ihåg dina kravspecifikationer och tidigare beslut för just det projektet, vilket gör den betydligt smartare över tid.
                         </p>
                       </div>
                     </div>
@@ -176,7 +176,7 @@ export function TopBar() {
                       <div>
                         <h5 className="font-semibold text-foreground">Promptbibliotek</h5>
                         <p className="text-muted-foreground text-xs mt-1 leading-relaxed">
-                          Spara dina mest potenta prompts. Om du ofta befaller maskineriet i en specifik ton (t.ex. "Skriv detta i professionell svensk stil...") så kan du spara denna hook här som en mall för snabbåtkomst nästa gång.
+                          Återanvänd dina bästa instruktioner. Spara avancerade systemprompts eller mallar som du ofta använder. Detta sparar tid och säkerställer att AI:n ger dig konsekventa resultat i den stil du önskar.
                         </p>
                       </div>
                     </div>
@@ -187,9 +187,9 @@ export function TopBar() {
                         <FileText className="w-4 h-4" />
                       </div>
                       <div>
-                        <h5 className="font-semibold text-foreground">Dokument</h5>
+                        <h5 className="font-semibold text-foreground">Dokument & Kunskapsbas</h5>
                         <p className="text-muted-foreground text-xs mt-1 leading-relaxed">
-                          Ladda upp systemkrav, träningsdata eller företagshemligheter som textreferenser (även kallat RAG). Dessa fästs vid dina "Projekt" och fungerar som AI:ns personliga facit som den slår upp information i. Allt bearbetas 100% lokalt i din maskin.
+                          Ladda upp PDF:er, textfiler eller källkod för att ge AI:n en kunskapsbas (RAG). AI:n använder dessa filer som referensmaterial för att svara på frågor, sammanfatta eller skriva ny kod baserat på din befintliga arkitektur.
                         </p>
                       </div>
                     </div>
@@ -200,9 +200,9 @@ export function TopBar() {
                         <Wrench className="w-4 h-4" />
                       </div>
                       <div>
-                        <h5 className="font-semibold text-foreground">Verktyg & Background Tasks</h5>
+                        <h5 className="font-semibold text-foreground">Terminal & Bakgrundsprocesser</h5>
                         <p className="text-muted-foreground text-xs mt-1 leading-relaxed">
-                          Terminalhanteraren (som du även når via ikonen uppe i menyraden). Här loggas alla agentiska bakgrundsprocesser som AI:n startat i din dator. Du kan säkert övervaka CPU-körningar, portar, och stänga av dem sekventiellt härifrån vid behov.
+                          Här kan du köra och övervaka kod direkt i LocalPilot. Terminalhanteraren loggar allt som händer när du startar bakgrundsprocesser (t.ex. en Python-server eller ett Node-skript) och låter dig interagera med dem i realtid.
                         </p>
                       </div>
                     </div>
@@ -213,10 +213,10 @@ export function TopBar() {
                 <div className="flex justify-between items-end pt-5 border-t border-border mt-6 pb-2">
                   <p className="text-muted-foreground text-[10px] uppercase tracking-widest font-mono">
                     LocalPilot v0.1.0-beta<br/>
-                    Byggt med React + Tauri
+                    Byggd av Jimmy med React + Tauri
                   </p>
                   <div className="text-[10px] uppercase tracking-widest text-primary/80 font-bold bg-primary/5 px-2.5 py-1.5 rounded border border-primary/20">
-                    Skyddad av Antigravity
+                    Utvecklad av Jimmy
                   </div>
                 </div>
               </div>
