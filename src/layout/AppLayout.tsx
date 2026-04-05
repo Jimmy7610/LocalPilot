@@ -10,9 +10,9 @@ import { TooltipProvider } from '@/components/ui/tooltip';
 export function AppLayout() {
   return (
     <TooltipProvider delayDuration={300}>
-      <div className="flex h-screen w-screen overflow-hidden bg-background text-foreground">
+      <div className="flex h-screen w-screen overflow-hidden bg-background text-foreground min-h-0">
         <Sidebar />
-        <div className="flex flex-col flex-1 min-w-0">
+        <div className="flex flex-col flex-1 min-w-0 min-h-0">
           <TopBar />
           <main className="flex-1 flex flex-col min-h-0 relative">
             <Outlet />

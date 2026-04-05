@@ -124,9 +124,9 @@ export function ChatPage() {
   };
 
   return (
-    <div className="flex h-full">
+    <div className="flex h-full w-full overflow-hidden min-h-0">
       {/* Chat Sidebar */}
-      <div className="w-72 border-r border-border flex flex-col bg-card/50">
+      <div className="w-72 border-r border-border flex flex-col bg-card/50 min-h-0 shrink-0">
         <div className="p-3 space-y-2">
           <Button onClick={handleNewChat} className="w-full gap-2" size="sm">
             <Plus className="w-4 h-4" /> {t.chat.newChat}
@@ -190,7 +190,7 @@ export function ChatPage() {
         {activeChatId && activeChat ? (
           <>
             {/* Chat header */}
-            <div className="flex items-center justify-between px-4 py-2.5 border-b border-border">
+            <div className="flex items-center justify-between px-4 py-2.5 border-b border-border shrink-0 bg-background/95 backdrop-blur z-10 w-full">
               <div className="flex items-center gap-2 min-w-0">
                 <h2 className="text-sm font-semibold truncate">{activeChat.title}</h2>
                 {activeChat.model && (

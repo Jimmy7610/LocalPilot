@@ -54,7 +54,7 @@ export function TopBar() {
   const runningTasks = terminalStore.tasks.filter(t => t.status === 'running');
 
   return (
-    <header className="flex items-center justify-between h-14 px-6 border-b border-border bg-background/80 backdrop-blur-sm">
+    <header className="flex items-center justify-between h-14 shrink-0 px-6 border-b border-border bg-background/80 backdrop-blur-sm z-20">
       {/* Page title */}
       <h1 className="text-base font-semibold tracking-tight">{pageTitle}</h1>
 
