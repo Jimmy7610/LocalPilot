@@ -443,7 +443,7 @@ function ChatMessage({ message, t }: { message: any; t: any }) {
   const chats = useChatStore((s) => s.chats || []);
   const chat = chats.find(c => c.id === message.chatId);
   const project = projects.find(p => p.id === chat?.projectId);
-  const workspacePath = project?.workspacePath;
+  const workspacePath = project?.workspacePath || undefined;
 
   const handleCopy = () => {
     navigator.clipboard.writeText(message.content);
@@ -469,7 +469,7 @@ function ChatMessage({ message, t }: { message: any; t: any }) {
           <div className="prose prose-sm dark:prose-invert max-w-none [&_pre]:bg-background/50 [&_pre]:rounded-lg [&_pre]:p-3 [&_pre]:my-2 [&_code]:text-xs [&_p]:my-1.5 [&_ul]:my-1.5 [&_ol]:my-1.5 [&_li]:my-0.5">
             <ReactMarkdown remarkPlugins={[remarkGfm]}
               components={{
-                pre: ({ children }) => <PreBlock t={t} chatId={message.chatId} cwd={workspacePath}>{children}</PreBlock>,
+                pre: ({ children }) => <PreBlock t={t} chatId={message.chatId} cwd={workspacePath || undefined}>{children}</PreBlock>,
                 code: ({ className, children, ...props }) => {
                   const match = /language-(\w+)/.exec(className || '');
                   const lang = match ? match[1] : '';

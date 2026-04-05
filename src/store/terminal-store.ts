@@ -87,7 +87,7 @@ export const useTerminalStore = create<TerminalState>((set, get) => ({
         // Run the code directly via the shell (it IS a shell command/script)
         if (isWindows) {
           shellCmd = 'powershell';
-          shellArgs = ['-NoLogo', '-Command', code];
+          shellArgs = ['-NoLogo', '-Command', `[Console]::OutputEncoding = [System.Text.Encoding]::UTF8; ${code}`];
         } else {
           shellCmd = 'sh';
           shellArgs = ['-c', code];
@@ -102,7 +102,7 @@ export const useTerminalStore = create<TerminalState>((set, get) => ({
         const escaped = code.replace(/'/g, isWindows ? "''" : "'\\''")
         const runner = config.runner.join(' ');
         const writeCmd = isWindows
-          ? `$env:PYTHONUNBUFFERED=1; $env:PYTHONIOENCODING='utf-8'; Set-Content -Path '${tmpFile}' -Value '${escaped}' -Encoding UTF8; ${runner} '${tmpFile}'`
+          ? `[Console]::OutputEncoding = [System.Text.Encoding]::UTF8; $OutputEncoding = [System.Text.Encoding]::UTF8; $env:PYTHONUNBUFFERED=1; $env:PYTHONIOENCODING='utf-8'; Set-Content -Path '${tmpFile}' -Value '${escaped}' -Encoding UTF8; ${runner} '${tmpFile}'`
           : `cat > '${tmpFile}' << 'LOCALPILOT_EOF'\n${code}\nLOCALPILOT_EOF\nPYTHONUNBUFFERED=1 ${runner} '${tmpFile}'`;
 
         if (isWindows) {
