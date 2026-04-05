@@ -136,10 +136,10 @@ export function DocumentsPage() {
     setAiResult('');
 
     const prompts: Record<string, string> = {
-      summarize: `Summarize the following text concisely:\n\n${selectedDoc.content}`,
-      rewrite: `Rewrite the following text to improve clarity and style:\n\n${selectedDoc.content}`,
-      explain: `Explain the following text in simple, easy-to-understand language:\n\n${selectedDoc.content}`,
-      bullets: `Turn the following text into a well-organized bullet point list:\n\n${selectedDoc.content}`,
+      summarize: `Summarize the following text concisely. IMPORTANT: Respond in the same language as the input text.\n\n${selectedDoc.content}`,
+      rewrite: `Rewrite the following text to improve clarity and style. IMPORTANT: Respond in the same language as the input text.\n\n${selectedDoc.content}`,
+      explain: `Explain the following text in simple, easy-to-understand language. IMPORTANT: Respond in the same language as the input text.\n\n${selectedDoc.content}`,
+      bullets: `Turn the following text into a well-organized bullet point list. IMPORTANT: Respond in the same language as the input text.\n\n${selectedDoc.content}`,
     };
 
     try {
