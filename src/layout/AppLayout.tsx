@@ -14,7 +14,7 @@ export function AppLayout() {
         <Sidebar />
         <div className="flex flex-col flex-1 min-w-0 min-h-0">
           <TopBar />
-          <main className="flex-1 flex flex-col min-h-0 relative">
+          <main className="flex-1 flex flex-col min-h-0 min-w-0 relative">
             <Outlet />
           </main>
         </div>

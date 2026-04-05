@@ -90,9 +90,17 @@ export function ChatPage() {
     if (activeChatId) store.loadMessages(activeChatId);
   }, [activeChatId]);
 
-  // Auto-scroll to bottom
+  // Auto-scroll to bottom safely
   useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'auto' });
+    if (messagesEndRef.current) {
+      // Find the specific ScrollArea viewport to avoid global container scrolls
+      const viewport = messagesEndRef.current.closest('[data-radix-scroll-area-viewport]');
+      if (viewport) {
+        viewport.scrollTop = viewport.scrollHeight;
+      } else {
+        messagesEndRef.current.scrollIntoView({ behavior: 'auto', block: 'end' });
+      }
+    }
   }, [chatMessages.length, chatMessages[chatMessages.length - 1]?.content]);
 
   // Filter chats
@@ -124,7 +132,7 @@ export function ChatPage() {
   };
 
   return (
-    <div className="flex h-full w-full overflow-hidden min-h-0">
+    <div className="flex h-full w-full overflow-hidden min-h-0 min-w-0">
       {/* Chat Sidebar */}
       <div className="w-72 border-r border-border flex flex-col bg-card/50 min-h-0 shrink-0">
         <div className="p-3 space-y-2">
@@ -255,7 +263,7 @@ export function ChatPage() {
             )}
 
             {/* Messages */}
-            <ScrollArea className="flex-1 px-4">
+            <ScrollArea className="flex-1 px-4 min-h-0 min-w-0">
               <div className="max-w-3xl mx-auto py-4 space-y-4">
                 {chatMessages.map((msg) => (
                   <ChatMessage key={msg.id} message={msg} t={t} />
@@ -271,7 +279,7 @@ export function ChatPage() {
             </ScrollArea>
 
             {/* Input */}
-            <div className="border-t border-border p-4">
+            <div className="border-t border-border p-4 shrink-0 min-w-0 w-full bg-background">
               <div className="max-w-3xl mx-auto flex items-end gap-2">
                 <Textarea
                   ref={inputRef}
@@ -434,10 +442,10 @@ function ChatMessage({ message, t }: { message: any; t: any }) {
   };
 
   return (
-    <div className={cn('group flex gap-3 relative', isUser ? 'justify-end' : 'justify-start')}>
+    <div className={cn('group flex gap-3 relative min-w-0', isUser ? 'justify-end' : 'justify-start')}>
       <div
         className={cn(
-          'max-w-[85%] rounded-xl px-4 py-3 text-sm animate-fade-in relative',
+          'max-w-[85%] rounded-xl px-4 py-3 text-sm animate-fade-in relative min-w-0',
           isUser
             ? 'bg-primary text-primary-foreground'
             : 'bg-muted'
