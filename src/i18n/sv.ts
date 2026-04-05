@@ -118,6 +118,12 @@ const sv: TranslationKeys = {
     pinned: 'Fästa',
     all: 'Alla',
     searchChats: 'Sök konversationer...',
+    starting: 'Startar',
+    suggestedAction: 'Föreslagen Åtgärd',
+    runAction: 'Kör',
+    executionSuccess: 'Körning Slutförd',
+    executionFailed: 'Körning Misslyckades',
+    terminalOpenHint: 'Öppna terminalen i verktygsfältet för att se resultat.',
   },
 
   // ── Projects ──

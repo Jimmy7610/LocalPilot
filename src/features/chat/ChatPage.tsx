@@ -19,7 +19,10 @@ import {
   Settings2,
   Loader2,
   Play,
-  TerminalSquare
+  TerminalSquare,
+  ChevronDown,
+  Terminal,
+  Info
 } from 'lucide-react';
 import { useT } from '@/i18n';
 import { useChatStore } from '@/store/chat-store';
@@ -452,13 +455,15 @@ function ChatMessage({ message, t }: { message: any; t: any }) {
             : 'bg-muted'
         )}
       >
-        {isUser ? (
+        {message.type === 'terminal_output' ? (
+          <TerminalOutput message={message} t={t} />
+        ) : isUser ? (
           <p className="whitespace-pre-wrap">{message.content}</p>
         ) : (
           <div className="prose prose-sm dark:prose-invert max-w-none [&_pre]:bg-background/50 [&_pre]:rounded-lg [&_pre]:p-3 [&_pre]:my-2 [&_code]:text-xs [&_p]:my-1.5 [&_ul]:my-1.5 [&_ol]:my-1.5 [&_li]:my-0.5">
             <ReactMarkdown remarkPlugins={[remarkGfm]}
               components={{
-                pre: ({ children }) => <PreBlock t={t}>{children}</PreBlock>,
+                pre: ({ children }) => <PreBlock t={t} chatId={message.chatId}>{children}</PreBlock>,
                 code: ({ className, children, ...props }) => {
                   const match = /language-(\w+)/.exec(className || '');
                   const lang = match ? match[1] : '';
@@ -489,7 +494,7 @@ function ChatMessage({ message, t }: { message: any; t: any }) {
 
 // ── Code Block with Copy ──
 
-function PreBlock({ children, t }: { children: React.ReactNode; t: any }) {
+function PreBlock({ children, t, chatId }: { children: React.ReactNode; t: any; chatId: string }) {
   const [copied, setCopied] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
   const runCode = useTerminalStore((s) => s.runCode);
@@ -506,15 +511,46 @@ function PreBlock({ children, t }: { children: React.ReactNode; t: any }) {
     const code = ref.current.textContent || '';
     if (!code.trim()) return;
 
-    // Detect language from the <code> element's data-language attribute
     const codeEl = ref.current.querySelector('code[data-language]');
     const language = codeEl?.getAttribute('data-language') || 'shell';
 
-    runCode(code, language);
-    toast.success(`Startar ${language || 'kod'}-block`, {
-      description: 'Öppna terminalen i menyraden för att se resultatet.'
+    runCode(code, language, { chatId });
+    toast.success(`${t.chat.starting || 'Starting'} ${language || 'code'}-block`, {
+      description: t.chat.terminalOpenHint || 'Open terminal in toolbar to see output.'
     });
   };
+
+  // Detect if it's a shell command (AI Proposal)
+  const codeEl = (children as any)?.props?.children;
+  const lang = (children as any)?.props?.className || '';
+  const isAction = lang.includes('shell') || lang.includes('bash') || lang.includes('sh') || lang.includes('ps1') || lang.includes('powershell');
+
+  if (isAction) {
+    return (
+      <div className="my-4 border border-primary/20 rounded-xl overflow-hidden bg-background/40 backdrop-blur-sm group" ref={ref}>
+        <div className="flex items-center justify-between px-4 py-2.5 bg-primary/5 border-b border-primary/10">
+          <div className="flex items-center gap-2">
+            <div className="w-2 h-2 rounded-full bg-primary animate-pulse" />
+            <span className="text-[10px] font-bold uppercase tracking-wider text-primary/80">
+              {t.chat.suggestedAction || 'Suggested Action'}
+            </span>
+          </div>
+          <div className="flex gap-1">
+            <button onClick={handleRun} className="flex items-center gap-1.5 px-3 py-1 bg-primary text-primary-foreground rounded-lg text-[10px] font-bold hover:bg-primary/90 transition-all shadow-lg shadow-primary/20 active:scale-95">
+              <Play className="w-3 h-3 fill-current" />
+              {t.chat.runAction || 'Run'}
+            </button>
+            <button onClick={handleCopy} className="p-1 px-1.5 text-muted-foreground hover:text-foreground transition-colors border border-border rounded-lg bg-background/50">
+              {copied ? <Check className="w-3 h-3 text-success" /> : <Copy className="w-3 h-3" />}
+            </button>
+          </div>
+        </div>
+        <div className="p-3">
+          <pre className="!m-0 !p-0 bg-transparent">{children}</pre>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="relative group" ref={ref}>
@@ -535,6 +571,53 @@ function PreBlock({ children, t }: { children: React.ReactNode; t: any }) {
           {copied ? <Check className="w-3 h-3 text-success" /> : <Copy className="w-3 h-3 text-muted-foreground hover:text-foreground" />}
         </button>
       </div>
+    </div>
+  );
+}
+
+function TerminalOutput({ message, t }: { message: any; t: any }) {
+  const [expanded, setExpanded] = useState(true);
+  const status = message.meta?.status || 'completed';
+  const isError = status === 'error';
+
+  return (
+    <div className="flex flex-col gap-2 my-2 w-full max-w-full">
+      <div 
+        className={cn(
+          "flex items-center justify-between px-3 py-2 rounded-lg border cursor-pointer transition-colors",
+          isError ? "bg-destructive/5 border-destructive/20 hover:bg-destructive/10" : "bg-success/5 border-success/20 hover:bg-success/10"
+        )}
+        onClick={() => setExpanded(!expanded)}
+      >
+        <div className="flex items-center gap-2">
+          <div className={cn("w-2 h-2 rounded-full", isError ? "bg-destructive animate-pulse" : "bg-success")} />
+          <span className="text-[10px] font-bold uppercase tracking-wider opacity-80">
+            {isError ? t.chat.executionFailed || 'Execution Failed' : t.chat.executionSuccess || 'Execution Finished'}
+          </span>
+        </div>
+        <div className="flex items-center gap-2">
+          {message.meta?.exitCode !== undefined && (
+            <span className="text-[9px] font-mono opacity-50 px-1.5 py-0.5 rounded bg-foreground/5 items-center">
+              exit: {message.meta.exitCode}
+            </span>
+          )}
+          <ChevronDown className={cn("w-3.5 h-3.5 transition-transform opacity-50", !expanded && "-rotate-90")} />
+        </div>
+      </div>
+      
+      {expanded && (
+        <div className="rounded-lg bg-black/90 p-4 font-mono text-[11px] leading-relaxed overflow-x-auto shadow-2xl border border-white/5">
+          <div className="flex items-center gap-2 mb-2 pb-2 border-b border-white/5 opacity-40">
+             <span className="w-2 h-2 rounded-full bg-red-400" />
+             <span className="w-2 h-2 rounded-full bg-yellow-400" />
+             <span className="w-2 h-2 rounded-full bg-green-400" />
+             <span className="ml-2 uppercase tracking-widest text-[8px] font-bold">Terminal Output</span>
+          </div>
+          <pre className="text-white/90 whitespace-pre-wrap break-all underline-offset-4 selection:bg-primary/30">
+            {message.content || '> No output received'}
+          </pre>
+        </div>
+      )}
     </div>
   );
 }

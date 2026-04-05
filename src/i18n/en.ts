@@ -116,6 +116,12 @@ const en = {
     pinned: 'Pinned',
     all: 'All',
     searchChats: 'Search conversations...',
+    starting: 'Starting',
+    suggestedAction: 'Suggested Action',
+    runAction: 'Run',
+    executionSuccess: 'Execution Finished',
+    executionFailed: 'Execution Failed',
+    terminalOpenHint: 'Open terminal in toolbar to see output.',
   },
 
   // ── Projects ──
