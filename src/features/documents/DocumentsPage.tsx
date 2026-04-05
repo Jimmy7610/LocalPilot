@@ -15,16 +15,20 @@ import {
   Loader2,
   Copy,
   Check,
+  FilePlus,
+  FileUp,
 } from 'lucide-react';
 import { useT } from '@/i18n';
 import { useDocumentStore } from '@/store/document-store';
 import { useOllamaStore } from '@/store/ollama-store';
 import { useSettingsStore } from '@/store/settings-store';
 import { generate } from '@/services/ollama';
+import { extractTextFromPDF } from '@/services/pdf-service';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent } from '@/components/ui/card';
+import { toast } from 'sonner';
 import {
   Dialog,
   DialogContent,
@@ -61,8 +65,36 @@ export function DocumentsPage() {
   const [aiLoading, setAiLoading] = useState(false);
   const [aiResult, setAiResult] = useState('');
   const [aiCopied, setAiCopied] = useState(false);
+  
+  const [isExtracting, setIsExtracting] = useState(false);
 
   useEffect(() => { if (!loaded) load(); }, [loaded]);
+
+  const handlePdfImport = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    
+    if (file.type !== 'application/pdf') {
+      toast.error('Går bara att ladda upp PDF-filer');
+      return;
+    }
+
+    setIsExtracting(true);
+    try {
+      const result = await extractTextFromPDF(file);
+      setFormTitle(result.fileName.replace(/\.pdf$/i, ''));
+      setFormContent(result.text);
+      setFormOpen(true);
+      toast.success('PDF importerad klockrent!');
+    } catch (err: any) {
+      console.error('PDF error:', err);
+      toast.error('Kunde tyvärr inte läsa PDF-filen');
+    } finally {
+      setIsExtracting(false);
+      // Reset input
+      e.target.value = '';
+    }
+  };
 
   const filtered = documents.filter(d =>
     d.title.toLowerCase().includes(searchQuery.toLowerCase())
@@ -212,9 +244,28 @@ export function DocumentsPage() {
       <div className="max-w-5xl mx-auto p-6 animate-fade-in">
       <div className="flex items-center justify-between mb-6">
         <h2 className="text-xl font-bold">{t.documents.title}</h2>
-        <Button onClick={openCreate} size="sm" className="gap-1.5">
-          <Plus className="w-4 h-4" /> {t.documents.newDocument}
-        </Button>
+        <div className="flex gap-2">
+          <input
+            type="file"
+            id="pdf-upload"
+            accept=".pdf"
+            className="hidden"
+            onChange={handlePdfImport}
+          />
+          <Button 
+            variant="outline" 
+            size="sm" 
+            className="gap-1.5" 
+            disabled={isExtracting}
+            onClick={() => document.getElementById('pdf-upload')?.click()}
+          >
+            {isExtracting ? <Loader2 className="w-4 h-4 animate-spin" /> : <FileUp className="w-4 h-4" />}
+            {isExtracting ? t.documents.pdfReading : t.documents.pdfUpload}
+          </Button>
+          <Button onClick={openCreate} size="sm" className="gap-1.5">
+            <Plus className="w-4 h-4" /> {t.documents.newDocument}
+          </Button>
+        </div>
       </div>
 
       <div className="relative mb-4">
@@ -232,9 +283,21 @@ export function DocumentsPage() {
           <FileText className="w-12 h-12 text-muted-foreground/20 mx-auto mb-3" />
           <h3 className="text-base font-semibold mb-1">{t.documents.noDocuments}</h3>
           <p className="text-sm text-muted-foreground">{t.documents.noDocumentsHint}</p>
-          <Button onClick={openCreate} className="mt-4 gap-1.5" size="sm">
-            <Plus className="w-4 h-4" /> {t.documents.newDocument}
-          </Button>
+          <div className="flex justify-center gap-2 mt-4">
+            <Button 
+              variant="outline" 
+              className="gap-1.5" 
+              size="sm"
+              disabled={isExtracting}
+              onClick={() => document.getElementById('pdf-upload')?.click()}
+            >
+              {isExtracting ? <Loader2 className="w-4 h-4 animate-spin" /> : <FileUp className="w-4 h-4" />}
+              {t.documents.pdfUpload}
+            </Button>
+            <Button onClick={openCreate} className="gap-1.5" size="sm">
+              <Plus className="w-4 h-4" /> {t.documents.newDocument}
+            </Button>
+          </div>
         </div>
       ) : (
         <div className="space-y-1.5">
