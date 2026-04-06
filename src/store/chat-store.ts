@@ -17,6 +17,7 @@ interface ChatState {
   messages: Record<string, Message[]>;
   activeChatId: string | null;
   generating: boolean;
+  analyzing: boolean;
   abortController: AbortController | null;
   loaded: boolean;
 
@@ -40,6 +41,7 @@ export const useChatStore = create<ChatState>((set, get) => ({
   messages: {},
   activeChatId: null,
   generating: false,
+  analyzing: false,
   abortController: null,
   loaded: false,
 
@@ -161,7 +163,19 @@ export const useChatStore = create<ChatState>((set, get) => ({
           });
         }
 
-        // 2. Fetch Workspace RAG context (Automated search)
+        // 2. Fetch Project File Structure (Discovery)
+        if (project.workspacePath) {
+          set({ analyzing: true });
+          try {
+            const { getProjectShallowTree } = await import('@/services/fs-service');
+            const tree = await getProjectShallowTree(project.workspacePath);
+            dynamicSystemPrompt += `\n--- PROJECT FILE STRUCTURE ---\n${tree}\n`;
+          } finally {
+            set({ analyzing: false });
+          }
+        }
+
+        // 3. Fetch Workspace RAG context (Automated search)
         if (project.workspacePath) {
           const workspaceContext = await searchWorkspace(project.id, content);
           if (workspaceContext) {

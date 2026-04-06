@@ -65,7 +65,7 @@ import { toast } from 'sonner';
 
 export function ChatPage() {
   const t = useT();
-  const { chats, activeChatId, messages, generating, loaded } = useChatStore();
+  const { chats, activeChatId, messages, generating, loaded, analyzing } = useChatStore();
   const store = useChatStore();
   const { models, connected } = useOllamaStore();
   const { defaultModel } = useSettingsStore();
@@ -272,6 +272,12 @@ export function ChatPage() {
                 {chatMessages.map((msg) => (
                   <ChatMessage key={msg.id} message={msg} t={t} />
                 ))}
+                {analyzing && (
+                  <div className="flex items-center gap-2 text-primary/80 text-sm py-2 animate-pulse">
+                    <div className="w-2 h-2 rounded-full bg-primary animate-ping" />
+                    {t.chat.analyzing}
+                  </div>
+                )}
                 {generating && chatMessages[chatMessages.length - 1]?.role !== 'assistant' && (
                   <div className="flex items-center gap-2 text-muted-foreground text-sm py-2">
                     <Loader2 className="w-4 h-4 animate-spin" />

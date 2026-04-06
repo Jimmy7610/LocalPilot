@@ -113,6 +113,7 @@ const sv: TranslationKeys = {
     noChats: 'Inga konversationer ännu',
     noChatsHint: 'Starta en ny konversation för att börja.',
     thinking: 'Tänker...',
+    analyzing: 'Analyserar projektstruktur...',
     errorGenerate: 'Kunde inte generera svar. Kontrollera din Ollama-anslutning.',
     copyCode: 'Kopiera kod',
     pinned: 'Fästa',

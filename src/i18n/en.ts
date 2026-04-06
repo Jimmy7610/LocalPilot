@@ -111,6 +111,7 @@ const en = {
     noChats: 'No conversations yet',
     noChatsHint: 'Start a new conversation to begin.',
     thinking: 'Thinking...',
+    analyzing: 'Analyzing project structure...',
     errorGenerate: 'Failed to generate response. Please check your Ollama connection.',
     copyCode: 'Copy code',
     pinned: 'Pinned',
