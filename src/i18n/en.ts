@@ -305,12 +305,19 @@ const en = {
 
   // ── Welcome ──
   welcome: {
-    button: 'Welcome to the future',
-    subtext: 'Press to start',
+    button: 'Get Started',
+    subtext: 'Click to explore your local node',
     featurePrivat: '100% Private',
     featureLokalt: 'Runs Locally',
     featureGranser: 'No Limits',
     featureSmart: 'Smart Context',
+    infoTitle: 'Why LocalPilot?',
+    infoPrivacyTitle: 'Absolute Privacy',
+    infoPrivacyDesc: 'Your data never leaves your machine. No cloud, no tracking, just local power.',
+    infoRAGTitle: 'Local RAG Analysis',
+    infoRAGDesc: 'Index your local codebases and documents for deep, context-aware AI reasoning.',
+    infoOllamaTitle: 'Powered by Ollama',
+    infoOllamaDesc: 'Seamless integration with Ollama to run the world\'s best open-source models.',
   },
 };
 

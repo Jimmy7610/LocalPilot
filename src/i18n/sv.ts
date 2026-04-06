@@ -307,12 +307,19 @@ const sv: TranslationKeys = {
 
   // ── Welcome ──
   welcome: {
-    button: 'Välkommen till framtiden',
-    subtext: 'Tryck för att starta',
+    button: 'Kom igång',
+    subtext: 'Utforska din lokala AI-nod',
     featurePrivat: '100% Privat',
     featureLokalt: 'Körs Lokalt',
     featureGranser: 'Inga Gränser',
     featureSmart: 'Smart Kontext',
+    infoTitle: 'Varför LocalPilot?',
+    infoPrivacyTitle: 'Total Integritet',
+    infoPrivacyDesc: 'Din data lämnar aldrig din maskin. Ingen molnbaserad insamling, bara lokal kraft.',
+    infoRAGTitle: 'Lokal RAG-analys',
+    infoRAGDesc: 'Indexera din källkod och dina dokument för djup, kontextmedveten AI-analys.',
+    infoOllamaTitle: 'Drivs av Ollama',
+    infoOllamaDesc: 'Sömlös integration med Ollama för att köra världens bästa öppen källkod-modeller.',
   },
 };
 
