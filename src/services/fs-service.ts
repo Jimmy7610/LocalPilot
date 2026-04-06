@@ -29,18 +29,20 @@ export async function getProjectShallowTree(workspacePath: string, maxItems = 40
     
     // Build a simple text tree
     let tree = `Project Root: ${workspacePath}\n`;
+    tree += `Total items scanned: ${filtered.length}\n\n`;
+    
     const limited = filtered.slice(0, maxItems);
 
     for (const entry of limited) {
       if (entry.isDirectory) {
-        tree += `📁 ${entry.name}/\n`;
+        tree += `📁 ${entry.name.padEnd(25)} [Directory]\n`;
       } else {
         tree += `📄 ${entry.name}\n`;
       }
     }
 
     if (filtered.length > maxItems) {
-      tree += `... (and ${filtered.length - maxItems} more items)\n`;
+      tree += `\n... (and ${filtered.length - maxItems} more items in the root folder)\n`;
     }
 
     return tree;

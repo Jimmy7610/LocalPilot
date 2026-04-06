@@ -12,6 +12,22 @@ import { useDocumentStore } from './document-store';
 import { useTerminalStore } from './terminal-store';
 import { searchWorkspace } from '@/services/rag-service';
 
+const BASE_AGENT_PROMPT = `You are LocalPilot, a professional agentic AI assistant specialized in local development and system management. 
+
+### CAPABILITIES & ENVIRONMENT
+- You have access to a LOCAL TERMINAL. Suggest commands using \`\`\`bash, \`\`\`sh, \`\`\`powershell, or \`\`\`cmd blocks.
+- You can analyze project structures, documents, and code.
+- You should provide concise, actionable, and technically accurate responses.
+
+### CRITICAL RULES (MUST FOLLOW)
+1. **NO PLACEHOLDERS**: NEVER use generic placeholders like 'my_folder', 'your_file.txt', or '<path>'. 
+2. **USE PROJECT CONTEXT**: Only use directory names and filenames that are EXPLICITLY listed in the "PROJECT FILE STRUCTURE" section below.
+3. **REAL PATHS ONLY**: If you are unsure of a path, suggest listing the current directory first (e.g., \`ls .\`) to discover the truth.
+4. **WINDOWS AWARENESS**: On Windows, prioritize PowerShell. Use \`Get-ChildItem\` instead of \`ls\` if absolute clarity is needed, though \`ls\` aliases are accepted.
+5. **MARKDOWN**: Always use proper Markdown formatting with headers and bold text for key terms.
+6. **LANGUAGE**: Always respond in the SAME LANGUAGE as the user's most recent message.
+`;
+
 interface ChatState {
   chats: Chat[];
   messages: Record<string, Message[]>;
@@ -141,17 +157,20 @@ export const useChatStore = create<ChatState>((set, get) => ({
     const allMsgs = get().messages[chatId] || [];
     const ollamaMessages: OllamaChatMessage[] = [];
 
-    let dynamicSystemPrompt = '';
+    let dynamicSystemPrompt = BASE_AGENT_PROMPT + "\n";
+    const isWindows = navigator.userAgent.includes('Windows');
 
     // Inject Project Context if linked
     if (chat?.projectId) {
       const project = useProjectStore.getState().projects.find(p => p.id === chat.projectId);
       if (project) {
-        dynamicSystemPrompt += `You are assisting the user within the context of a specific project.\n`;
+        dynamicSystemPrompt += `\n--- CURRENT PROJECT ROOT ---\n`;
         dynamicSystemPrompt += `Project Name: ${project.name}\n`;
-        dynamicSystemPrompt += `ENVIRONMENT: You have access to a terminal. You can suggest shell commands or scripts using \`\`\`bash or \`\`\`powershell code blocks. The user can execute these with a single click. Use this to help with file management, git, or running scripts.\n`;
         if (project.description) {
-          dynamicSystemPrompt += `Project Description: ${project.description}\n`;
+          dynamicSystemPrompt += `Description: ${project.description}\n`;
+        }
+        if (project.workspacePath) {
+          dynamicSystemPrompt += `Workspace Path (CWD): ${project.workspacePath}\n`;
         }
         
         // 1. Fetch linked manual documents
@@ -169,7 +188,7 @@ export const useChatStore = create<ChatState>((set, get) => ({
           try {
             const { getProjectShallowTree } = await import('@/services/fs-service');
             const tree = await getProjectShallowTree(project.workspacePath);
-            dynamicSystemPrompt += `\n--- PROJECT FILE STRUCTURE ---\n${tree}\n`;
+            dynamicSystemPrompt += `\n--- PROJECT FILE STRUCTURE (TRUTH) ---\n${tree}\n`;
           } finally {
             set({ analyzing: false });
           }
@@ -179,23 +198,17 @@ export const useChatStore = create<ChatState>((set, get) => ({
         if (project.workspacePath) {
           const workspaceContext = await searchWorkspace(project.id, content);
           if (workspaceContext) {
-            dynamicSystemPrompt += workspaceContext;
+            dynamicSystemPrompt += `\n--- RELEVANT CODE SNIPPETS ---\n${workspaceContext}\n`;
           }
         }
       }
     }
 
     if (chat?.systemPrompt) {
-      if (dynamicSystemPrompt) {
-        dynamicSystemPrompt += `\n--- USER SYSTEM PROMPT ---\n${chat.systemPrompt}`;
-      } else {
-        dynamicSystemPrompt = chat.systemPrompt;
-      }
+      dynamicSystemPrompt += `\n--- ADDITIONAL USER INSTRUCTIONS ---\n${chat.systemPrompt}\n`;
     }
 
-    if (dynamicSystemPrompt) {
-      ollamaMessages.push({ role: 'system', content: dynamicSystemPrompt.trim() });
-    }
+    ollamaMessages.push({ role: 'system', content: dynamicSystemPrompt.trim() });
 
     for (const m of allMsgs) {
       if (m.id === assistantMsg.id) continue; // Skip the pending assistant message
