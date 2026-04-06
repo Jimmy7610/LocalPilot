@@ -87,71 +87,89 @@ export function OverlayPanel({ open, onClose }: OverlayPanelProps) {
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-start justify-center pt-[15vh] animate-fade-in" onClick={onClose}>
+    <div className="fixed inset-0 z-50 flex items-start justify-center pt-[15vh] backdrop-blur-sm animate-fade-in" onClick={onClose}>
       <div
-        className="w-[560px] bg-popover border border-border rounded-2xl shadow-2xl overflow-hidden animate-slide-up"
+        className="w-[640px] glass border-white/10 rounded-[24px] shadow-[0_24px_80px_rgba(0,0,0,0.6)] overflow-hidden animate-slide-up ring-1 ring-white/5"
         onClick={e => e.stopPropagation()}
       >
-        {/* Header */}
-        <div className="flex items-center justify-between px-4 py-3 border-b border-border">
+        {/* Search Bar Area */}
+        <div className="relative flex items-center px-6 py-5 border-b border-white/5">
+          <Zap className="absolute left-6 w-5 h-5 text-primary drop-shadow-[0_0_8px_rgba(var(--color-primary),0.6)]" />
+          <input
+            value={input}
+            onChange={e => setInput(e.target.value)}
+            onKeyDown={handleKeyDown}
+            placeholder={t.overlay.quickInput}
+            className="w-full pl-10 bg-transparent border-none outline-none text-lg font-medium placeholder:text-white/20"
+            autoFocus
+          />
           <div className="flex items-center gap-2">
-            <Zap className="w-4 h-4 text-primary" />
-            <span className="text-sm font-semibold">{t.overlay.title}</span>
-          </div>
-          <div className="flex items-center gap-1">
-            <Button variant="ghost" size="icon" className="h-7 w-7" onClick={handleOpenFull}>
-              <Maximize2 className="w-3.5 h-3.5" />
-            </Button>
-            <Button variant="ghost" size="icon" className="h-7 w-7" onClick={onClose}>
-              <X className="w-3.5 h-3.5" />
-            </Button>
+            {!input && <span className="text-[10px] font-bold tracking-widest text-white/20 uppercase">LocalPilot Spotlight</span>}
+            <kbd className="px-1.5 py-0.5 rounded-md bg-white/5 border border-white/10 text-[10px] font-mono text-white/40">ESC</kbd>
           </div>
         </div>
 
-        {/* Body */}
-        <div className="p-4 space-y-3">
-          <div className="flex gap-2">
-            <Select value={selectedTool} onValueChange={setSelectedTool}>
-              <SelectTrigger className="w-[160px] h-8 text-xs">
-                <SelectValue placeholder={t.overlay.selectTool} />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value=" ">{t.common.none}</SelectItem>
-                {toolDefinitions.map(td => (
-                  <SelectItem key={td.id} value={td.id} className="text-xs">
-                    {(t.tools as any)[td.titleKey] || td.id}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+        {/* Content Body */}
+        <div className="p-2 max-h-[400px] overflow-auto">
+          {/* Tool Selector Section */}
+          <div className="px-3 py-2">
+            <h3 className="px-3 text-[10px] font-bold tracking-[0.1em] text-white/30 uppercase mb-2">Capabilities</h3>
+            <div className="grid grid-cols-3 gap-1">
+              {toolDefinitions.map(td => (
+                <button
+                  key={td.id}
+                  onClick={() => setSelectedTool(td.id)}
+                  className={cn(
+                    "flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-xs font-medium transition-all group duration-200 text-left",
+                    selectedTool === td.id 
+                      ? "bg-primary/20 text-primary shadow-[inset_0_0_15px_rgba(var(--color-primary),0.05)] border border-primary/20" 
+                      : "hover:bg-white/5 text-white/60 border border-transparent"
+                  )}
+                >
+                  <Wrench className={cn("w-4 h-4 opacity-50 transition-transform group-hover:scale-110", selectedTool === td.id && "opacity-100")} />
+                  <span className="truncate">{(t.tools as Record<string, string>)[td.titleKey] || td.id}</span>
+                </button>
+              ))}
+            </div>
           </div>
 
-          <div className="flex items-end gap-2">
-            <Textarea
-              value={input}
-              onChange={e => setInput(e.target.value)}
-              onKeyDown={handleKeyDown}
-              placeholder={t.overlay.quickInput}
-              className="min-h-[44px] max-h-[120px] resize-none text-sm"
-              rows={1}
-              autoFocus
-            />
-            <Button
-              size="icon"
-              className="h-[44px] w-[44px] shrink-0"
-              onClick={handleSend}
-              disabled={loading || !input.trim() || !connected}
-            >
-              {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
-            </Button>
-          </div>
-
-          {/* Result */}
+          {/* Action Results */}
           {result && (
-            <div className="bg-muted rounded-xl p-3 max-h-[200px] overflow-auto">
-              <pre className="whitespace-pre-wrap text-sm font-sans">{result}</pre>
+            <div className="mt-2 mx-2 p-4 rounded-2xl bg-black/40 border border-white/5 animate-fade-in shadow-inner">
+              <div className="flex items-center gap-2 mb-3">
+                <div className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse" />
+                <span className="text-[10px] font-bold tracking-widest text-white/40 uppercase">Generation Result</span>
+              </div>
+              <pre className="whitespace-pre-wrap text-sm font-sans leading-relaxed text-white/80">{result}</pre>
             </div>
           )}
+        </div>
+
+        {/* Footer Actions */}
+        <div className="flex items-center justify-between px-6 py-4 bg-black/20 border-t border-white/5">
+          <div className="flex items-center gap-4">
+              <div className="flex items-center gap-1.5 opacity-40">
+                <div className={cn("w-2 h-2 rounded-full", connected ? "bg-success" : "bg-destructive")} />
+                <span className="text-[10px] font-bold uppercase tracking-widest">{connected ? "AI Ready" : "Offline"}</span>
+              </div>
+          </div>
+          <div className="flex items-center gap-2">
+            <Button 
+                variant="ghost" 
+                size="sm" 
+                onClick={handleOpenFull}
+                className="h-9 px-4 rounded-xl text-xs font-bold text-white/40 hover:text-white"
+            >
+              Open Full App
+            </Button>
+            <Button 
+                onClick={handleSend}
+                disabled={loading || !input.trim() || !connected}
+                className="h-9 px-5 rounded-xl bg-primary hover:bg-primary/80 text-white font-bold text-xs shadow-lg shadow-primary/20"
+            >
+              {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <span>Run Command</span>}
+            </Button>
+          </div>
         </div>
       </div>
     </div>

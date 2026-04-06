@@ -125,6 +125,8 @@ const sv: TranslationKeys = {
     executionSuccess: 'Körning Slutförd',
     executionFailed: 'Körning Misslyckades',
     terminalOpenHint: 'Öppna terminalen i verktygsfältet för att se resultat.',
+    aiReady: 'AI Redo',
+    offline: 'Offline',
   },
 
   // ── Projects ──
@@ -240,6 +242,7 @@ const sv: TranslationKeys = {
     selectTool: 'Välj verktyg',
     openFull: 'Öppna i hela appen',
     close: 'Stäng snabbåtkomst',
+    spotlightSubtitle: 'LocalPilot Spotlight',
   },
 
   // ── Settings ──

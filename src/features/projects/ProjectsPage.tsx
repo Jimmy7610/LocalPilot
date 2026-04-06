@@ -1,8 +1,9 @@
 // ──────────────────────────────────────────
-// LocalPilot — Projects Page
+// LocalPilot — Projects Page 2.0
 // ──────────────────────────────────────────
 
 import { useEffect, useState } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { toast } from 'sonner';
 import {
   Plus,
@@ -12,17 +13,20 @@ import {
   MoreVertical,
   ChevronLeft,
   MessageSquare,
-  BookOpen,
   FileText,
   FolderOpen,
   RefreshCw,
   Loader2,
   Search as SearchIcon,
+  Layers,
+  ArrowRight,
+  Shield,
+  Activity,
+  Zap,
 } from 'lucide-react';
 import { useT } from '@/i18n';
 import { useProjectStore } from '@/store/project-store';
 import { useChatStore } from '@/store/chat-store';
-import { usePromptStore } from '@/store/prompt-store';
 import { useDocumentStore } from '@/store/document-store';
 import { useOllamaStore } from '@/store/ollama-store';
 import { open } from '@tauri-apps/plugin-dialog';
@@ -31,7 +35,6 @@ import { workspaceFileRepo } from '@/services/storage';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
-import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import {
   Dialog,
@@ -63,12 +66,33 @@ const PROJECT_COLORS = [
   '#eab308', '#22c55e', '#14b8a6', '#06b6d4', '#3b82f6',
 ];
 
+const containerVariants = {
+  hidden: { opacity: 0 },
+  visible: {
+    opacity: 1,
+    transition: {
+      staggerChildren: 0.1,
+    },
+  },
+};
+
+const itemVariants = {
+  hidden: { y: 20, opacity: 0 },
+  visible: {
+    y: 0,
+    opacity: 1,
+    transition: {
+      type: 'spring',
+      stiffness: 100,
+    },
+  },
+};
+
 export function ProjectsPage() {
   const t = useT();
   const { projects, loaded, load, createProject, updateProject, deleteProject } = useProjectStore();
-  const { models } = useOllamaStore();
+  const { models, connected } = useOllamaStore();
   const { chats } = useChatStore();
-  const { prompts } = usePromptStore();
   const { documents } = useDocumentStore();
 
   const [formOpen, setFormOpen] = useState(false);
@@ -91,7 +115,6 @@ export function ProjectsPage() {
 
   const selectedProject = projects.find(p => p.id === selectedProjectId);
 
-  // Load indexing stats when project is selected
   useEffect(() => {
     if (selectedProjectId) {
       workspaceFileRepo.getByProject(selectedProjectId).then(files => setFileCount(files.length));
@@ -133,7 +156,7 @@ export function ProjectsPage() {
           preferredModel: formModel || models[0]?.name || '',
           workspacePath: formWorkspacePath
         });
-        toast.success(t.common.saveSuccess || 'Project updated');
+        toast.success(t.common.saveSuccess);
       } else {
         const newProject = await createProject({ 
           name: formName, 
@@ -143,335 +166,442 @@ export function ProjectsPage() {
           preferredModel: formModel || models[0]?.name || '',
           workspacePath: formWorkspacePath
         });
-        toast.success(t.common.saveSuccess || 'Project created');
-        
-        // If workspace was linked during creation, start indexing immediately
-        if (formWorkspacePath) {
-          setSelectedProjectId(newProject.id);
-          // Indexing will be handled by the detail view effect or user manual refresh
-        }
+        toast.success(t.common.saveSuccess);
+        if (formWorkspacePath) setSelectedProjectId(newProject.id);
       }
       setFormOpen(false);
     } catch (err) {
-      console.error('Failed to save project:', err);
-      toast.error(t.common.error || 'Failed to save project');
+      toast.error(t.common.error);
     }
   };
 
   const handleIndex = async () => {
     if (!selectedProject?.workspacePath) return;
     setIsIndexing(true);
-    console.log(`Starting index for project ${selectedProject.id} at ${selectedProject.workspacePath}`);
     try {
       await indexWorkspace(selectedProject.id, selectedProject.workspacePath, (progress) => {
         setIndexProgress(progress);
       });
       const files = await workspaceFileRepo.getByProject(selectedProject.id);
       setFileCount(files.length);
-      toast.success(t.projects.indexSuccess || 'Indexing complete!');
+      toast.success(t.projects.indexSuccess);
     } catch (err) {
-      console.error('Indexing failed:', err);
-      toast.error(`${t.projects.indexingError || 'Indexing failed'}: ${err}`);
+      toast.error(`${t.projects.indexingError}: ${err}`);
     } finally {
       setIsIndexing(false);
       setIndexProgress(null);
     }
   };
 
-  // Get linked items for selected project
   const linkedChats = selectedProject ? chats.filter(c => c.projectId === selectedProject.id) : [];
   const linkedDocs = selectedProject ? documents.filter(d => d.projectId === selectedProject.id) : [];
 
   if (selectedProject) {
     return (
-      <div className="h-full overflow-y-auto">
-        <div className="max-w-5xl mx-auto p-6 animate-fade-in">
-        <Button variant="ghost" size="sm" className="gap-1.5 mb-4" onClick={() => setSelectedProjectId(null)}>
-          <ChevronLeft className="w-4 h-4" /> {t.common.back}
-        </Button>
-
-        <div className="flex items-center gap-4 mb-6">
-          <div className="w-12 h-12 rounded-xl flex items-center justify-center text-white text-lg font-bold" style={{ backgroundColor: selectedProject.color }}>
-            {selectedProject.name[0]?.toUpperCase()}
-          </div>
-          <div className="flex-1 min-w-0">
-            <h2 className="text-xl font-bold truncate">{selectedProject.name}</h2>
-            {selectedProject.description && <p className="text-sm text-muted-foreground mt-0.5 line-clamp-1">{selectedProject.description}</p>}
-          </div>
-          <div className="flex gap-1.5 shrink-0">
-            {selectedProject.preferredModel && <Badge variant="secondary" className="hidden sm:inline-flex">{selectedProject.preferredModel}</Badge>}
-            <Button variant="outline" size="sm" onClick={() => openEdit(selectedProject)}>
-              <Edit3 className="w-3.5 h-3.5 mr-1.5" /> {t.common.edit}
+      <div className="h-full overflow-y-auto px-4 py-4 md:px-8 md:py-8">
+        <motion.div 
+          initial={{ opacity: 0, x: -20 }}
+          animate={{ opacity: 1, x: 0 }}
+          className="max-w-6xl mx-auto space-y-8"
+        >
+          <div className="flex items-center justify-between">
+            <Button 
+              variant="ghost" 
+              size="sm" 
+              className="gap-2 text-white/40 hover:text-white" 
+              onClick={() => setSelectedProjectId(null)}
+            >
+              <ChevronLeft className="w-4 h-4" /> {t.common.back}
             </Button>
+            <div className="flex gap-2">
+              <Button variant="ghost" size="sm" className="glass h-9 px-4 rounded-xl text-xs font-bold" onClick={() => openEdit(selectedProject)}>
+                <Edit3 className="w-3.5 h-3.5 mr-2" /> {t.common.edit}
+              </Button>
+            </div>
           </div>
-        </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-          <Card className="md:col-span-2">
-            <CardContent className="pt-4">
-              <div className="flex items-center justify-between mb-3">
-                <h3 className="text-sm font-semibold flex items-center gap-2">
-                  <FolderOpen className="w-4 h-4" /> {t.projects.workspace}
-                </h3>
+          <div className="flex flex-col md:flex-row items-start md:items-center gap-6">
+            <div 
+              className="w-20 h-20 rounded-[28px] glass flex items-center justify-center text-3xl font-black shadow-2xl relative"
+              style={{ color: selectedProject.color }}
+            >
+               <div className="absolute inset-0 opacity-20 blur-2xl rounded-full" style={{ backgroundColor: selectedProject.color }} />
+               {selectedProject.name[0]?.toUpperCase()}
+            </div>
+            <div className="flex-1 space-y-2">
+              <div className="flex items-center gap-3">
+                <h1 className="text-4xl font-black tracking-tighter uppercase italic">{selectedProject.name}</h1>
                 {selectedProject.workspacePath && (
-                  <Button 
-                    variant="ghost" 
-                    size="sm" 
-                    className="h-7 px-2" 
-                    onClick={handleIndex}
-                    disabled={isIndexing}
-                  >
-                    {isIndexing ? (
-                      <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                    ) : (
-                      <RefreshCw className="w-3.5 h-3.5" />
-                    )}
-                    <span className="ml-1.5 text-xs">{t.projects.refreshIndex}</span>
-                  </Button>
+                   <Badge className="bg-primary/20 text-primary border-primary/20 text-[10px] tracking-widest uppercase">RAG Enabled</Badge>
                 )}
               </div>
-              {selectedProject.workspacePath ? (
-                <div className="space-y-2">
-                  <p className="text-[10px] text-muted-foreground bg-muted/50 p-2 rounded truncate border border-border/50">
-                    {selectedProject.workspacePath}
-                  </p>
-                  <div className="flex items-center gap-4">
-                    <div className="flex items-center gap-1.5">
-                      <SearchIcon className="w-3.5 h-3.5 text-primary" />
-                      <span className="text-xs font-medium">{fileCount ?? 0} {t.projects.workspaceDocs}</span>
+              <p className="text-lg text-white/40 font-medium leading-relaxed italic">{selectedProject.description || t.projects.noProjectsHint}</p>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div className="md:col-span-2 space-y-6">
+              <div className="glass-card p-6 border-white/10 relative overflow-hidden group">
+                <div className="absolute top-0 right-0 p-4 opacity-5 group-hover:opacity-10 transition-opacity">
+                  <FolderOpen className="w-24 h-24" />
+                </div>
+                <div className="flex items-center justify-between mb-6">
+                  <div className="space-y-1">
+                    <h3 className="text-xs font-black tracking-widest uppercase text-white/30 flex items-center gap-2">
+                      <FolderOpen className="w-3.5 h-3.5" /> {t.projects.workspace}
+                    </h3>
+                    <p className="text-sm font-mono text-white/60 bg-black/40 px-3 py-1.5 rounded-lg border border-white/5 truncate max-w-md">
+                      {selectedProject.workspacePath || t.projects.noWorkspace}
+                    </p>
+                  </div>
+                  {selectedProject.workspacePath && (
+                    <Button 
+                      onClick={handleIndex}
+                      disabled={isIndexing}
+                      className="glass bg-primary/20 hover:bg-primary/30 border-primary/20 text-primary h-10 px-6 rounded-xl font-black text-xs uppercase tracking-widest"
+                    >
+                      {isIndexing ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <RefreshCw className="w-4 h-4 mr-2" />}
+                      {t.projects.refreshIndex}
+                    </Button>
+                  )}
+                </div>
+
+                {isIndexing && indexProgress && (
+                  <div className="space-y-3 animate-fade-in mb-6">
+                    <div className="flex justify-between text-[10px] font-black uppercase tracking-widest text-white/40">
+                      <span className="truncate max-w-[250px]">{indexProgress.currentFile}</span>
+                      <span className="text-primary">{Math.round((indexProgress.processedFiles / indexProgress.totalFiles) * 100)}%</span>
+                    </div>
+                    <div className="h-1.5 w-full bg-white/5 rounded-full overflow-hidden">
+                      <motion.div 
+                        initial={{ width: 0 }}
+                        animate={{ width: `${(indexProgress.processedFiles / indexProgress.totalFiles) * 100}%` }}
+                        className="h-full bg-primary shadow-[0_0_10px_rgba(var(--color-primary),0.5)]"
+                      />
                     </div>
                   </div>
-                  {isIndexing && indexProgress && (
-                    <div className="mt-2 space-y-1">
-                      <div className="flex justify-between text-[10px]">
-                        <span className="text-muted-foreground truncate max-w-[150px]">{indexProgress.currentFile}</span>
-                        <span>{indexProgress.processedFiles} / {indexProgress.totalFiles}</span>
-                      </div>
-                      <div className="h-1 w-full bg-muted rounded-full overflow-hidden">
-                        <div 
-                          className="h-full bg-primary transition-all duration-300" 
-                          style={{ width: `${(indexProgress.processedFiles / indexProgress.totalFiles) * 100}%` }}
-                        />
-                      </div>
+                )}
+
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+                  <div className="p-4 rounded-2xl bg-white/5 border border-white/5 text-center space-y-1">
+                    <span className="block text-2xl font-black text-white">{fileCount ?? 0}</span>
+                    <span className="text-[10px] font-black uppercase tracking-widest text-white/20">Analyzed Files</span>
+                  </div>
+                   <div className="p-4 rounded-2xl bg-white/5 border border-white/5 text-center space-y-1">
+                     <div className="flex justify-center mb-1">
+                        <div className={cn("w-2 h-2 rounded-full animate-pulse", connected ? "bg-success" : "bg-destructive")} />
+                     </div>
+                    <span className="block text-[10px] font-black uppercase tracking-widest text-white/20">Local AI Status</span>
+                  </div>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                <div className="glass-card p-6 border-white/10">
+                   <h3 className="text-xs font-black tracking-widest uppercase text-white/30 flex items-center gap-2 mb-4">
+                    <MessageSquare className="w-3.5 h-3.5" /> {t.projects.linkedChats}
+                  </h3>
+                  {linkedChats.length === 0 ? (
+                    <div className="py-8 text-center text-white/20 italic text-sm">{t.common.none}</div>
+                  ) : (
+                    <div className="space-y-2">
+                       {linkedChats.map(c => (
+                         <div key={c.id} className="p-3 rounded-xl hover:bg-white/5 transition-colors group flex items-center gap-3">
+                            <div className="w-1.5 h-1.5 rounded-full bg-primary/40 group-hover:bg-primary transition-colors" />
+                            <span className="text-xs font-medium text-white/70 truncate">{c.title}</span>
+                         </div>
+                       ))}
                     </div>
                   )}
                 </div>
-              ) : (
-                <div className="py-4 text-center border-2 border-dashed border-muted rounded-lg">
-                  <p className="text-xs text-muted-foreground mb-2">{t.projects.noWorkspace}</p>
-                  <Button variant="outline" size="sm" onClick={() => openEdit(selectedProject)}>
-                    <Plus className="w-3.5 h-3.5 mr-1.5" /> {t.projects.linkWorkspace}
-                  </Button>
+                 <div className="glass-card p-6 border-white/10">
+                   <h3 className="text-xs font-black tracking-widest uppercase text-white/30 flex items-center gap-2 mb-4">
+                    <FileText className="w-3.5 h-3.5" /> {t.projects.linkedDocuments}
+                  </h3>
+                  {linkedDocs.length === 0 ? (
+                    <div className="py-8 text-center text-white/20 italic text-sm">{t.common.none}</div>
+                  ) : (
+                    <div className="space-y-2">
+                       {linkedDocs.map(d => (
+                         <div key={d.id} className="p-3 rounded-xl hover:bg-white/5 transition-colors group flex items-center gap-3">
+                            <FileText className="w-3.5 h-3.5 text-white/20 group-hover:text-primary transition-colors" />
+                            <span className="text-xs font-medium text-white/70 truncate">{d.title}</span>
+                         </div>
+                       ))}
+                    </div>
+                  )}
                 </div>
-              )}
-            </CardContent>
-          </Card>
+              </div>
+            </div>
 
-          <Card>
-            <CardContent className="pt-4">
-              <h3 className="text-sm font-semibold flex items-center gap-2 mb-3">
-                <MessageSquare className="w-4 h-4" /> {t.projects.linkedChats}
-              </h3>
-              {linkedChats.length === 0 ? (
-                <p className="text-xs text-muted-foreground py-2">{t.common.none}</p>
-              ) : (
-                <div className="space-y-1">
-                  {linkedChats.slice(0, 5).map(c => (
-                    <div key={c.id} className="text-xs py-1 px-2 hover:bg-muted rounded truncate cursor-default">{c.title}</div>
-                  ))}
-                  {linkedChats.length > 5 && <div className="text-[10px] text-muted-foreground pl-2">+{linkedChats.length - 5} till...</div>}
-                </div>
-              )}
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardContent className="pt-4">
-              <h3 className="text-sm font-semibold flex items-center gap-2 mb-3">
-                <FileText className="w-4 h-4" /> {t.projects.linkedDocuments}
-              </h3>
-              {linkedDocs.length === 0 ? (
-                <p className="text-xs text-muted-foreground py-2">{t.common.none}</p>
-              ) : (
-                <div className="space-y-1">
-                  {linkedDocs.slice(0, 5).map(d => (
-                    <div key={d.id} className="text-xs py-1 px-2 hover:bg-muted rounded truncate cursor-default">{d.title}</div>
-                  ))}
-                  {linkedDocs.length > 5 && <div className="text-[10px] text-muted-foreground pl-2">+{linkedDocs.length - 5} till...</div>}
-                </div>
-              )}
-            </CardContent>
-          </Card>
-        </div>
+            <div className="space-y-6">
+               <div className="glass-card p-6 border-white/10 space-y-6">
+                  <div>
+                    <h4 className="text-[10px] font-black tracking-widest uppercase text-white/30 mb-3">Project Specs</h4>
+                    <div className="space-y-4">
+                       <div className="flex justify-between items-center">
+                          <span className="text-[11px] text-white/40 font-bold uppercase">AI Model</span>
+                          <Badge variant="outline" className="border-white/10 text-white/70">{selectedProject.preferredModel || 'Default'}</Badge>
+                       </div>
+                       <div className="flex justify-between items-center">
+                          <span className="text-[11px] text-white/40 font-bold uppercase">Last Sync</span>
+                          <span className="text-[11px] text-white/70">{formatDistanceToNow(new Date(selectedProject.updatedAt), { addSuffix: true })}</span>
+                       </div>
+                    </div>
+                  </div>
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button variant="ghost" className="w-full justify-between glass border-white/5 h-12 rounded-2xl group">
+                         <div className="flex items-center gap-2">
+                            <Activity className="w-4 h-4 text-primary" />
+                            <span className="text-xs font-black uppercase tracking-widest">Management</span>
+                         </div>
+                         <MoreVertical className="w-4 h-4 text-white/20 group-hover:text-white transition-colors" />
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end" className="glass border-white/10 w-48">
+                       <DropdownMenuItem onClick={() => openEdit(selectedProject)} className="gap-2 py-2.5">
+                         <Edit3 className="w-4 h-4" /> {t.common.edit}
+                       </DropdownMenuItem>
+                       <DropdownMenuSeparator className="bg-white/5" />
+                       <DropdownMenuItem onClick={() => setDeleteDialogId(selectedProject.id)} className="gap-2 py-2.5 text-destructive focus:text-destructive">
+                         <Trash2 className="w-4 h-4" /> {t.common.delete}
+                       </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+               </div>
+            </div>
+          </div>
+        </motion.div>
       </div>
-    </div>
     );
   }
 
   return (
-    <div className="h-full overflow-y-auto">
-      <div className="max-w-5xl mx-auto p-6 animate-fade-in">
-      <div className="flex items-center justify-between mb-6">
-        <h2 className="text-xl font-bold">{t.projects.title}</h2>
-        <Button onClick={openCreate} size="sm" className="gap-1.5">
-          <Plus className="w-4 h-4" /> {t.projects.newProject}
-        </Button>
-      </div>
-
-      {projects.length === 0 ? (
-        <div className="text-center py-16">
-          <FolderKanban className="w-12 h-12 text-muted-foreground/20 mx-auto mb-3" />
-          <h3 className="text-base font-semibold mb-1">{t.projects.noProjects}</h3>
-          <p className="text-sm text-muted-foreground">{t.projects.noProjectsHint}</p>
-          <Button onClick={openCreate} className="mt-4 gap-1.5" size="sm">
-            <Plus className="w-4 h-4" /> {t.projects.newProject}
+    <div className="h-full overflow-y-auto px-4 py-8 md:px-8">
+      <div className="max-w-6xl mx-auto">
+        <div className="flex flex-col md:flex-row items-start md:items-end justify-between gap-6 mb-12">
+          <div className="space-y-2">
+            <h1 className="text-5xl font-black tracking-tighter uppercase italic">{t.projects.title}</h1>
+            <p className="text-lg text-white/40 font-medium italic">Organize your local AI workspaces.</p>
+          </div>
+          <Button onClick={openCreate} className="h-14 px-8 rounded-full bg-primary text-primary-foreground font-black uppercase italic tracking-tighter shadow-2xl shadow-primary/20 transition-all hover:scale-105 active:scale-95 gap-3">
+            <Plus className="w-5 h-5" /> {t.projects.newProject}
           </Button>
         </div>
-      ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-          {projects.map(project => (
-            <Card
-              key={project.id}
-              className="cursor-pointer hover:border-primary/30 transition-colors group"
-              onClick={() => setSelectedProjectId(project.id)}
-            >
-              <CardContent className="pt-4">
-                <div className="flex items-start justify-between mb-3">
-                  <div className="w-10 h-10 rounded-lg flex items-center justify-center text-white text-sm font-bold" style={{ backgroundColor: project.color }}>
-                    {project.name[0]?.toUpperCase()}
-                  </div>
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <Button variant="ghost" size="icon" className="h-7 w-7 opacity-0 group-hover:opacity-100" onClick={e => e.stopPropagation()}>
-                        <MoreVertical className="w-3.5 h-3.5" />
-                      </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end">
-                      <DropdownMenuItem onClick={(e) => { e.stopPropagation(); openEdit(project); }}>
-                        <Edit3 className="w-3 h-3 mr-2" /> {t.common.edit}
-                      </DropdownMenuItem>
-                      <DropdownMenuSeparator />
-                      <DropdownMenuItem className="text-destructive" onClick={(e) => { e.stopPropagation(); setDeleteDialogId(project.id); }}>
-                        <Trash2 className="w-3 h-3 mr-2" /> {t.common.delete}
-                      </DropdownMenuItem>
-                    </DropdownMenuContent>
-                  </DropdownMenu>
+
+        {projects.length === 0 ? (
+          <motion.div 
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="flex flex-col items-center justify-center py-24 text-center glass-card border-white/10 rounded-[40px] opacity-50"
+          >
+            <div className="w-24 h-24 rounded-full bg-white/5 flex items-center justify-center mb-6">
+               <FolderKanban className="w-10 h-10 text-white/20" />
+            </div>
+            <h3 className="text-2xl font-black uppercase italic mb-2">{t.projects.noProjects}</h3>
+            <p className="text-white/40 max-w-sm mb-10">{t.projects.noProjectsHint}</p>
+            <Button onClick={openCreate} variant="secondary" className="glass h-12 px-8 rounded-2xl font-black uppercase italic tracking-widest text-xs">
+               Initialize First Project <ArrowRight className="ml-2 w-4 h-4" />
+            </Button>
+          </motion.div>
+        ) : (
+          <motion.div 
+            variants={containerVariants}
+            initial="hidden"
+            animate="visible"
+            className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6"
+          >
+            {projects.map(project => (
+              <motion.div 
+                key={project.id} 
+                variants={itemVariants}
+                whileHover={{ y: -8, scale: 1.02 }}
+                className="group cursor-pointer relative"
+                onClick={() => setSelectedProjectId(project.id)}
+              >
+                <div 
+                  className="absolute inset-0 opacity-0 group-hover:opacity-10 blur-3xl rounded-[32px] transition-opacity duration-500"
+                  style={{ backgroundColor: project.color }}
+                />
+                <div className="glass-card border-white/10 rounded-[32px] p-6 hover:border-white/20 transition-all shadow-xl group-hover:shadow-2xl h-full flex flex-col isolation-isolate overflow-hidden">
+                   <div className="absolute top-0 right-0 p-4 opacity-5 group-hover:opacity-10 transition-opacity">
+                      <Layers className="w-20 h-20" />
+                   </div>
+                   
+                   <div className="flex items-start justify-between mb-8">
+                     <div 
+                        className="w-14 h-14 rounded-2xl flex items-center justify-center text-xl font-black shadow-lg"
+                        style={{ backgroundColor: `${project.color}20`, color: project.color }}
+                     >
+                       {project.name[0]?.toUpperCase()}
+                     </div>
+                     <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button 
+                            variant="ghost" 
+                            size="icon" 
+                            className="h-10 w-10 text-white/20 hover:text-white rounded-xl hover:bg-white/5" 
+                            onClick={e => e.stopPropagation()}
+                          >
+                            <MoreVertical className="w-4 h-4" />
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end" className="glass border-white/10 w-40">
+                          <DropdownMenuItem onClick={(e) => { e.stopPropagation(); openEdit(project); }}>
+                            <Edit3 className="w-3.5 h-3.5 mr-2" /> {t.common.edit}
+                          </DropdownMenuItem>
+                          <DropdownMenuSeparator className="bg-white/5" />
+                          <DropdownMenuItem className="text-destructive focus:text-destructive" onClick={(e) => { e.stopPropagation(); setDeleteDialogId(project.id); }}>
+                            <Trash2 className="w-3.5 h-3.5 mr-2" /> {t.common.delete}
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                   </div>
+
+                   <div className="flex-1 space-y-2">
+                     <h3 className="text-xl font-black tracking-tight uppercase italic truncate">{project.name}</h3>
+                     <p className="text-sm text-white/40 font-medium line-clamp-2 italic">{project.description || 'No description provided.'}</p>
+                   </div>
+
+                   <div className="mt-8 pt-6 border-t border-white/5 flex items-center justify-between">
+                      <div className="flex items-center gap-4">
+                         {project.workspacePath && (
+                            <div className="flex items-center gap-1.5 opacity-60">
+                               <Shield className="w-3.5 h-3.5 text-primary" />
+                               <span className="text-[10px] font-black uppercase tracking-widest text-white">RAG</span>
+                            </div>
+                         )}
+                         <div className="text-[10px] font-black uppercase tracking-widest text-white/20">
+                           {formatDistanceToNow(new Date(project.updatedAt), { addSuffix: true })}
+                         </div>
+                      </div>
+                      <ArrowRight className="w-4 h-4 text-white/10 group-hover:text-primary group-hover:translate-x-1 transition-all" />
+                   </div>
                 </div>
-                <h3 className="text-sm font-semibold mb-0.5 truncate">{project.name}</h3>
-                {project.description && <p className="text-xs text-muted-foreground line-clamp-2 min-h-[2.5rem]">{project.description}</p>}
-                
-                <div className="flex items-center justify-between mt-3">
-                  <p className="text-[10px] text-muted-foreground">
-                    {formatDistanceToNow(new Date(project.updatedAt), { addSuffix: true })}
-                  </p>
-                  {project.workspacePath && (
-                    <Badge variant="outline" className="text-[9px] px-1.5 py-0 h-4 bg-primary/5 text-primary border-primary/20">
-                      RAG
-                    </Badge>
-                  )}
-                </div>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
-      )}
+              </motion.div>
+            ))}
+          </motion.div>
+        )}
 
-      {/* Create/Edit Dialog */}
-      <Dialog open={formOpen} onOpenChange={setFormOpen}>
-        <DialogContent className="max-w-m">
-          <DialogHeader>
-            <DialogTitle>{editingProject ? t.projects.editProject : t.projects.newProject}</DialogTitle>
-          </DialogHeader>
-          <div className="space-y-4 py-2">
-            <div className="grid grid-cols-2 gap-3">
-              <div className="col-span-2">
-                <label className="text-xs font-medium mb-1 block">{t.common.name}</label>
-                <Input value={formName} onChange={e => setFormName(e.target.value)} placeholder="e.g. My Awesome Project" />
+        {/* Create/Edit Dialog */}
+        <Dialog open={formOpen} onOpenChange={setFormOpen}>
+          <DialogContent className="glass border-white/20 max-w-lg rounded-[40px] p-8 shadow-[0_0_50px_rgba(0,0,0,0.5)]">
+            <DialogHeader className="mb-6">
+              <DialogTitle className="text-3xl font-black uppercase italic tracking-tighter">
+                {editingProject ? t.projects.editProject : t.projects.newProject}
+              </DialogTitle>
+            </DialogHeader>
+            <div className="space-y-6">
+              <div className="space-y-2">
+                <label className="text-[10px] font-black uppercase tracking-widest text-white/30 ml-1">{t.common.name}</label>
+                <Input 
+                  value={formName} 
+                  onChange={e => setFormName(e.target.value)} 
+                  className="glass h-12 px-5 rounded-2xl border-white/5 focus:border-primary/50 transition-all font-bold"
+                  placeholder="e.g. AGENTIC OVERHAUL" 
+                />
               </div>
-              <div className="col-span-2">
-                <label className="text-xs font-medium mb-1 block">{t.common.description}</label>
-                <Textarea value={formDesc} onChange={e => setFormDesc(e.target.value)} rows={2} className="resize-none" />
+              <div className="space-y-2">
+                <label className="text-[10px] font-black uppercase tracking-widest text-white/30 ml-1">{t.common.description}</label>
+                <Textarea 
+                  value={formDesc} 
+                  onChange={e => setFormDesc(e.target.value)} 
+                  className="glass p-5 rounded-2xl border-white/5 focus:border-primary/50 transition-all min-h-[100px] font-medium italic"
+                  placeholder="Brief project mission..." 
+                />
               </div>
-            </div>
-            
-            <div>
-              <label className="text-xs font-medium mb-1.5 block">{t.projects.projectColor}</label>
-              <div className="flex flex-wrap gap-2">
-                {PROJECT_COLORS.map(c => (
-                  <button
-                    key={c}
-                    className={cn('w-6 h-6 rounded-full transition-all hover:scale-110', formColor === c && 'ring-2 ring-primary ring-offset-2 ring-offset-background scale-110')}
-                    style={{ backgroundColor: c }}
-                    onClick={() => setFormColor(c)}
-                  />
-                ))}
-              </div>
-            </div>
-
-            <div>
-              <label className="text-xs font-medium mb-1.5 block">{t.projects.workspace}</label>
-              <div className="flex gap-2">
-                <Input value={formWorkspacePath || ''} readOnly placeholder={t.projects.noWorkspace} className="text-xs bg-muted/30" />
-                <Button 
-                  variant="secondary" 
-                  size="sm" 
-                  className="shrink-0"
-                  onClick={async () => {
-                    try {
-                      const selected = await open({ 
-                        directory: true, 
-                        multiple: false,
-                        title: t.projects.linkWorkspace
-                      });
-                      if (selected && typeof selected === 'string') {
-                        setFormWorkspacePath(selected);
-                        toast.success(t.projects.workspaceLinked || 'Workspace linked');
-                      }
-                    } catch (err) {
-                      console.error('Failed to open directory:', err);
-                      toast.error(t.common.error || 'Opening folder failed. Make sure the app has permissions.');
-                    }
-                  }}
-                >
-                  <FolderOpen className="w-4 h-4 mr-1.5" /> {t.common.select}
-                </Button>
-              </div>
-            </div>
-
-            <div>
-              <label className="text-xs font-medium mb-1 block">{t.projects.preferredModel}</label>
-              <Select value={formModel} onValueChange={setFormModel}>
-                <SelectTrigger className="h-9"><SelectValue placeholder={t.common.selectModel} /></SelectTrigger>
-                <SelectContent>
-                  {models.map(m => (
-                    <SelectItem key={m.name} value={m.name}>{m.name}</SelectItem>
+              
+              <div className="space-y-3">
+                <label className="text-[10px] font-black uppercase tracking-widest text-white/30 ml-1">{t.projects.projectColor}</label>
+                <div className="flex flex-wrap gap-3">
+                  {PROJECT_COLORS.map(c => (
+                    <motion.button
+                      key={c}
+                      whileHover={{ scale: 1.2 }}
+                      whileTap={{ scale: 0.9 }}
+                      className={cn(
+                        'w-8 h-8 rounded-full border-2 transition-all', 
+                        formColor === c ? 'border-white scale-110 shadow-lg' : 'border-transparent opacity-60'
+                      )}
+                      style={{ backgroundColor: c }}
+                      onClick={() => setFormColor(c)}
+                    />
                   ))}
-                  {models.length === 0 && <div className="p-2 text-xs text-muted-foreground">No models found</div>}
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
-          <DialogFooter className="gap-2 sm:gap-0">
-            <Button variant="ghost" onClick={() => setFormOpen(false)}>{t.common.cancel}</Button>
-            <Button onClick={handleSave} className="px-8">{t.common.save}</Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+                </div>
+              </div>
 
-      {/* Delete Dialog */}
-      <Dialog open={!!deleteDialogId} onOpenChange={() => setDeleteDialogId(null)}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>{t.projects.deleteProject}</DialogTitle>
-          </DialogHeader>
-          <p className="text-sm text-muted-foreground">{t.projects.deleteProjectConfirm}</p>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setDeleteDialogId(null)}>{t.common.cancel}</Button>
-            <Button variant="destructive" onClick={() => { if (deleteDialogId) { deleteProject(deleteDialogId); setDeleteDialogId(null); } }}>{t.common.delete}</Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-    </div>
+              <div className="space-y-3">
+                <label className="text-[10px] font-black uppercase tracking-widest text-white/30 ml-1">{t.projects.workspace}</label>
+                <div className="flex gap-3">
+                  <div className="flex-1 relative">
+                    <Input 
+                      value={formWorkspacePath || ''} 
+                      readOnly 
+                      className="glass h-12 pl-5 pr-10 rounded-2xl border-white/5 font-mono text-[10px] text-white/40" 
+                      placeholder={t.projects.noWorkspace} 
+                    />
+                  </div>
+                  <Button 
+                    variant="secondary" 
+                    className="glass border-white/10 px-6 rounded-2xl h-12 hove:bg-white/10"
+                    onClick={async () => {
+                        const selected = await open({ directory: true, multiple: false });
+                        if (selected && typeof selected === 'string') setFormWorkspacePath(selected);
+                    }}
+                  >
+                    <FolderOpen className="w-4 h-4 mr-2" /> {t.common.select}
+                  </Button>
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <label className="text-[10px] font-black uppercase tracking-widest text-white/30 ml-1">{t.projects.preferredModel}</label>
+                <Select value={formModel} onValueChange={setFormModel}>
+                  <SelectTrigger className="glass h-12 px-5 rounded-2xl border-white/5">
+                    <SelectValue placeholder={t.common.selectModel} />
+                  </SelectTrigger>
+                  <SelectContent className="glass border-white/10 rounded-2xl">
+                    {models.map(m => (
+                      <SelectItem key={m.name} value={m.name} className="py-3 rounded-xl">{m.name}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+            <DialogFooter className="mt-10 flex gap-3">
+              <Button variant="ghost" onClick={() => setFormOpen(false)} className="h-14 px-8 rounded-full text-white/40 hover:text-white">{t.common.cancel}</Button>
+              <Button onClick={handleSave} className="h-14 px-10 rounded-full bg-primary text-primary-foreground font-black uppercase italic tracking-tighter shadow-xl shadow-primary/20">
+                {t.common.save}
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+
+        {/* Delete Dialog */}
+        <Dialog open={!!deleteDialogId} onOpenChange={() => setDeleteDialogId(null)}>
+          <DialogContent className="glass border-white/20 max-w-sm rounded-[40px] p-8">
+            <DialogHeader className="mb-4">
+              <DialogTitle className="text-2xl font-black uppercase italic tracking-tighter flex items-center gap-3">
+                 <Trash2 className="w-6 h-6 text-destructive" /> {t.projects.deleteProject}
+              </DialogTitle>
+            </DialogHeader>
+            <p className="text-white/60 font-medium italic mb-8">{t.projects.deleteProjectConfirm}</p>
+            <DialogFooter className="gap-3">
+              <Button variant="ghost" onClick={() => setDeleteDialogId(null)} className="flex-1 h-12 rounded-2xl text-white/40 hover:text-white uppercase font-black text-[10px] tracking-widest">
+                {t.common.cancel}
+              </Button>
+              <Button 
+                variant="destructive" 
+                onClick={() => { if (deleteDialogId) { deleteProject(deleteDialogId); setDeleteDialogId(null); } }}
+                className="flex-1 h-12 rounded-2xl bg-destructive/20 hover:bg-destructive/100 border border-destructive/20 text-destructive hover:text-white font-black uppercase text-[10px] tracking-widest transition-all"
+              >
+                {t.common.delete}
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+      </div>
     </div>
   );
 }

@@ -123,6 +123,8 @@ const en = {
     executionSuccess: 'Execution Finished',
     executionFailed: 'Execution Failed',
     terminalOpenHint: 'Open terminal in toolbar to see output.',
+    aiReady: 'AI Ready',
+    offline: 'Offline',
   },
 
   // ── Projects ──
@@ -238,6 +240,7 @@ const en = {
     selectTool: 'Select tool',
     openFull: 'Open in full app',
     close: 'Close overlay',
+    spotlightSubtitle: 'LocalPilot Spotlight',
   },
 
   // ── Settings ──
