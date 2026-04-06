@@ -111,9 +111,11 @@ export function WelcomePage({ onComplete }: WelcomePageProps) {
             initial={{ y: 20, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
             transition={{ delay: 0.2, duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
-            className="text-7xl md:text-9xl font-black tracking-tighter uppercase italic select-none"
+            className="text-7xl md:text-[10rem] font-extrabold tracking-tighter uppercase select-none leading-none"
           >
-            <span className="text-shimmer inline-block">LocalPilot</span>
+            <span className="text-shimmer inline-block">
+              L<span className="font-serif italic text-[0.75em] tracking-tight lowercase ml-[-0.05em]">ocalPilot</span>
+            </span>
           </motion.h1>
           <motion.p
             initial={{ y: 20, opacity: 0 }}
