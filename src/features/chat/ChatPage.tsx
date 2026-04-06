@@ -22,7 +22,9 @@ import {
   TerminalSquare,
   ChevronDown,
   Terminal,
-  Info
+  Info,
+  ImagePlus,
+  X
 } from 'lucide-react';
 import { useT } from '@/i18n';
 import { useChatStore } from '@/store/chat-store';
@@ -79,6 +81,7 @@ export function ChatPage() {
   const [renameValue, setRenameValue] = useState('');
   const [deleteDialog, setDeleteDialog] = useState<string | null>(null);
   const [showSettings, setShowSettings] = useState(false);
+  const [pendingImages, setPendingImages] = useState<string[]>([]);
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
@@ -125,15 +128,32 @@ export function ChatPage() {
     const model = activeChat?.model || defaultModel || models[0]?.name || '';
     if (!model) return;
     const msg = inputValue;
+    const images = [...pendingImages];
     setInputValue('');
-    await store.sendMessage(activeChatId, msg, model);
-  }, [inputValue, activeChatId, generating, activeChat, defaultModel, models]);
+    setPendingImages([]);
+    await store.sendMessage(activeChatId, msg, model, images);
+  }, [inputValue, pendingImages, activeChatId, generating, activeChat, defaultModel, models]);
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
       handleSend();
     }
+  };
+
+  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      const base64String = (reader.result as string).split(',')[1];
+      if (base64String) {
+        setPendingImages(prev => [...prev, base64String]);
+      }
+    };
+    reader.readAsDataURL(file);
+    e.target.value = ''; // Reset input
   };
 
   return (
@@ -323,14 +343,37 @@ export function ChatPage() {
             {/* Input Overlay Box */}
             <div className="p-6 shrink-0 min-w-0 w-full mt-auto relative z-20">
                <div className="absolute inset-x-0 bottom-0 h-32 bg-gradient-to-t from-background to-transparent pointer-events-none -z-10" />
-               <div className="max-w-3xl mx-auto glass rounded-2xl border-white/10 p-2 flex items-end gap-2 shadow-2xl">
+               <div className="max-w-3xl mx-auto glass rounded-2xl border-white/10 p-2 flex flex-col shadow-2xl">
+                 
+                 {/* Pending Images Preview */}
+                 {pendingImages.length > 0 && (
+                   <div className="flex gap-2 p-2 overflow-x-auto">
+                     {pendingImages.map((imgBase64, idx) => (
+                       <div key={idx} className="relative group/img w-16 h-16 rounded-xl overflow-hidden shrink-0 border border-white/10">
+                         <img src={`data:image/jpeg;base64,${imgBase64}`} alt="Attachment" className="w-full h-full object-cover" />
+                         <button 
+                           onClick={() => setPendingImages(prev => prev.filter((_, i) => i !== idx))}
+                           className="absolute top-1 right-1 bg-black/50 hover:bg-destructive rounded-full p-0.5 opacity-0 group-hover/img:opacity-100 transition-all"
+                         >
+                           <X className="w-3 h-3 text-white" />
+                         </button>
+                       </div>
+                     ))}
+                   </div>
+                 )}
+
+                 <div className="flex items-end gap-2 p-1">
+                    <label className="shrink-0 cursor-pointer p-2 rounded-xl text-white/40 hover:text-white hover:bg-white/5 transition-colors mb-0.5">
+                       <ImagePlus className="w-5 h-5" />
+                       <input type="file" accept="image/*" className="hidden" onChange={handleImageUpload} />
+                    </label>
                     <Textarea
                       ref={inputRef}
                       value={inputValue}
                       onChange={e => setInputValue(e.target.value)}
                       onKeyDown={handleKeyDown}
-                      placeholder={t.chat.typeMessage}
-                      className="min-h-[48px] max-h-[250px] resize-none text-sm bg-transparent border-none focus:ring-0 placeholder:text-white/20 font-medium py-3 px-4"
+                      placeholder={t.chat.typeMessage || 'Type a message...'}
+                      className="min-h-[48px] max-h-[250px] resize-none text-sm bg-transparent border-none focus:ring-0 placeholder:text-white/20 font-medium py-3 px-2 flex-1"
                       rows={1}
                       disabled={!connected}
                     />
@@ -355,6 +398,7 @@ export function ChatPage() {
                           </Button>
                         )}
                     </div>
+                 </div>
                </div>
                <div className="max-w-3xl mx-auto flex justify-between px-4 mt-2">
                     <span className="text-[9px] font-bold uppercase tracking-widest text-white/20">Press Enter to send • / to invoke tools</span>
@@ -529,7 +573,16 @@ function ChatMessage({ message, t }: { message: any; t: any }) {
         {message.type === 'terminal_output' ? (
           <TerminalOutput message={message} t={t} />
         ) : isUser ? (
-          <p className="whitespace-pre-wrap">{message.content}</p>
+          <div className="flex flex-col gap-2">
+             <p className="whitespace-pre-wrap">{message.content}</p>
+             {message.images && message.images.length > 0 && (
+               <div className="flex flex-wrap gap-2 mt-2">
+                 {message.images.map((img: string, idx: number) => (
+                   <img key={idx} src={`data:image/jpeg;base64,${img}`} className="w-48 rounded-xl object-contain border border-white/10 shadow-lg" alt={`Attachment ${idx + 1}`} />
+                 ))}
+               </div>
+             )}
+          </div>
         ) : (
           <div className="prose prose-sm dark:prose-invert max-w-none [&_pre]:bg-background/50 [&_pre]:rounded-lg [&_pre]:p-3 [&_pre]:my-2 [&_code]:text-xs [&_p]:my-1.5 [&_ul]:my-1.5 [&_ol]:my-1.5 [&_li]:my-0.5">
             <ReactMarkdown remarkPlugins={[remarkGfm]}

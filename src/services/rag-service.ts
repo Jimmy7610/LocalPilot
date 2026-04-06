@@ -6,6 +6,8 @@ import { BaseDirectory, readDir, readTextFile, stat } from '@tauri-apps/plugin-f
 import { sep } from '@tauri-apps/api/path';
 import { v4 as uuid } from 'uuid';
 import { workspaceFileRepo, workspaceChunkRepo } from './storage';
+import { generateEmbeddings } from './ollama';
+import { cosineSimilarity } from '@/lib/vector-math';
 import type { WorkspaceFile, WorkspaceChunk } from '@/types';
 
 const CHUNK_SIZE = 1000; // characters
@@ -28,7 +30,8 @@ export interface IndexProgress {
 export async function indexWorkspace(
   projectId: string, 
   basePath: string,
-  onProgress?: (p: IndexProgress) => void
+  onProgress?: (p: IndexProgress) => void,
+  embeddingModel: string = 'nomic-embed-text'
 ): Promise<void> {
   // 1. Clear existing index for this project
   await workspaceFileRepo.deleteByProject(projectId);
@@ -90,13 +93,27 @@ export async function indexWorkspace(
 
       // Chunk the content
       const chunks = chunkText(content, CHUNK_SIZE, CHUNK_OVERLAP);
-      const chunkRecords: WorkspaceChunk[] = chunks.map((text, index) => ({
-        id: uuid(),
-        fileId: fileRecord.id,
-        projectId,
-        content: text,
-        indexOrder: index,
-      }));
+      const chunkRecords: WorkspaceChunk[] = [];
+      
+      for (let i = 0; i < chunks.length; i++) {
+        const text = chunks[i];
+        let embedding: number[] | undefined;
+        try {
+          // Attempt to vectorize the chunk
+          embedding = await generateEmbeddings(embeddingModel, text);
+        } catch (e) {
+          console.warn('Could not generate embedding for chunk, continuing without it:', e);
+        }
+        
+        chunkRecords.push({
+          id: uuid(),
+          fileId: fileRecord.id,
+          projectId,
+          content: text,
+          indexOrder: i,
+          embedding,
+        });
+      }
 
       await workspaceChunkRepo.createMany(chunkRecords);
     } catch (err) {
@@ -131,14 +148,52 @@ function chunkText(text: string, size: number, overlap: number): string[] {
 }
 
 /**
- * Searches the project workspace for relevant snippets.
+ * Searches the project workspace using Vector Embeddings (Cosine Similarity).
+ * Falls back to basic database search if embeddings aren't available.
  */
-export async function searchWorkspace(projectId: string, query: string, limit = 5): Promise<string> {
-  const chunks = await workspaceChunkRepo.search(projectId, query, limit);
-  if (chunks.length === 0) return '';
+export async function searchWorkspace(
+  projectId: string, 
+  query: string, 
+  limit = 5,
+  embeddingModel: string = 'nomic-embed-text'
+): Promise<string> {
+  let queryEmbedding: number[] | undefined;
+  
+  try {
+    queryEmbedding = await generateEmbeddings(embeddingModel, query);
+  } catch (e) {
+    console.warn('No embedding generated for query, falling back to basic LIKE search.');
+  }
+
+  let finalChunks: WorkspaceChunk[] = [];
+
+  if (queryEmbedding && queryEmbedding.length > 0) {
+    // 1. Vector Search
+    const allChunks = await workspaceChunkRepo.getAllByProject(projectId);
+    
+    const validScored = allChunks
+      .filter(c => c.embedding && c.embedding.length === queryEmbedding!.length)
+      .map(chunk => ({
+        chunk,
+        score: cosineSimilarity(queryEmbedding!, chunk.embedding!)
+      }));
+
+    // Sort by descending score
+    validScored.sort((a, b) => b.score - a.score);
+    
+    finalChunks = validScored.slice(0, limit).map(s => s.chunk);
+  }
+
+  // Fallback to basic term search if vector search fails or yields nothing
+  if (finalChunks.length === 0) {
+    finalChunks = await workspaceChunkRepo.search(projectId, query, limit);
+  }
+
+  if (finalChunks.length === 0) return '';
 
   let context = "\n--- RELEVANT WORKSPACE CONTEXT ---\n";
-  chunks.forEach((chunk, i) => {
+  finalChunks.forEach((chunk, i) => {
+    // We append the snippet index for clarity
     context += `[Snippet ${i + 1}]:\n${chunk.content}\n\n`;
   });
   

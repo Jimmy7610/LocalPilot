@@ -30,6 +30,7 @@ export interface Message {
   chatId: string;
   role: 'user' | 'assistant' | 'system';
   content: string;
+  images?: string[];
   type?: 'text' | 'terminal_output' | 'action_proposal';
   meta?: any;
   createdAt: string;
@@ -65,6 +66,7 @@ export interface WorkspaceChunk {
   projectId: string;
   content: string;
   indexOrder: number;
+  embedding?: number[];
 }
 
 // ── Prompt ────────────────────────────────
@@ -110,6 +112,7 @@ export interface OllamaModel {
 export interface OllamaChatMessage {
   role: 'user' | 'assistant' | 'system';
   content: string;
+  images?: string[];
 }
 
 export interface OllamaChatRequest {

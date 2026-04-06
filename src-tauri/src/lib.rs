@@ -140,6 +140,12 @@ pub fn run() {
             sql: "ALTER TABLE messages ADD COLUMN meta TEXT;",
             kind: MigrationKind::Up,
         },
+        Migration {
+            version: 6,
+            description: "add embedding to workspace_chunks",
+            sql: "ALTER TABLE workspace_chunks ADD COLUMN embedding TEXT;",
+            kind: MigrationKind::Up,
+        },
     ];
 
     tauri::Builder::default()

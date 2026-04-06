@@ -220,3 +220,26 @@ export async function generate(
   const data = await res.json();
   return data.response || '';
 }
+
+// ── Embeddings ──
+
+export async function generateEmbeddings(
+  model: string,
+  prompt: string
+): Promise<number[]> {
+  const res = await fetch(`${baseUrl}/api/embeddings`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      model,
+      prompt,
+    }),
+  });
+
+  if (!res.ok) {
+    throw new Error(`Ollama embeddings error: ${res.status}`);
+  }
+
+  const data = await res.json();
+  return data.embedding || [];
+}

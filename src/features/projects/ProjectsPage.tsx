@@ -415,7 +415,7 @@ export function ProjectsPage() {
             {projects.map(project => (
               <motion.div 
                 key={project.id} 
-                variants={itemVariants}
+                variants={itemVariants as any}
                 whileHover={{ y: -8, scale: 1.02 }}
                 className="group cursor-pointer relative"
                 onClick={() => setSelectedProjectId(project.id)}

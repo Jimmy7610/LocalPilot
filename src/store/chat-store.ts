@@ -44,7 +44,7 @@ interface ChatState {
   togglePin: (id: string) => Promise<void>;
   setActiveChat: (id: string | null) => void;
   loadMessages: (chatId: string) => Promise<void>;
-  sendMessage: (chatId: string, content: string, model: string) => Promise<void>;
+  sendMessage: (chatId: string, content: string, model: string, images?: string[]) => Promise<void>;
   stopGeneration: () => void;
   updateChatModel: (id: string, model: string) => Promise<void>;
   updateSystemPrompt: (id: string, prompt: string) => Promise<void>;
@@ -124,12 +124,13 @@ export const useChatStore = create<ChatState>((set, get) => ({
     set(s => ({ messages: { ...s.messages, [chatId]: msgs } }));
   },
 
-  sendMessage: async (chatId, content, model) => {
+  sendMessage: async (chatId, content, model, images) => {
     const userMsg: Message = {
       id: uuid(),
       chatId,
       role: 'user',
       content,
+      images,
       type: 'text',
       createdAt: new Date().toISOString(),
     };
@@ -212,7 +213,7 @@ export const useChatStore = create<ChatState>((set, get) => ({
 
     for (const m of allMsgs) {
       if (m.id === assistantMsg.id) continue; // Skip the pending assistant message
-      ollamaMessages.push({ role: m.role, content: m.content });
+      ollamaMessages.push({ role: m.role, content: m.content, images: m.images });
     }
 
     // Auto-run interceptor BEFORE calling Ollama

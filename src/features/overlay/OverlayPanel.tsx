@@ -127,7 +127,7 @@ export function OverlayPanel({ open, onClose }: OverlayPanelProps) {
                   )}
                 >
                   <Wrench className={cn("w-4 h-4 opacity-50 transition-transform group-hover:scale-110", selectedTool === td.id && "opacity-100")} />
-                  <span className="truncate">{(t.tools as Record<string, string>)[td.titleKey] || td.id}</span>
+                  <span className="truncate">{(t.tools as Record<string, string>)[td.titleKey || ''] || td.title || td.id}</span>
                 </button>
               ))}
             </div>

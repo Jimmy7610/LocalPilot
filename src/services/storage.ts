@@ -299,14 +299,27 @@ export const workspaceChunkRepo = {
   async search(projectId: string, query: string, limit = 5): Promise<WorkspaceChunk[]> {
     const database = await getDb();
     if (database) {
-      // Basic keyword search using LIKE - later can use FTS5 if enabled
-      return database.select(
-        'SELECT id, file_id as fileId, project_id as projectId, content, index_order as indexOrder FROM workspace_chunks WHERE project_id = $1 AND content LIKE $2 LIMIT $3',
+      // Basic keyword search using LIKE - later we will use actual vector math in JS
+      const rows: any[] = await database.select(
+        'SELECT id, file_id as fileId, project_id as projectId, content, index_order as indexOrder, embedding FROM workspace_chunks WHERE project_id = $1 AND content LIKE $2 LIMIT $3',
         [projectId, `%${query}%`, limit]
       );
+      return rows.map(r => ({ ...r, embedding: r.embedding ? JSON.parse(r.embedding) : undefined }));
     }
     const chunks = lsGet<WorkspaceChunk[]>('workspace_chunks', []).filter(c => c.projectId === projectId);
     return chunks.filter(c => c.content.toLowerCase().includes(query.toLowerCase())).slice(0, limit);
+  },
+
+  async getAllByProject(projectId: string): Promise<WorkspaceChunk[]> {
+    const database = await getDb();
+    if (database) {
+      const rows: any[] = await database.select(
+        'SELECT id, file_id as fileId, project_id as projectId, content, index_order as indexOrder, embedding FROM workspace_chunks WHERE project_id = $1',
+        [projectId]
+      );
+      return rows.map(r => ({ ...r, embedding: r.embedding ? JSON.parse(r.embedding) : undefined }));
+    }
+    return lsGet<WorkspaceChunk[]>('workspace_chunks', []).filter(c => c.projectId === projectId);
   },
 
   async createMany(chunks: WorkspaceChunk[]): Promise<void> {
@@ -314,8 +327,8 @@ export const workspaceChunkRepo = {
     if (database) {
       for (const chunk of chunks) {
         await database.execute(
-          'INSERT INTO workspace_chunks (id, file_id, project_id, content, index_order) VALUES ($1, $2, $3, $4, $5)',
-          [chunk.id, chunk.fileId, chunk.projectId, chunk.content, chunk.indexOrder]
+          'INSERT INTO workspace_chunks (id, file_id, project_id, content, index_order, embedding) VALUES ($1, $2, $3, $4, $5, $6)',
+          [chunk.id, chunk.fileId, chunk.projectId, chunk.content, chunk.indexOrder, chunk.embedding ? JSON.stringify(chunk.embedding) : null]
         );
       }
     } else {

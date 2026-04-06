@@ -73,6 +73,11 @@
   --color-sidebar-accent-foreground: hsl(245 75% 78%);
   --color-success: hsl(142 71% 45%);
   --color-warning: hsl(38 92% 50%);
+
+  /* Premium Glows */
+  --glow-primary: radial-gradient(circle, var(--color-primary) 0%, transparent 70%);
+  --glow-cyan: radial-gradient(circle, #06b6d4 0%, transparent 70%);
+  --glow-purple: radial-gradient(circle, #8b5cf6 0%, transparent 70%);
 }
 
 @layer base {
@@ -135,6 +140,32 @@
     @apply glass rounded-2xl overflow-hidden active:scale-[0.99] transition-all;
   }
 
+  /* Shimmer Text Effect */
+  .text-shimmer {
+    background: linear-gradient(
+      to right,
+      #fff 20%,
+      rgba(255, 255, 255, 0.4) 50%,
+      #fff 80%
+    );
+    background-size: 200% auto;
+    background-clip: text;
+    text-fill-color: transparent;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    animation: shimmer 4s linear infinite;
+  }
+
+  /* Mesh Gradient Container */
+  .mesh-gradient {
+    position: absolute;
+    inset: 0;
+    overflow: hidden;
+    filter: blur(140px);
+    opacity: 0.8;
+    z-index: 0;
+  }
+
   .glow-border {
     position: relative;
   }
@@ -174,6 +205,11 @@
   }
 }
 
+@keyframes shimmer {
+  to {
+    background-position: 200% center;
+  }
+}
 @keyframes fadeIn {
   from { opacity: 0; }
   to { opacity: 1; }
