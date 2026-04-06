@@ -240,20 +240,23 @@ export const projectRepo = {
   async delete(id: string): Promise<void> {
     const database = await getDb();
     if (database) {
-      // 1. Cleanup junction tables (defensive)
-      await database.execute('DELETE FROM project_chats WHERE project_id = $1', [id]);
-      await database.execute('DELETE FROM project_documents WHERE project_id = $1', [id]);
-      await database.execute('DELETE FROM project_prompts WHERE project_id = $1', [id]);
-      
-      // 2. Cleanup workspace data
-      await database.execute('DELETE FROM workspace_chunks WHERE project_id = $1', [id]);
-      await database.execute('DELETE FROM workspace_files WHERE project_id = $1', [id]);
-      
-      // 3. Cleanup primary records
-      await database.execute('DELETE FROM projects WHERE id = $1', [id]);
+      // Aggressive cleanup: Try each step, ignore errors for secondary tables
+      const cleanup = async (sql: string) => {
+        try { await database.execute(sql, [id]); } catch (e) { console.debug(`Cleanup step failed: ${sql}`, e); }
+      };
 
-      // Note: We currently don't delete chats/documents themselves to avoid data loss, 
-      // but they are decoupled from the project.
+      await cleanup('DELETE FROM project_chats WHERE project_id = $1');
+      await cleanup('DELETE FROM project_documents WHERE project_id = $1');
+      await cleanup('DELETE FROM project_prompts WHERE project_id = $1');
+      await cleanup('DELETE FROM workspace_chunks WHERE project_id = $1');
+      await cleanup('DELETE FROM workspace_files WHERE project_id = $1');
+      
+      // Force dissociate from chats and documents (nullable column)
+      await cleanup('UPDATE chats SET project_id = NULL WHERE project_id = $1');
+      await cleanup('UPDATE documents SET project_id = NULL WHERE project_id = $1');
+
+      // Final primary record deletion (Must succeed)
+      await database.execute('DELETE FROM projects WHERE id = $1', [id]);
     } else {
       const projects = lsGet<Project[]>('projects', []);
       lsSet('projects', projects.filter(p => p.id !== id));

@@ -418,42 +418,45 @@ export function ProjectsPage() {
                 key={project.id} 
                 variants={itemVariants as any}
                 whileHover={{ y: -8, scale: 1.02 }}
-                className="group cursor-pointer relative"
-                onClick={() => setSelectedProjectId(project.id)}
+                className="group relative h-full"
               >
                 <div 
                   className="absolute inset-0 opacity-0 group-hover:opacity-10 blur-3xl rounded-[32px] transition-opacity duration-500"
                   style={{ backgroundColor: project.color }}
                 />
-                <div className="glass-card border-white/10 rounded-[32px] p-6 hover:border-white/20 transition-all shadow-xl group-hover:shadow-2xl h-full flex flex-col isolation-isolate overflow-hidden">
-                   <div className="absolute top-0 right-0 p-4 opacity-5 group-hover:opacity-10 transition-opacity">
+                <div className="glass-card border-white/10 rounded-[32px] p-6 hover:border-white/20 transition-all shadow-xl group-hover:shadow-2xl h-full flex flex-col isolation-isolate overflow-hidden relative">
+                   <div 
+                     className="absolute inset-0 z-0 cursor-pointer"
+                     onClick={() => setSelectedProjectId(project.id)}
+                   />
+                   
+                   <div className="absolute top-0 right-0 p-4 opacity-5 group-hover:opacity-10 transition-opacity pointer-events-none">
                       <Layers className="w-20 h-20" />
                    </div>
                    
-                   <div className="flex items-start justify-between mb-8">
+                   <div className="flex items-start justify-between mb-8 relative z-10">
                      <div 
-                        className="w-14 h-14 rounded-2xl flex items-center justify-center text-xl font-black shadow-lg"
+                        className="w-14 h-14 rounded-2xl flex items-center justify-center text-xl font-black shadow-lg pointer-events-none"
                         style={{ backgroundColor: `${project.color}20`, color: project.color }}
                      >
                        {project.name[0]?.toUpperCase()}
                      </div>
-                     <DropdownMenu>
+                     <DropdownMenu modal={false}>
                         <DropdownMenuTrigger asChild>
                           <Button 
                             variant="ghost" 
                             size="icon" 
-                            className="h-10 w-10 text-white/20 hover:text-white rounded-xl hover:bg-white/5" 
-                            onClick={e => e.stopPropagation()}
+                            className="h-10 w-10 text-white/20 hover:text-white rounded-xl hover:bg-white/5 relative z-20"
                           >
                             <MoreVertical className="w-4 h-4" />
                           </Button>
                         </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end" className="glass border-white/10 w-40">
-                          <DropdownMenuItem onClick={(e) => { e.stopPropagation(); openEdit(project); }}>
+                        <DropdownMenuContent align="end" className="glass border-white/10 w-40 z-[200]">
+                          <DropdownMenuItem onSelect={() => openEdit(project)}>
                             <Edit3 className="w-3.5 h-3.5 mr-2" /> {t.common.edit}
                           </DropdownMenuItem>
                           <DropdownMenuSeparator className="bg-white/5" />
-                          <DropdownMenuItem className="text-destructive focus:text-destructive" onClick={(e) => { e.stopPropagation(); setDeleteDialogId(project.id); }}>
+                          <DropdownMenuItem className="text-destructive focus:text-destructive" onSelect={() => setDeleteDialogId(project.id)}>
                             <Trash2 className="w-3.5 h-3.5 mr-2" /> {t.common.delete}
                           </DropdownMenuItem>
                         </DropdownMenuContent>

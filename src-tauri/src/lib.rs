@@ -141,9 +141,14 @@ pub fn run() {
             kind: MigrationKind::Up,
         },
         Migration {
-            version: 6,
-            description: "add embedding to workspace_chunks",
-            sql: "ALTER TABLE workspace_chunks ADD COLUMN embedding TEXT;",
+            version: 7,
+            description: "add indices for project relations",
+            sql: "
+                CREATE INDEX IF NOT EXISTS idx_chats_project_id ON chats(project_id);
+                CREATE INDEX IF NOT EXISTS idx_documents_project_id ON documents(project_id);
+                CREATE INDEX IF NOT EXISTS idx_workspace_files_project_id ON workspace_files(project_id);
+                CREATE INDEX IF NOT EXISTS idx_workspace_chunks_project_id ON workspace_chunks(project_id);
+            ",
             kind: MigrationKind::Up,
         },
     ];
