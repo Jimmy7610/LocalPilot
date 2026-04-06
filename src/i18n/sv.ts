@@ -30,6 +30,7 @@ const sv: TranslationKeys = {
     save: 'Spara',
     cancel: 'Avbryt',
     delete: 'Ta bort',
+    deleteSuccess: 'Projektet har tagits bort',
     edit: 'Redigera',
     close: 'Stäng',
     search: 'Sök',

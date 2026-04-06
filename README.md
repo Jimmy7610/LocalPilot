@@ -1,110 +1,92 @@
 # LocalPilot 🚀
+### Industrial Grade Local AI Workspace
 
-**LocalPilot** är ditt personliga, oberoende kontrollcenter för lokal AI. Istället för att lita på molntjänster kör du kraftfulla AI-modeller (via Ollama) direkt på din egen hårdvara. 100% integritet, ingen spårning, och total kontroll.
+**LocalPilot** is the definitive, local-first AI control center for high-stakes workflows. Powered by Ollama and built for privacy-conscious power users, it puts the world's most advanced open-weight models (Llama 3, Mistral, DeepSeek) directly on your hardware. 
 
-Byggt för power-users som vill ha en polerad, privat och praktisk miljö för AI-stöttat arbete.
+No clouds. No subscriptions. No data leaks. Just pure, unadulterated intelligence.
 
 ---
 
-### Skärmbilder
-
+### 🎨 The Experience
 <p align="center">
-  <img src="docs/home.png" width="400" alt="Hem - Översikt" />
-  <img src="docs/chat.png" width="400" alt="Chatt-gränssnitt" />
-  <img src="docs/projects.png" width="400" alt="Projekt-hantering" />
-  <img src="docs/terminal.png" width="400" alt="Terminal Manager" />
+  <img src="docs/home.png" width="45%" alt="Home Dashboard" />
+  <img src="docs/chat.png" width="45%" alt="Premium Chat" />
 </p>
 
----
-
-## 🛠 Vad är LocalPilot?
-
-LocalPilot kombinerar chatt, projektorganisering, dokumenthantering och avancerade AI-verktyg i en och samma skrivbordsapplikation. Det är bryggan mellan dina lokala AI-modeller och ditt faktiska arbetsflöde.
-
-### Nyckelfunktioner
-
-- **🤖 Avancerad Chatt** — Fullfjädrad chattupplevelse med streaming, markdown, kod-highlighting och smart modellval.
-- **📂 Projekt-isolerat Minne** — Organisera ditt arbete i Projekt. AI:n "minns" kontexten för specifika uppdrag genom att knyta samman dokument och chattar.
-- **📟 Terminal Manager** — En modern, svävande (floating island) terminal där du kan köra kod och övervaka bakgrundsprocesser direkt i appen.
-- **📑 Dokument & RAG** — Ladda upp textreferenser som AI:n använder som facit (Retrieval-Augmented Generation).
-- **⚡ Snabbverktyg** — Färdiga verktyg för att sammanfatta, skriva om, översätta eller städa upp anteckningar med ett klick.
-- **🔄 Säker Omstart** — Inbyggd funktion för att starta om både frontend och backend med ett klick för att rensa minne eller synka ändringar.
-- **🌓 Dark & Light Mode** — Premium-design med stöd för både mörkt och ljust tema.
+- **Editorial Typography:** High-contrast, bold, and professional.
+- **Glassmorphism UI:** A sleek, semi-transparent aesthetic that feels native to modern OS environments.
+- **Micro-Animations:** Fluid transitions powered by Framer Motion.
 
 ---
 
-## 🎨 Designfilosofi
+### ⚡ Core Capabilities
 
-- **Local-first:** Din data lämnar aldrig din maskin.
-- **Premium UX:** En ren, intelligent och fokuserad design som känns som en modern macOS/Windows-app.
-- **Transparens:** Övervaka exakt vad AI:n gör via den inbyggda terminalen.
-
----
-
-## 💻 Technical Stack
-
-LocalPilot är byggt med den senaste tekniken för maximal prestanda och säkerhet:
-
-- **Desktop Shell:** [Tauri 2](https://tauri.app) (Rust-baserat för minsta möjliga footprint)
-- **Frontend:** React 19 + TypeScript + Vite 7
-- **Styling:** Tailwind CSS 4 (för den där premium-känslan)
-- **State Management:** Zustand 5
-- **Persistence:** SQLite via `tauri-plugin-sql`
-- **AI Backend:** [Ollama](https://ollama.com) (lokal instans på `localhost:11434`)
-- **Process Management:** `tauri-plugin-process` för kontroll av bakgrundskörningar
+- **🤖 Elite Chat Studio** — Multi-modal support, streaming, and full project-aware context.
+- **📂 Strategic Project Isolation** — Group your documents, chats, and tools into isolated workspaces.
+- **📑 RAG Engine (Local Indexing)** — Full-text search and vector-based retrieval on your local files.
+- **📟 Agentic Terminal** — Run system commands and scripts with a built-in safety-interceptor and approval flow.
+- **🛠 Prompt Engineering Studio** — Maintain a library of high-performance system prompts.
+- **⚡ Advanced Tools** — Built-in modules for code refactoring, translation, and document summarization.
 
 ---
 
-## 🚀 Kom igång
+### 💻 The Stack (V5 Core)
 
-### 1. Förutsättningar
-- [Node.js](https://nodejs.org) 18+
-- [Rust](https://rustup.rs) (för Tauri-kompilering)
-- [Ollama](https://ollama.com) installerat och igång
+| Technology | Role |
+|:---|:---|
+| **Tauri 2.0** | High-performance Rust-based desktop shell |
+| **React 19** | Modern frontend engine |
+| **Vite 7** | Lightning-fast build and development |
+| **Tailwind 4** | Next-gen utility-first styling |
+| **SQLite** | Industrial-grade local persistence |
+| **Ollama** | Local model inference backend |
 
-### 2. Installation
+---
+
+### 🚀 Implementation
+
+#### 1. Requirements
+- **Node.js** 20+
+- **Rust** (Stable)
+- **Ollama** Running at `localhost:11434`
+
+#### 2. Installation
 ```bash
 git clone https://github.com/Jimmy7610/LocalPilot.git
 cd LocalPilot
 npm install
 ```
 
-### 3. Kör i utvecklingsläge
+#### 3. Execution
 ```bash
-# För desktop-appen (Tauri + SQLite)
+# Launch Production-Ready Desktop Environment
 npm run tauri dev
-
-# Endast frontend (i webbläsaren)
-npm run dev
 ```
 
 ---
 
-## ⌨️ Kortkommandon
+### ⌨️ Command Center Shortcuts
 
-| Kommando | Aktion |
-|----------|--------|
-| `Ctrl+K` | Öppna Overlay / Quick Access |
-| `Enter` | Skicka meddelande |
-| `Shift+Enter` | Ny rad i chatten |
-
----
-
-## 📝 Roadmap
-
-- [x] Import av PDF-dokument
-- [x] RAG-stöd för hela mappar (Workspace-synk)
-- [ ] Export av chattar till Markdown/JSON
-- [ ] Fler agentiska verktyg i Terminalen (t.ex. körning av skript)
-- [ ] Global hotkey för system-tray / snabb-minimering
-- [ ] Bildstöd i chatten (för multimodala modeller)
+| Key | Operation |
+|:---|:---|
+| `Ctrl + K` | **Spotlight Search** - Global Action Palette |
+| `Ctrl + L` | **Clear Timeline** |
+| `Enter` | Send Command |
+| `Shift + Enter` | Newline |
 
 ---
 
-## Licens
-MIT
+### 📝 The Roadmap (Phase 5 Completed)
+
+- [x] **Spotlight Search (Ctrl+K):** Global command palette for instant navigation.
+- [x] **Action Cards:** Approval-based execution for terminal commands.
+- [x] **Library System:** Unified management for Documents, Prompts, and Tools.
+- [x] **Premium Productivity Design:** Full UI/UX overhaul to professional standards.
+- [ ] **Multi-Modal Image Support:** Native support for vision-capable models (In Progress).
+- [ ] **Global Hotkey:** Minimize to tray / background execution.
 
 ---
 
-**Utvecklad med omsorg av Jimmy.**
-*Local-first AI for the rest of us.*
+**Built with uncompromising vision by Jimmy.**  
+*The future of AI is local.*
+

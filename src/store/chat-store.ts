@@ -216,17 +216,18 @@ export const useChatStore = create<ChatState>((set, get) => ({
       ollamaMessages.push({ role: m.role, content: m.content, images: m.images });
     }
 
-    // Auto-run interceptor BEFORE calling Ollama
+    // 'Safety First' Action Interceptor
     const userIntent = content.toLowerCase();
-    if (
+    const isExecutionIntent = 
       userIntent.includes('starta appen') || 
       userIntent.includes('start app') || 
       userIntent.includes('kör servern') ||
       userIntent.includes('run the app') ||
       userIntent.includes('start the server') ||
       userIntent.includes('kör koden') ||
-      userIntent.includes('run it')
-    ) {
+      userIntent.includes('run it');
+
+    if (isExecutionIntent) {
       const lastAssistantMsg = allMsgs.slice().reverse().find(m => m.role === 'assistant' && m.content.includes('```'));
       if (lastAssistantMsg) {
         const match = lastAssistantMsg.content.match(/```(?:bash|sh|cmd|powershell|)\s*\n([\s\S]*?)```/);
@@ -238,21 +239,27 @@ export const useChatStore = create<ChatState>((set, get) => ({
               // 1. DYNAMICALLY pull the Workspace service
               const { syncWorkspace } = await import('@/services/workspace');
               
-              // 2. Extract & write ALL code files to the disk
+              // 2. Extract & write ALL code files to the disk (Safe pre-step)
               const workspaceDir = await syncWorkspace(chatId, allMsgs);
               
-              // 3. Execute terminal command securely mapped to that new directory context
-              useTerminalStore.getState().runCommand(command, { cwd: workspaceDir });
-              
-              // 4. Print synthetic success log
-              assistantMsg.content = `📦 **Workspace Synced** under Documents folder.\n🚀 Background execution triggered: \`${command}\``;
+              // 3. Propose the action instead of running it immediately
+              assistantMsg.type = 'action_proposal';
+              assistantMsg.content = command;
+              assistantMsg.meta = {
+                title: 'Execute Workspace Sync',
+                description: 'LocalPilot will sync your generated files and execute this command in the background.',
+                command,
+                cwd: workspaceDir,
+                status: 'pending'
+              };
+
               await messageRepo.create(assistantMsg);
               
               set(s => ({
                 messages: {
                   ...s.messages,
                   [chatId]: (s.messages[chatId] || []).map(m =>
-                    m.id === assistantMsg.id ? { ...m, content: assistantMsg.content } : m
+                    m.id === assistantMsg.id ? { ...m, content: assistantMsg.content, type: 'action_proposal', meta: assistantMsg.meta } : m
                   ),
                 },
                 generating: false,

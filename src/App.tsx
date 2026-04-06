@@ -20,7 +20,7 @@ import { DocumentsPage } from '@/features/documents/DocumentsPage';
 import { ToolsPage } from '@/features/tools/ToolsPage';
 import { SettingsPage } from '@/features/settings/SettingsPage';
 import { WelcomePage } from '@/features/welcome/WelcomePage';
-import { OverlayPanel } from '@/features/overlay/OverlayPanel';
+import { CommandPalette } from '@/features/command-palette/CommandPalette';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Toaster } from 'sonner';
 
@@ -32,7 +32,7 @@ export default function App() {
   const promptStore = usePromptStore();
   const documentStore = useDocumentStore();
 
-  const [overlayOpen, setOverlayOpen] = useState(false);
+  const [commandPaletteOpen, setCommandPaletteOpen] = useState(false);
   const [showWelcome, setShowWelcome] = useState(true);
 
   // Initialize app
@@ -56,12 +56,12 @@ export default function App() {
     }
   }, [settings.loaded]);
 
-  // Global keyboard shortcut for overlay (Ctrl+K)
+  // Global keyboard shortcut for Command Palette (Ctrl+K)
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
         e.preventDefault();
-        setOverlayOpen(prev => !prev);
+        setCommandPaletteOpen(prev => !prev);
       }
     };
     window.addEventListener('keydown', handleKeyDown);
@@ -103,7 +103,7 @@ export default function App() {
                   <Route path="settings" element={<SettingsPage />} />
                 </Route>
               </Routes>
-              <OverlayPanel open={overlayOpen} onClose={() => setOverlayOpen(false)} />
+              <CommandPalette open={commandPaletteOpen} onClose={() => setCommandPaletteOpen(false)} />
               <Toaster
                 position="bottom-right"
                 toastOptions={{

@@ -17,7 +17,9 @@ import {
   Check,
   FilePlus,
   FileUp,
+  ArrowRight,
 } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { useT, useLanguage } from '@/i18n';
 import { useDocumentStore } from '@/store/document-store';
 import { useOllamaStore } from '@/store/ollama-store';
@@ -76,7 +78,7 @@ export function DocumentsPage() {
     if (!file) return;
     
     if (file.type !== 'application/pdf') {
-      toast.error('Går bara att ladda upp PDF-filer');
+      toast.error('Only PDF files are supported.');
       return;
     }
 
@@ -86,13 +88,12 @@ export function DocumentsPage() {
       setFormTitle(result.fileName.replace(/\.pdf$/i, ''));
       setFormContent(result.text);
       setFormOpen(true);
-      toast.success('PDF importerad klockrent!');
+      toast.success('PDF imported successfully!');
     } catch (err: any) {
       console.error('PDF error:', err);
-      toast.error('Kunde tyvärr inte läsa PDF-filen');
+      toast.error('Failed to read PDF file.');
     } finally {
       setIsExtracting(false);
-      // Reset input
       e.target.value = '';
     }
   };
@@ -162,238 +163,278 @@ export function DocumentsPage() {
     }
   };
 
-  // Document detail view
   if (selectedDoc) {
     return (
-      <div className="h-full overflow-y-auto">
-        <div className="max-w-4xl mx-auto p-6 animate-fade-in">
-        <Button variant="ghost" size="sm" className="gap-1.5 mb-4" onClick={() => { setSelectedDoc(null); setEditing(false); setAiResult(''); }}>
-          <ChevronLeft className="w-4 h-4" /> {t.common.back}
-        </Button>
-
-        {editing ? (
-          <div className="space-y-3">
-            <Input value={formTitle} onChange={e => setFormTitle(e.target.value)} className="text-lg font-semibold" />
-            <Textarea
-              value={formContent}
-              onChange={e => setFormContent(e.target.value)}
-              placeholder={t.documents.contentPlaceholder}
-              className="min-h-[400px] font-mono text-sm"
-            />
-            <div className="flex gap-2">
-              <Button onClick={handleSaveEdit}>{t.common.save}</Button>
-              <Button variant="outline" onClick={() => setEditing(false)}>{t.common.cancel}</Button>
-            </div>
+      <div className="h-full overflow-y-auto custom-scrollbar">
+        <div className="max-w-4xl mx-auto p-12 space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
+          <div className="flex items-center justify-between">
+            <Button variant="ghost" size="sm" className="gap-2 text-white/40 hover:text-white" onClick={() => { setSelectedDoc(null); setEditing(false); setAiResult(''); }}>
+              <ChevronLeft className="w-4 h-4" /> {t.common.back}
+            </Button>
+            {!editing && (
+              <Button variant="ghost" size="sm" className="glass h-9 px-4 rounded-xl text-xs font-bold" onClick={startEdit}>
+                <Edit3 className="w-3.5 h-3.5 mr-2" /> {t.common.edit}
+              </Button>
+            )}
           </div>
-        ) : (
-          <>
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="text-xl font-bold">{selectedDoc.title}</h2>
-              <div className="flex gap-1.5">
-                <Button variant="outline" size="sm" onClick={startEdit}>
-                  <Edit3 className="w-3.5 h-3.5 mr-1.5" /> {t.common.edit}
-                </Button>
+
+          {editing ? (
+            <div className="space-y-6">
+              <Input 
+                value={formTitle} 
+                onChange={e => setFormTitle(e.target.value)} 
+                className="text-4xl font-black tracking-tighter bg-transparent border-none p-0 focus-visible:ring-0 placeholder:opacity-20" 
+                placeholder="Document Title"
+              />
+              <Textarea
+                value={formContent}
+                onChange={e => setFormContent(e.target.value)}
+                placeholder={t.documents.contentPlaceholder}
+                className="min-h-[500px] glass p-6 rounded-[32px] border-white/5 font-mono text-[13px] leading-relaxed focus:border-primary/40 transition-all"
+              />
+              <div className="flex gap-3">
+                <Button onClick={handleSaveEdit} className="h-12 px-8 rounded-2xl bg-primary font-bold text-xs uppercase tracking-widest">{t.common.save}</Button>
+                <Button variant="ghost" onClick={() => setEditing(false)} className="h-12 px-8 rounded-2xl text-white/40">{t.common.cancel}</Button>
               </div>
             </div>
-
-            <div className="bg-card border border-border rounded-xl p-5 mb-4 min-h-[200px]">
-              <pre className="whitespace-pre-wrap text-sm font-sans">{selectedDoc.content || t.documents.contentPlaceholder}</pre>
-            </div>
-
-            {/* AI Actions */}
-            <div className="space-y-3">
-              <h3 className="text-sm font-semibold flex items-center gap-2">
-                <Sparkles className="w-4 h-4 text-primary" /> {t.documents.aiActions}
-              </h3>
-              <div className="flex gap-2">
-                {[
-                  { key: 'summarize', label: t.documents.summarize },
-                  { key: 'rewrite', label: t.documents.rewrite },
-                  { key: 'explain', label: t.documents.explain },
-                  { key: 'bullets', label: t.documents.toBullets },
-                ].map(action => (
-                  <Button
-                    key={action.key}
-                    variant="outline"
-                    size="sm"
-                    disabled={aiLoading || !connected || !selectedDoc.content}
-                    onClick={() => runAiAction(action.key)}
-                  >
-                    {aiLoading ? <Loader2 className="w-3.5 h-3.5 animate-spin mr-1.5" /> : null}
-                    {action.label}
-                  </Button>
-                ))}
-              </div>
-
-              {aiResult && (
-                <div className="bg-muted rounded-xl p-4 relative group">
-                  <pre className="whitespace-pre-wrap text-sm font-sans">{aiResult}</pre>
-                  <button
-                    className="absolute top-2 right-2 p-1.5 rounded-md bg-background/80 border border-border opacity-0 group-hover:opacity-100 transition-opacity"
-                    onClick={() => {
-                      navigator.clipboard.writeText(aiResult);
-                      setAiCopied(true);
-                      setTimeout(() => setAiCopied(false), 2000);
-                    }}
-                  >
-                    {aiCopied ? <Check className="w-3 h-3 text-success" /> : <Copy className="w-3 h-3" />}
-                  </button>
+          ) : (
+            <div className="space-y-12">
+              <div className="space-y-2">
+                <div className="flex items-center gap-2 mb-2">
+                   <div className="px-2 py-0.5 rounded bg-white/5 border border-white/10 text-[9px] font-black uppercase tracking-widest text-white/40">Knowledge Base</div>
+                   <div className="w-1 h-1 rounded-full bg-white/20" />
+                   <div className="text-[10px] font-bold uppercase tracking-widest text-white/20">Last modified {formatDistanceToNow(new Date(selectedDoc.updatedAt), { addSuffix: true })}</div>
                 </div>
-              )}
+                <h1 className="text-5xl font-black tracking-tighter uppercase italic">{selectedDoc.title}</h1>
+              </div>
+
+              <div className="glass-card p-10 border-white/5 shadow-2xl relative">
+                  <div className="absolute top-0 right-0 p-6 opacity-5">
+                      <FileText className="w-32 h-32" />
+                  </div>
+                  <div className="prose prose-invert max-w-none prose-sm selection:bg-primary/30 leading-relaxed text-white/80 font-medium">
+                      {selectedDoc.content ? (
+                        <pre className="whitespace-pre-wrap font-sans !m-0 !p-0 bg-transparent">{selectedDoc.content}</pre>
+                      ) : (
+                        <p className="italic opacity-30">{t.documents.contentPlaceholder}</p>
+                      )}
+                  </div>
+              </div>
+
+              {/* AI Actions System */}
+              <div className="p-8 rounded-[40px] bg-primary/5 border border-primary/10 space-y-6">
+                <div className="flex items-center gap-3">
+                  <div className="w-8 h-8 rounded-xl bg-primary/20 flex items-center justify-center text-primary shadow-lg shadow-primary/20">
+                    <Sparkles className="w-4 h-4 shadow-sm" />
+                  </div>
+                  <h3 className="text-xs font-black tracking-[0.2em] uppercase text-primary/80">Intelligent Operations</h3>
+                </div>
+                
+                <div className="flex flex-wrap gap-2">
+                  {[
+                    { key: 'summarize', label: t.documents.summarize, icon: FilePlus },
+                    { key: 'rewrite', label: t.documents.rewrite, icon: Edit3 },
+                    { key: 'explain', label: t.documents.explain, icon: Sparkles },
+                    { key: 'bullets', label: t.documents.toBullets, icon: Check },
+                  ].map(action => (
+                    <Button
+                      key={action.key}
+                      variant="ghost"
+                      size="sm"
+                      className="glass h-10 px-4 rounded-xl border-white/5 hover:bg-primary/10 hover:text-primary hover:border-primary/20 transition-all font-bold text-[10px] uppercase tracking-widest gap-2"
+                      disabled={aiLoading || !connected || !selectedDoc.content}
+                      onClick={() => runAiAction(action.key)}
+                    >
+                      {aiLoading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <action.icon className="w-3.5 h-3.5 opacity-40 shrink-0" />}
+                      {action.label}
+                    </Button>
+                  ))}
+                </div>
+
+                <AnimatePresence>
+                  {aiResult && (
+                    <motion.div 
+                      initial={{ opacity: 0, scale: 0.98 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      className="bg-black/40 rounded-[28px] p-6 border border-white/5 relative group shadow-2xl"
+                    >
+                      <div className="prose prose-invert prose-xs max-w-none selection:bg-primary/40 leading-relaxed text-primary/90 font-medium italic">
+                          <pre className="whitespace-pre-wrap font-sans !m-0 !p-0 bg-transparent">{aiResult}</pre>
+                      </div>
+                      <button
+                        className="absolute top-4 right-4 p-2 rounded-xl bg-primary/20 border border-primary/20 hover:bg-primary transition-all text-primary hover:text-primary-foreground shadow-xl opacity-0 group-hover:opacity-100"
+                        onClick={() => {
+                          navigator.clipboard.writeText(aiResult);
+                          setAiCopied(true);
+                          setTimeout(() => setAiCopied(false), 2000);
+                        }}
+                      >
+                        {aiCopied ? <Check className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />}
+                      </button>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </div>
             </div>
-          </>
-        )}
+          )}
         </div>
       </div>
     );
   }
 
-  // Document list view
   return (
-    <div className="h-full overflow-y-auto">
-      <div className="max-w-5xl mx-auto p-6 animate-fade-in">
-      <div className="flex items-center justify-between mb-6">
-        <h2 className="text-xl font-bold">{t.documents.title}</h2>
-        <div className="flex gap-2">
-          <input
-            type="file"
-            id="pdf-upload"
-            accept=".pdf"
-            className="hidden"
-            onChange={handlePdfImport}
-          />
-          <Button 
-            variant="outline" 
-            size="sm" 
-            className="gap-1.5" 
-            disabled={isExtracting}
-            onClick={() => document.getElementById('pdf-upload')?.click()}
-          >
-            {isExtracting ? <Loader2 className="w-4 h-4 animate-spin" /> : <FileUp className="w-4 h-4" />}
-            {isExtracting ? t.documents.pdfReading : t.documents.pdfUpload}
-          </Button>
-          <Button onClick={openCreate} size="sm" className="gap-1.5">
-            <Plus className="w-4 h-4" /> {t.documents.newDocument}
-          </Button>
-        </div>
-      </div>
-
-      <div className="relative mb-4">
-        <Search className="absolute left-2.5 top-2.5 w-3.5 h-3.5 text-muted-foreground" />
-        <Input
-          placeholder={t.documents.searchDocuments}
-          value={searchQuery}
-          onChange={e => setSearchQuery(e.target.value)}
-          className="pl-8 h-9"
-        />
-      </div>
-
-      {filtered.length === 0 ? (
-        <div className="text-center py-16">
-          <FileText className="w-12 h-12 text-muted-foreground/20 mx-auto mb-3" />
-          <h3 className="text-base font-semibold mb-1">{t.documents.noDocuments}</h3>
-          <p className="text-sm text-muted-foreground">{t.documents.noDocumentsHint}</p>
-          <div className="flex justify-center gap-2 mt-4">
+    <div className="h-full overflow-y-auto custom-scrollbar">
+      <div className="max-w-6xl mx-auto p-12 space-y-12 animate-in fade-in duration-700">
+        <div className="flex flex-col md:flex-row items-start md:items-end justify-between gap-6">
+          <div className="space-y-2">
+            <h1 className="text-5xl font-black tracking-tighter uppercase italic">{t.documents.title}</h1>
+            <p className="text-lg text-white/40 font-medium italic">Build your local knowledge repository.</p>
+          </div>
+          <div className="flex gap-3">
+            <input
+              type="file"
+              id="pdf-upload"
+              accept=".pdf"
+              className="hidden"
+              onChange={handlePdfImport}
+            />
             <Button 
-              variant="outline" 
-              className="gap-1.5" 
-              size="sm"
+              variant="ghost" 
+              className="glass h-14 px-8 rounded-full border-white/5 hover:bg-white/10 font-black uppercase italic tracking-tighter gap-3 text-white/60 hover:text-white" 
               disabled={isExtracting}
               onClick={() => document.getElementById('pdf-upload')?.click()}
             >
-              {isExtracting ? <Loader2 className="w-4 h-4 animate-spin" /> : <FileUp className="w-4 h-4" />}
-              {t.documents.pdfUpload}
+              {isExtracting ? <Loader2 className="w-5 h-5 animate-spin" /> : <FileUp className="w-5 h-5" />}
+              {isExtracting ? t.documents.pdfReading : t.documents.pdfUpload}
             </Button>
-            <Button onClick={openCreate} className="gap-1.5" size="sm">
-              <Plus className="w-4 h-4" /> {t.documents.newDocument}
+            <Button onClick={openCreate} className="h-14 px-8 rounded-full bg-primary text-primary-foreground font-black uppercase italic tracking-tighter shadow-2xl shadow-primary/20 hover:scale-105 transition-all gap-3">
+              <Plus className="w-5 h-5" /> {t.documents.newDocument}
             </Button>
           </div>
         </div>
-      ) : (
-        <div className="space-y-1.5">
-          {filtered.map(doc => (
-            <div
-              key={doc.id}
-              className="flex items-center gap-3 p-3 rounded-xl border border-border hover:border-primary/30 cursor-pointer transition-colors group bg-card"
-              onClick={() => setSelectedDoc(doc)}
-            >
-              <FileText className="w-5 h-5 text-muted-foreground shrink-0" />
-              <div className="flex-1 min-w-0">
-                <h3 className="text-sm font-medium truncate">{doc.title}</h3>
-                <p className="text-xs text-muted-foreground line-clamp-1">{doc.content || t.documents.contentPlaceholder}</p>
+
+        <div className="relative group">
+          <Search className="absolute left-5 top-1/2 -translate-y-1/2 w-4 h-4 text-white/20 group-focus-within:text-primary transition-colors" />
+          <Input
+            placeholder={t.documents.searchDocuments}
+            value={searchQuery}
+            onChange={e => setSearchQuery(e.target.value)}
+            className="pl-12 h-14 rounded-[20px] glass border-white/5 focus:border-primary/40 transition-all font-medium italic text-lg"
+          />
+        </div>
+
+        {filtered.length === 0 ? (
+          <div className="flex flex-col items-center justify-center py-32 text-center glass-card border-white/5 rounded-[40px] opacity-40 group hover:opacity-60 transition-opacity">
+            <div className="w-24 h-24 rounded-full bg-white/5 flex items-center justify-center mb-6 shadow-xl border border-white/5 group-hover:scale-110 transition-transform">
+               <FileText className="w-10 h-10 text-white/20" />
+            </div>
+            <h3 className="text-2xl font-black uppercase italic mb-2">{t.documents.noDocuments}</h3>
+            <p className="text-white/40 max-w-sm mb-10">{t.documents.noDocumentsHint}</p>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+            {filtered.map(doc => (
+              <motion.div
+                key={doc.id}
+                whileHover={{ y: -8, scale: 1.02 }}
+                className="group cursor-pointer relative"
+                onClick={() => setSelectedDoc(doc)}
+              >
+                <div className="absolute inset-0 opacity-0 group-hover:opacity-10 blur-3xl bg-primary rounded-[32px] transition-all duration-500" />
+                <div className="glass-card border-white/5 rounded-[32px] p-8 hover:border-white/20 transition-all shadow-xl group-hover:shadow-2xl h-full flex flex-col isolation-isolate overflow-hidden bg-white/[0.02]">
+                  <div className="flex items-start justify-between mb-8">
+                    <div className="w-12 h-12 rounded-2xl bg-white/5 flex items-center justify-center shadow-lg border border-white/5 group-hover:bg-primary/20 group-hover:border-primary/40 transition-all">
+                        <FileText className="w-5 h-5 text-white/20 group-hover:text-primary" />
+                    </div>
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button variant="ghost" size="icon" className="h-10 w-10 text-white/10 hover:text-white rounded-xl hover:bg-white/5" onClick={e => e.stopPropagation()}>
+                          <MoreVertical className="w-4 h-4" />
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end" className="glass border-white/10 w-40">
+                        <DropdownMenuItem onClick={(e) => { e.stopPropagation(); setSelectedDoc(doc); startEdit(); }} className="gap-2 py-2.5">
+                          <Edit3 className="w-4 h-4" /> {t.common.edit}
+                        </DropdownMenuItem>
+                        <DropdownMenuSeparator className="bg-white/5" />
+                        <DropdownMenuItem className="text-destructive focus:text-destructive gap-2 py-2.5" onClick={(e) => { e.stopPropagation(); setDeleteDialogId(doc.id); }}>
+                          <Trash2 className="w-4 h-4" /> {t.common.delete}
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  </div>
+                  
+                  <div className="flex-1 min-w-0">
+                    <h3 className="text-lg font-black tracking-tight uppercase italic truncate mb-2 group-hover:text-primary transition-colors">{doc.title}</h3>
+                    <p className="text-xs text-white/30 font-medium line-clamp-3 leading-relaxed italic">{doc.content || 'Indexed but empty.'}</p>
+                  </div>
+
+                  <div className="mt-8 pt-6 border-t border-white/5 flex items-center justify-between">
+                     <span className="text-[10px] font-black uppercase tracking-widest text-white/10">
+                        {formatDistanceToNow(new Date(doc.updatedAt), { addSuffix: true })}
+                     </span>
+                     <ArrowRight className="w-4 h-4 text-white/10 group-hover:text-primary group-hover:translate-x-1 transition-all" />
+                  </div>
+                </div>
+              </motion.div>
+            ))}
+          </div>
+        )}
+
+        {/* Create Dialog */}
+        <Dialog open={formOpen} onOpenChange={setFormOpen}>
+          <DialogContent className="glass border-white/20 max-w-2xl rounded-[40px] p-10 shadow-[0_0_50px_rgba(0,0,0,0.5)]">
+            <DialogHeader className="mb-8">
+              <DialogTitle className="text-4xl font-black uppercase italic tracking-tighter">{t.documents.newDocument}</DialogTitle>
+            </DialogHeader>
+            
+            <div className="space-y-6">
+              <div className="space-y-2">
+                <label className="text-[10px] font-black uppercase tracking-widest text-white/30 ml-2">{t.common.title}</label>
+                <Input 
+                  value={formTitle} 
+                  onChange={e => setFormTitle(e.target.value)}
+                  className="glass h-14 px-6 rounded-2xl border-white/5 font-bold italic text-lg" 
+                  placeholder="The knowledge node title..."
+                />
               </div>
-              <span className="text-[10px] text-muted-foreground shrink-0">
-                {formatDistanceToNow(new Date(doc.updatedAt), { addSuffix: true })}
-              </span>
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" size="icon" className="h-7 w-7 opacity-0 group-hover:opacity-100 shrink-0" onClick={e => e.stopPropagation()}>
-                    <MoreVertical className="w-3.5 h-3.5" />
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end">
-                  <DropdownMenuItem onClick={(e) => { e.stopPropagation(); setSelectedDoc(doc); startEdit(); }}>
-                    <Edit3 className="w-3 h-3 mr-2" /> {t.common.edit}
-                  </DropdownMenuItem>
-                  <DropdownMenuSeparator />
-                  <DropdownMenuItem className="text-destructive" onClick={(e) => { e.stopPropagation(); setDeleteDialogId(doc.id); }}>
-                    <Trash2 className="w-3 h-3 mr-2" /> {t.common.delete}
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
+              <div className="space-y-2">
+                <label className="text-[10px] font-black uppercase tracking-widest text-white/30 ml-2">{t.common.content}</label>
+                <Textarea
+                  value={formContent}
+                  onChange={e => setFormContent(e.target.value)}
+                  placeholder={t.documents.contentPlaceholder}
+                  className="min-h-[400px] glass p-6 rounded-[28px] border-white/5 font-mono text-[13px] leading-relaxed resize-none italic"
+                />
+              </div>
             </div>
-          ))}
-        </div>
-      )}
 
-      {/* Create Dialog */}
-      <Dialog open={formOpen} onOpenChange={setFormOpen}>
-        <DialogContent className="sm:max-w-[600px] border-border/50 shadow-2xl backdrop-blur-xl">
-          <DialogHeader>
-            <DialogTitle>{t.documents.newDocument}</DialogTitle>
-          </DialogHeader>
-          
-          <div className="max-h-[70vh] overflow-y-auto pr-4 -mr-4 py-4 space-y-4 scrollbar-thin scrollbar-thumb-primary/20 scrollbar-track-transparent">
-            <div>
-              <label className="text-xs font-medium mb-1.5 block">{t.common.title}</label>
-              <Input 
-                value={formTitle} 
-                onChange={e => setFormTitle(e.target.value)}
-                className="bg-background/50" 
-              />
-            </div>
-            <div>
-              <label className="text-xs font-medium mb-1.5 block">{t.common.content}</label>
-              <Textarea
-                value={formContent}
-                onChange={e => setFormContent(e.target.value)}
-                placeholder={t.documents.contentPlaceholder}
-                className="min-h-[400px] bg-background/50 resize-y text-sm font-sans"
-              />
-            </div>
-          </div>
+            <DialogFooter className="mt-10 gap-3">
+              <Button variant="ghost" onClick={() => setFormOpen(false)} className="h-14 px-8 rounded-full text-white/40 hover:text-white uppercase font-black tracking-widest text-[10px]">{t.common.cancel}</Button>
+              <Button onClick={handleCreate} className="h-14 px-10 rounded-full bg-primary text-primary-foreground font-black uppercase italic tracking-tighter shadow-2xl shadow-primary/20 active:scale-95 transition-all">
+                {t.common.create}
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
 
-          <DialogFooter className="pt-4 border-t border-border/50">
-            <Button variant="outline" onClick={() => setFormOpen(false)}>{t.common.cancel}</Button>
-            <Button onClick={handleCreate} className="shadow-lg shadow-primary/20">{t.common.create}</Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-
-      {/* Delete Dialog */}
-      <Dialog open={!!deleteDialogId} onOpenChange={() => setDeleteDialogId(null)}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>{t.documents.deleteDocument}</DialogTitle>
-          </DialogHeader>
-          <p className="text-sm text-muted-foreground">{t.documents.deleteDocumentConfirm}</p>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setDeleteDialogId(null)}>{t.common.cancel}</Button>
-            <Button variant="destructive" onClick={() => { if (deleteDialogId) { deleteDocument(deleteDialogId); setDeleteDialogId(null); } }}>{t.common.delete}</Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-    </div>
+        {/* Delete Dialog */}
+        <Dialog open={!!deleteDialogId} onOpenChange={() => setDeleteDialogId(null)}>
+          <DialogContent className="glass border-white/20 max-w-sm rounded-[40px] p-10">
+            <DialogHeader className="mb-6">
+              <DialogTitle className="text-2xl font-black uppercase italic tracking-tighter flex items-center gap-3">
+                <Trash2 className="w-6 h-6 text-destructive" /> {t.documents.deleteDocument}
+              </DialogTitle>
+            </DialogHeader>
+            <p className="text-white/60 font-medium italic mb-10 leading-relaxed">{t.documents.deleteDocumentConfirm}</p>
+            <DialogFooter className="gap-3">
+              <Button variant="ghost" onClick={() => setDeleteDialogId(null)} className="flex-1 h-12 rounded-2xl text-white/40 hover:text-white uppercase font-black text-[10px] tracking-widest">{t.common.cancel}</Button>
+              <Button variant="destructive" className="flex-1 h-12 rounded-2xl bg-destructive hover:bg-destructive/80 font-black uppercase tracking-widest text-[10px] shadow-xl shadow-destructive/20" onClick={() => { if (deleteDialogId) { deleteDocument(deleteDialogId); setDeleteDialogId(null); } }}>{t.common.delete}</Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+      </div>
     </div>
   );
 }
+

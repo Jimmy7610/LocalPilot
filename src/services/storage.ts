@@ -240,14 +240,27 @@ export const projectRepo = {
   async delete(id: string): Promise<void> {
     const database = await getDb();
     if (database) {
-      await database.execute('DELETE FROM projects WHERE id = $1', [id]);
-      await database.execute('DELETE FROM workspace_files WHERE project_id = $1', [id]);
+      // 1. Cleanup junction tables (defensive)
+      await database.execute('DELETE FROM project_chats WHERE project_id = $1', [id]);
+      await database.execute('DELETE FROM project_documents WHERE project_id = $1', [id]);
+      await database.execute('DELETE FROM project_prompts WHERE project_id = $1', [id]);
+      
+      // 2. Cleanup workspace data
       await database.execute('DELETE FROM workspace_chunks WHERE project_id = $1', [id]);
+      await database.execute('DELETE FROM workspace_files WHERE project_id = $1', [id]);
+      
+      // 3. Cleanup primary records
+      await database.execute('DELETE FROM projects WHERE id = $1', [id]);
+
+      // Note: We currently don't delete chats/documents themselves to avoid data loss, 
+      // but they are decoupled from the project.
     } else {
       const projects = lsGet<Project[]>('projects', []);
       lsSet('projects', projects.filter(p => p.id !== id));
+      
       const files = lsGet<WorkspaceFile[]>('workspace_files', []);
       lsSet('workspace_files', files.filter(f => f.projectId !== id));
+      
       const chunks = lsGet<WorkspaceChunk[]>('workspace_chunks', []);
       lsSet('workspace_chunks', chunks.filter(c => c.projectId !== id));
     }

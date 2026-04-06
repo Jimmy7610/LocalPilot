@@ -108,6 +108,7 @@ export function ProjectsPage() {
   const [formWorkspacePath, setFormWorkspacePath] = useState<string | null>(null);
 
   const [isIndexing, setIsIndexing] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
   const [indexProgress, setIndexProgress] = useState<IndexProgress | null>(null);
   const [fileCount, setFileCount] = useState<number | null>(null);
 
@@ -579,24 +580,39 @@ export function ProjectsPage() {
         </Dialog>
 
         {/* Delete Dialog */}
-        <Dialog open={!!deleteDialogId} onOpenChange={() => setDeleteDialogId(null)}>
+        <Dialog open={!!deleteDialogId} onOpenChange={() => !isDeleting && setDeleteDialogId(null)}>
           <DialogContent className="glass border-white/20 max-w-sm rounded-[40px] p-8">
             <DialogHeader className="mb-4">
               <DialogTitle className="text-2xl font-black uppercase italic tracking-tighter flex items-center gap-3">
-                 <Trash2 className="w-6 h-6 text-destructive" /> {t.projects.deleteProject}
+                 {isDeleting ? <Loader2 className="w-6 h-6 animate-spin text-primary" /> : <Trash2 className="w-6 h-6 text-destructive" />} {t.projects.deleteProject}
               </DialogTitle>
             </DialogHeader>
             <p className="text-white/60 font-medium italic mb-8">{t.projects.deleteProjectConfirm}</p>
             <DialogFooter className="gap-3">
-              <Button variant="ghost" onClick={() => setDeleteDialogId(null)} className="flex-1 h-12 rounded-2xl text-white/40 hover:text-white uppercase font-black text-[10px] tracking-widest">
+              <Button variant="ghost" disabled={isDeleting} onClick={() => setDeleteDialogId(null)} className="flex-1 h-12 rounded-2xl text-white/40 hover:text-white uppercase font-black text-[10px] tracking-widest">
                 {t.common.cancel}
               </Button>
               <Button 
                 variant="destructive" 
-                onClick={() => { if (deleteDialogId) { deleteProject(deleteDialogId); setDeleteDialogId(null); } }}
+                disabled={isDeleting}
+                onClick={async () => { 
+                  if (deleteDialogId) { 
+                    setIsDeleting(true);
+                    try {
+                      await deleteProject(deleteDialogId);
+                      setSelectedProjectId(null); // Return to list if in detail view
+                      setDeleteDialogId(null);
+                      toast.success(t.common.deleteSuccess || 'Project deleted');
+                    } catch (err) {
+                      toast.error(t.common.error || 'Failed to delete project');
+                    } finally {
+                      setIsDeleting(false);
+                    }
+                  } 
+                }}
                 className="flex-1 h-12 rounded-2xl bg-destructive/20 hover:bg-destructive/100 border border-destructive/20 text-destructive hover:text-white font-black uppercase text-[10px] tracking-widest transition-all"
               >
-                {t.common.delete}
+                {isDeleting ? <Loader2 className="w-4 h-4 animate-spin" /> : t.common.delete}
               </Button>
             </DialogFooter>
           </DialogContent>

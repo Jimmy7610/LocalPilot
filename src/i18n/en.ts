@@ -37,6 +37,7 @@ const en = {
     select: 'Select',
     error: 'An error occurred',
     saveSuccess: 'Project saved successfully',
+    deleteSuccess: 'Project deleted successfully',
     loading: 'Loading...',
     noResults: 'No results found',
     confirm: 'Confirm',

@@ -24,7 +24,8 @@ import {
   Terminal,
   Info,
   ImagePlus,
-  X
+  X,
+  ShieldAlert
 } from 'lucide-react';
 import { useT } from '@/i18n';
 import { useChatStore } from '@/store/chat-store';
@@ -33,6 +34,7 @@ import { useSettingsStore } from '@/store/settings-store';
 import { useTerminalStore } from '@/store/terminal-store';
 import { useProjectStore } from '@/store/project-store';
 import { Button } from '@/components/ui/button';
+import { ActionCard } from '@/components/chat/ActionCard';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -277,8 +279,8 @@ export function ChatPage() {
                     ))}
                   </SelectContent>
                 </Select>
-                <Button variant="ghost" size="icon" className="h-9 w-9 rounded-xl hover:bg-white/5" onClick={() => setShowSettings(!showSettings)}>
-                  <Settings2 className="w-4 h-4 text-white/40" />
+                <Button variant="ghost" size="icon" className="h-9 w-9 rounded-xl hover:bg-white/5 transition-all active:scale-90" onClick={() => setShowSettings(!showSettings)}>
+                  <Settings2 className={cn("w-4 h-4 transition-colors", showSettings ? "text-primary" : "text-white/40")} />
                 </Button>
               </div>
             </div>
@@ -308,7 +310,7 @@ export function ChatPage() {
 
             {/* Messages */}
             <ScrollArea className="flex-1 px-4 min-h-0 min-w-0">
-              <div className="max-w-3xl mx-auto py-8 space-y-6">
+              <div className="max-w-3xl mx-auto py-12 space-y-10">
                 <AnimatePresence initial={false}>
                 {chatMessages.map((msg) => (
                   <ChatMessage key={msg.id} message={msg} t={t} />
@@ -317,11 +319,11 @@ export function ChatPage() {
                 
                 {analyzing && (
                   <motion.div 
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    className="flex items-center gap-3 text-primary text-[10px] font-bold uppercase tracking-widest py-3 px-4 rounded-2xl bg-primary/5 border border-primary/20 w-fit mx-auto shadow-2xl shadow-primary/10"
+                    initial={{ opacity: 0, scale: 0.9 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    className="flex items-center gap-3 text-primary text-[10px] font-bold uppercase tracking-widest py-3 px-6 rounded-full bg-primary/5 border border-primary/20 w-fit mx-auto shadow-2xl shadow-primary/10 backdrop-blur-md"
                   >
-                    <div className="w-2 h-2 rounded-full bg-primary animate-ping" />
+                    <div className="w-1.5 h-1.5 rounded-full bg-primary animate-ping" />
                     {t.chat.analyzing}
                   </motion.div>
                 )}
@@ -330,9 +332,13 @@ export function ChatPage() {
                   <motion.div 
                     initial={{ opacity: 0, y: 10 }}
                     animate={{ opacity: 1, y: 0 }}
-                    className="flex items-center gap-3 text-white/30 text-[10px] font-bold uppercase tracking-widest py-2 px-4 rounded-2xl bg-white/5 border border-white/5 w-fit mx-auto"
+                    className="flex items-center gap-4 text-white/20 text-[10px] font-bold uppercase tracking-[0.2em] py-3 px-6 rounded-full bg-white/5 border border-white/5 w-fit mx-auto transition-all"
                   >
-                    <Loader2 className="w-3 h-3 animate-spin" />
+                    <div className="flex gap-1">
+                        <div className="w-1 h-1 rounded-full bg-white/20 animate-bounce [animation-delay:-0.3s]" />
+                        <div className="w-1 h-1 rounded-full bg-white/20 animate-bounce [animation-delay:-0.15s]" />
+                        <div className="w-1 h-1 rounded-full bg-white/20 animate-bounce" />
+                    </div>
                     {t.chat.thinking}
                   </motion.div>
                 )}
@@ -564,25 +570,43 @@ function ChatMessage({ message, t }: { message: any; t: any }) {
     >
       <div
         className={cn(
-          'max-w-[100%] rounded-2xl px-5 py-4 text-sm relative min-w-0 transition-all duration-300',
+          'max-w-[100%] rounded-[24px] px-6 py-5 text-[15px] relative min-w-0 transition-all duration-300 shadow-2xl',
           isUser
-            ? 'bg-primary text-primary-foreground shadow-xl shadow-primary/20 rounded-tr-none'
-            : 'glass border-white/5 rounded-tl-none font-medium text-white/90'
+            ? 'bg-primary text-primary-foreground shadow-primary/10 rounded-tr-none'
+            : 'glass border-white/5 rounded-tl-none font-medium text-white/90 shadow-black/40'
         )}
       >
         {message.type === 'terminal_output' ? (
           <TerminalOutput message={message} t={t} />
         ) : isUser ? (
           <div className="flex flex-col gap-2">
-             <p className="whitespace-pre-wrap">{message.content}</p>
+             <p className="whitespace-pre-wrap leading-relaxed">{message.content}</p>
              {message.images && message.images.length > 0 && (
-               <div className="flex flex-wrap gap-2 mt-2">
+               <div className="flex flex-wrap gap-2 mt-3">
                  {message.images.map((img: string, idx: number) => (
-                   <img key={idx} src={`data:image/jpeg;base64,${img}`} className="w-48 rounded-xl object-contain border border-white/10 shadow-lg" alt={`Attachment ${idx + 1}`} />
+                   <img key={idx} src={`data:image/jpeg;base64,${img}`} className="w-64 rounded-2xl object-contain border border-white/10 shadow-2xl hover:scale-[1.02] transition-transform" alt={`Attachment ${idx + 1}`} />
                  ))}
                </div>
              )}
           </div>
+        ) : message.type === 'action_proposal' ? (
+          <ActionCard
+            title={message.meta?.title || 'Action Required'}
+            description={message.meta?.description || 'The AI wants to perform an action.'}
+            code={message.content}
+            status={message.meta?.status || 'pending'}
+            onApprove={() => {
+              if (message.meta?.command) {
+                useTerminalStore.getState().runCommand(message.meta.command, { cwd: message.meta.cwd });
+                useChatStore.getState().addTerminalMessage(message.chatId, `🚀 Executing: ${message.meta.command}`, { status: 'executing' });
+                // Update message status in meta (ideally should be persisted, but for now we update store)
+                message.meta.status = 'approved';
+              }
+            }}
+            onReject={() => {
+               message.meta.status = 'rejected';
+            }}
+          />
         ) : (
           <div className="prose prose-sm dark:prose-invert max-w-none [&_pre]:bg-background/50 [&_pre]:rounded-lg [&_pre]:p-3 [&_pre]:my-2 [&_code]:text-xs [&_p]:my-1.5 [&_ul]:my-1.5 [&_ol]:my-1.5 [&_li]:my-0.5">
             <ReactMarkdown remarkPlugins={[remarkGfm]}
