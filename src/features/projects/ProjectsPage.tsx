@@ -197,297 +197,305 @@ export function ProjectsPage() {
   const linkedChats = selectedProject ? chats.filter(c => c.projectId === selectedProject.id) : [];
   const linkedDocs = selectedProject ? documents.filter(d => d.projectId === selectedProject.id) : [];
 
-  if (selectedProject) {
-    return (
-      <div className="h-full overflow-y-auto px-4 py-4 md:px-8 md:py-8">
-        <motion.div 
-          initial={{ opacity: 0, x: -20 }}
-          animate={{ opacity: 1, x: 0 }}
-          className="max-w-6xl mx-auto space-y-8"
-        >
-          <div className="flex items-center justify-between">
-            <Button 
-              variant="ghost" 
-              size="sm" 
-              className="gap-2 text-white/40 hover:text-white" 
-              onClick={() => setSelectedProjectId(null)}
-            >
-              <ChevronLeft className="w-4 h-4" /> {t.common.back}
-            </Button>
-            <div className="flex gap-2">
-              <Button variant="ghost" size="sm" className="glass h-9 px-4 rounded-xl text-xs font-bold" onClick={() => openEdit(selectedProject)}>
-                <Edit3 className="w-3.5 h-3.5 mr-2" /> {t.common.edit}
-              </Button>
-            </div>
-          </div>
-
-          <div className="flex flex-col md:flex-row items-start md:items-center gap-6">
-            <div 
-              className="w-20 h-20 rounded-[28px] glass flex items-center justify-center text-3xl font-black shadow-2xl relative"
-              style={{ color: selectedProject.color }}
-            >
-               <div className="absolute inset-0 opacity-20 blur-2xl rounded-full" style={{ backgroundColor: selectedProject.color }} />
-               {selectedProject.name[0]?.toUpperCase()}
-            </div>
-            <div className="flex-1 space-y-2">
-              <div className="flex items-center gap-3">
-                <h1 className="text-4xl font-black tracking-tighter uppercase italic">{selectedProject.name}</h1>
-                {selectedProject.workspacePath && (
-                   <Badge className="bg-primary/20 text-primary border-primary/20 text-[10px] tracking-widest uppercase">RAG Enabled</Badge>
-                )}
-              </div>
-              <p className="text-lg text-white/40 font-medium leading-relaxed italic">{selectedProject.description || t.projects.noProjectsHint}</p>
-            </div>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <div className="md:col-span-2 space-y-6">
-              <div className="glass-card p-6 border-white/10 relative overflow-hidden group">
-                <div className="absolute top-0 right-0 p-4 opacity-5 group-hover:opacity-10 transition-opacity">
-                  <FolderOpen className="w-24 h-24" />
-                </div>
-                <div className="flex items-center justify-between mb-6">
-                  <div className="space-y-1">
-                    <h3 className="text-xs font-black tracking-widest uppercase text-white/30 flex items-center gap-2">
-                      <FolderOpen className="w-3.5 h-3.5" /> {t.projects.workspace}
-                    </h3>
-                    <p className="text-sm font-mono text-white/60 bg-black/40 px-3 py-1.5 rounded-lg border border-white/5 truncate max-w-md">
-                      {selectedProject.workspacePath || t.projects.noWorkspace}
-                    </p>
-                  </div>
-                  {selectedProject.workspacePath && (
-                    <Button 
-                      onClick={handleIndex}
-                      disabled={isIndexing}
-                      className="glass bg-primary/20 hover:bg-primary/30 border-primary/20 text-primary h-10 px-6 rounded-xl font-black text-xs uppercase tracking-widest"
-                    >
-                      {isIndexing ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <RefreshCw className="w-4 h-4 mr-2" />}
-                      {t.projects.refreshIndex}
-                    </Button>
-                  )}
-                </div>
-
-                {isIndexing && indexProgress && (
-                  <div className="space-y-3 animate-fade-in mb-6">
-                    <div className="flex justify-between text-[10px] font-black uppercase tracking-widest text-white/40">
-                      <span className="truncate max-w-[250px]">{indexProgress.currentFile}</span>
-                      <span className="text-primary">{Math.round((indexProgress.processedFiles / indexProgress.totalFiles) * 100)}%</span>
-                    </div>
-                    <div className="h-1.5 w-full bg-white/5 rounded-full overflow-hidden">
-                      <motion.div 
-                        initial={{ width: 0 }}
-                        animate={{ width: `${(indexProgress.processedFiles / indexProgress.totalFiles) * 100}%` }}
-                        className="h-full bg-primary shadow-[0_0_10px_rgba(var(--color-primary),0.5)]"
-                      />
-                    </div>
-                  </div>
-                )}
-
-                <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-                  <div className="p-4 rounded-2xl bg-white/5 border border-white/5 text-center space-y-1">
-                    <span className="block text-2xl font-black text-white">{fileCount ?? 0}</span>
-                    <span className="text-[10px] font-black uppercase tracking-widest text-white/20">Analyzed Files</span>
-                  </div>
-                   <div className="p-4 rounded-2xl bg-white/5 border border-white/5 text-center space-y-1">
-                     <div className="flex justify-center mb-1">
-                        <div className={cn("w-2 h-2 rounded-full animate-pulse", connected ? "bg-success" : "bg-destructive")} />
-                     </div>
-                    <span className="block text-[10px] font-black uppercase tracking-widest text-white/20">Local AI Status</span>
-                  </div>
-                </div>
-              </div>
-
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-                <div className="glass-card p-6 border-white/10">
-                   <h3 className="text-xs font-black tracking-widest uppercase text-white/30 flex items-center gap-2 mb-4">
-                    <MessageSquare className="w-3.5 h-3.5" /> {t.projects.linkedChats}
-                  </h3>
-                  {linkedChats.length === 0 ? (
-                    <div className="py-8 text-center text-white/20 italic text-sm">{t.common.none}</div>
-                  ) : (
-                    <div className="space-y-2">
-                       {linkedChats.map(c => (
-                         <div key={c.id} className="p-3 rounded-xl hover:bg-white/5 transition-colors group flex items-center gap-3">
-                            <div className="w-1.5 h-1.5 rounded-full bg-primary/40 group-hover:bg-primary transition-colors" />
-                            <span className="text-xs font-medium text-white/70 truncate">{c.title}</span>
-                         </div>
-                       ))}
-                    </div>
-                  )}
-                </div>
-                 <div className="glass-card p-6 border-white/10">
-                   <h3 className="text-xs font-black tracking-widest uppercase text-white/30 flex items-center gap-2 mb-4">
-                    <FileText className="w-3.5 h-3.5" /> {t.projects.linkedDocuments}
-                  </h3>
-                  {linkedDocs.length === 0 ? (
-                    <div className="py-8 text-center text-white/20 italic text-sm">{t.common.none}</div>
-                  ) : (
-                    <div className="space-y-2">
-                       {linkedDocs.map(d => (
-                         <div key={d.id} className="p-3 rounded-xl hover:bg-white/5 transition-colors group flex items-center gap-3">
-                            <FileText className="w-3.5 h-3.5 text-white/20 group-hover:text-primary transition-colors" />
-                            <span className="text-xs font-medium text-white/70 truncate">{d.title}</span>
-                         </div>
-                       ))}
-                    </div>
-                  )}
-                </div>
-              </div>
-            </div>
-
-            <div className="space-y-6">
-               <div className="glass-card p-6 border-white/10 space-y-6">
-                  <div>
-                    <h4 className="text-[10px] font-black tracking-widest uppercase text-white/30 mb-3">Project Specs</h4>
-                    <div className="space-y-4">
-                       <div className="flex justify-between items-center">
-                          <span className="text-[11px] text-white/40 font-bold uppercase">AI Model</span>
-                          <Badge variant="outline" className="border-white/10 text-white/70">{selectedProject.preferredModel || 'Default'}</Badge>
-                       </div>
-                       <div className="flex justify-between items-center">
-                          <span className="text-[11px] text-white/40 font-bold uppercase">Last Sync</span>
-                          <span className="text-[11px] text-white/70">{formatDistanceToNow(new Date(selectedProject.updatedAt), { addSuffix: true })}</span>
-                       </div>
-                    </div>
-                  </div>
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <Button variant="ghost" className="w-full justify-between glass border-white/5 h-12 rounded-2xl group">
-                         <div className="flex items-center gap-2">
-                            <Activity className="w-4 h-4 text-primary" />
-                            <span className="text-xs font-black uppercase tracking-widest">Management</span>
-                         </div>
-                         <MoreVertical className="w-4 h-4 text-white/20 group-hover:text-white transition-colors" />
-                      </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end" className="glass border-white/10 w-48">
-                       <DropdownMenuItem onClick={() => openEdit(selectedProject)} className="gap-2 py-2.5">
-                         <Edit3 className="w-4 h-4" /> {t.common.edit}
-                       </DropdownMenuItem>
-                       <DropdownMenuSeparator className="bg-white/5" />
-                       <DropdownMenuItem onClick={() => setDeleteDialogId(selectedProject.id)} className="gap-2 py-2.5 text-destructive focus:text-destructive">
-                         <Trash2 className="w-4 h-4" /> {t.common.delete}
-                       </DropdownMenuItem>
-                    </DropdownMenuContent>
-                  </DropdownMenu>
-               </div>
-            </div>
-          </div>
-        </motion.div>
-      </div>
-    );
-  }
-
   return (
     <div className="h-full overflow-y-auto px-4 py-8 md:px-8">
       <div className="max-w-6xl mx-auto">
-        <div className="flex flex-col md:flex-row items-start md:items-end justify-between gap-6 mb-12">
-          <div className="space-y-2">
-            <h1 className="text-5xl font-black tracking-tighter uppercase italic">{t.projects.title}</h1>
-            <p className="text-lg text-white/40 font-medium italic">Organize your local AI workspaces.</p>
-          </div>
-          <Button onClick={openCreate} className="h-14 px-8 rounded-full bg-primary text-primary-foreground font-black uppercase italic tracking-tighter shadow-2xl shadow-primary/20 transition-all hover:scale-105 active:scale-95 gap-3">
-            <Plus className="w-5 h-5" /> {t.projects.newProject}
-          </Button>
-        </div>
-
-        {projects.length === 0 ? (
+        {selectedProject ? (
+          // ──────────────────────────────────────────
+          // Project Detail View
+          // ──────────────────────────────────────────
           <motion.div 
-            initial={{ opacity: 0, scale: 0.95 }}
-            animate={{ opacity: 1, scale: 1 }}
-            className="flex flex-col items-center justify-center py-24 text-center glass-card border-white/10 rounded-[40px] opacity-50"
+            initial={{ opacity: 0, x: -20 }}
+            animate={{ opacity: 1, x: 0 }}
+            className="space-y-8"
           >
-            <div className="w-24 h-24 rounded-full bg-white/5 flex items-center justify-center mb-6">
-               <FolderKanban className="w-10 h-10 text-white/20" />
-            </div>
-            <h3 className="text-2xl font-black uppercase italic mb-2">{t.projects.noProjects}</h3>
-            <p className="text-white/40 max-w-sm mb-10">{t.projects.noProjectsHint}</p>
-            <Button onClick={openCreate} variant="secondary" className="glass h-12 px-8 rounded-2xl font-black uppercase italic tracking-widest text-xs">
-               Initialize First Project <ArrowRight className="ml-2 w-4 h-4" />
-            </Button>
-          </motion.div>
-        ) : (
-          <motion.div 
-            variants={containerVariants}
-            initial="hidden"
-            animate="visible"
-            className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6"
-          >
-            {projects.map(project => (
-              <motion.div 
-                key={project.id} 
-                variants={itemVariants as any}
-                whileHover={{ y: -8, scale: 1.02 }}
-                className="group relative h-full"
+            <div className="flex items-center justify-between">
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                className="gap-2 text-white/40 hover:text-white" 
+                onClick={() => setSelectedProjectId(null)}
               >
-                <div 
-                  className="absolute inset-0 opacity-0 group-hover:opacity-10 blur-3xl rounded-[32px] transition-opacity duration-500"
-                  style={{ backgroundColor: project.color }}
-                />
-                <div className="glass-card border-white/10 rounded-[32px] p-6 hover:border-white/20 transition-all shadow-xl group-hover:shadow-2xl h-full flex flex-col isolation-isolate overflow-hidden relative">
-                   <div 
-                     className="absolute inset-0 z-0 cursor-pointer"
-                     onClick={() => setSelectedProjectId(project.id)}
-                   />
-                   
-                   <div className="absolute top-0 right-0 p-4 opacity-5 group-hover:opacity-10 transition-opacity pointer-events-none">
-                      <Layers className="w-20 h-20" />
-                   </div>
-                   
-                   <div className="flex items-start justify-between mb-8 relative z-10">
-                     <div 
-                        className="w-14 h-14 rounded-2xl flex items-center justify-center text-xl font-black shadow-lg pointer-events-none"
-                        style={{ backgroundColor: `${project.color}20`, color: project.color }}
-                     >
-                       {project.name[0]?.toUpperCase()}
-                     </div>
-                     <DropdownMenu modal={false}>
-                        <DropdownMenuTrigger asChild>
-                          <Button 
-                            variant="ghost" 
-                            size="icon" 
-                            className="h-10 w-10 text-white/20 hover:text-white rounded-xl hover:bg-white/5 relative z-20"
-                          >
-                            <MoreVertical className="w-4 h-4" />
-                          </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end" className="glass border-white/10 w-40 z-[200]">
-                          <DropdownMenuItem onSelect={() => openEdit(project)}>
-                            <Edit3 className="w-3.5 h-3.5 mr-2" /> {t.common.edit}
-                          </DropdownMenuItem>
-                          <DropdownMenuSeparator className="bg-white/5" />
-                          <DropdownMenuItem className="text-destructive focus:text-destructive" onSelect={() => setDeleteDialogId(project.id)}>
-                            <Trash2 className="w-3.5 h-3.5 mr-2" /> {t.common.delete}
-                          </DropdownMenuItem>
-                        </DropdownMenuContent>
-                      </DropdownMenu>
-                   </div>
+                <ChevronLeft className="w-4 h-4" /> {t.common.back}
+              </Button>
+              <div className="flex gap-2">
+                <Button variant="ghost" size="sm" className="glass h-9 px-4 rounded-xl text-xs font-bold" onClick={() => openEdit(selectedProject)}>
+                  <Edit3 className="w-3.5 h-3.5 mr-2" /> {t.common.edit}
+                </Button>
+              </div>
+            </div>
 
-                   <div className="flex-1 space-y-2">
-                     <h3 className="text-xl font-black tracking-tight uppercase italic truncate">{project.name}</h3>
-                     <p className="text-sm text-white/40 font-medium line-clamp-2 italic">{project.description || 'No description provided.'}</p>
-                   </div>
+            <div className="flex flex-col md:flex-row items-start md:items-center gap-6">
+              <div 
+                className="w-20 h-20 rounded-[28px] glass flex items-center justify-center text-3xl font-black shadow-2xl relative"
+                style={{ color: selectedProject.color }}
+              >
+                 <div className="absolute inset-0 opacity-20 blur-2xl rounded-full" style={{ backgroundColor: selectedProject.color }} />
+                 {selectedProject.name[0]?.toUpperCase()}
+              </div>
+              <div className="flex-1 space-y-2">
+                <div className="flex items-center gap-3">
+                  <h1 className="text-4xl font-black tracking-tighter uppercase italic">{selectedProject.name}</h1>
+                  {selectedProject.workspacePath && (
+                     <Badge className="bg-primary/20 text-primary border-primary/20 text-[10px] tracking-widest uppercase">RAG Enabled</Badge>
+                  )}
+                </div>
+                <p className="text-lg text-white/40 font-medium leading-relaxed italic">{selectedProject.description || t.projects.noProjectsHint}</p>
+              </div>
+            </div>
 
-                   <div className="mt-8 pt-6 border-t border-white/5 flex items-center justify-between">
-                      <div className="flex items-center gap-4">
-                         {project.workspacePath && (
-                            <div className="flex items-center gap-1.5 opacity-60">
-                               <Shield className="w-3.5 h-3.5 text-primary" />
-                               <span className="text-[10px] font-black uppercase tracking-widest text-white">RAG</span>
-                            </div>
-                         )}
-                         <div className="text-[10px] font-black uppercase tracking-widest text-white/20">
-                           {formatDistanceToNow(new Date(project.updatedAt), { addSuffix: true })}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              <div className="md:col-span-2 space-y-6">
+                <div className="glass-card p-6 border-white/10 relative overflow-hidden group">
+                  <div className="absolute top-0 right-0 p-4 opacity-5 group-hover:opacity-10 transition-opacity">
+                    <FolderOpen className="w-24 h-24" />
+                  </div>
+                  <div className="flex items-center justify-between mb-6">
+                    <div className="space-y-1">
+                      <h3 className="text-xs font-black tracking-widest uppercase text-white/30 flex items-center gap-2">
+                        <FolderOpen className="w-3.5 h-3.5" /> {t.projects.workspace}
+                      </h3>
+                      <p className="text-sm font-mono text-white/60 bg-black/40 px-3 py-1.5 rounded-lg border border-white/5 truncate max-w-md">
+                        {selectedProject.workspacePath || t.projects.noWorkspace}
+                      </p>
+                    </div>
+                    {selectedProject.workspacePath && (
+                      <Button 
+                        onClick={handleIndex}
+                        disabled={isIndexing}
+                        className="glass bg-primary/20 hover:bg-primary/30 border-primary/20 text-primary h-10 px-6 rounded-xl font-black text-xs uppercase tracking-widest"
+                      >
+                        {isIndexing ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <RefreshCw className="w-4 h-4 mr-2" />}
+                        {t.projects.refreshIndex}
+                      </Button>
+                    )}
+                  </div>
+
+                  {isIndexing && indexProgress && (
+                    <div className="space-y-3 animate-fade-in mb-6">
+                      <div className="flex justify-between text-[10px] font-black uppercase tracking-widest text-white/40">
+                        <span className="truncate max-w-[250px]">{indexProgress.currentFile}</span>
+                        <span className="text-primary">{Math.round((indexProgress.processedFiles / indexProgress.totalFiles) * 100)}%</span>
+                      </div>
+                      <div className="h-1.5 w-full bg-white/5 rounded-full overflow-hidden">
+                        <motion.div 
+                          initial={{ width: 0 }}
+                          animate={{ width: `${(indexProgress.processedFiles / indexProgress.totalFiles) * 100}%` }}
+                          className="h-full bg-primary shadow-[0_0_10px_rgba(var(--color-primary),0.5)]"
+                        />
+                      </div>
+                    </div>
+                  )}
+
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+                    <div className="p-4 rounded-2xl bg-white/5 border border-white/5 text-center space-y-1">
+                      <span className="block text-2xl font-black text-white">{fileCount ?? 0}</span>
+                      <span className="text-[10px] font-black uppercase tracking-widest text-white/20">Analyzed Files</span>
+                    </div>
+                     <div className="p-4 rounded-2xl bg-white/5 border border-white/5 text-center space-y-1">
+                       <div className="flex justify-center mb-1">
+                          <div className={cn("w-2 h-2 rounded-full animate-pulse", connected ? "bg-success" : "bg-destructive")} />
+                       </div>
+                      <span className="block text-[10px] font-black uppercase tracking-widest text-white/20">Local AI Status</span>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                  <div className="glass-card p-6 border-white/10">
+                     <h3 className="text-xs font-black tracking-widest uppercase text-white/30 flex items-center gap-2 mb-4">
+                      <MessageSquare className="w-3.5 h-3.5" /> {t.projects.linkedChats}
+                    </h3>
+                    {linkedChats.length === 0 ? (
+                      <div className="py-8 text-center text-white/20 italic text-sm">{t.common.none}</div>
+                    ) : (
+                      <div className="space-y-2">
+                         {linkedChats.map(c => (
+                           <div key={c.id} className="p-3 rounded-xl hover:bg-white/5 transition-colors group flex items-center gap-3">
+                              <div className="w-1.5 h-1.5 rounded-full bg-primary/40 group-hover:bg-primary transition-colors" />
+                              <span className="text-xs font-medium text-white/70 truncate">{c.title}</span>
+                           </div>
+                         ))}
+                      </div>
+                    )}
+                  </div>
+                   <div className="glass-card p-6 border-white/10">
+                     <h3 className="text-xs font-black tracking-widest uppercase text-white/30 flex items-center gap-2 mb-4">
+                      <FileText className="w-3.5 h-3.5" /> {t.projects.linkedDocuments}
+                    </h3>
+                    {linkedDocs.length === 0 ? (
+                      <div className="py-8 text-center text-white/20 italic text-sm">{t.common.none}</div>
+                    ) : (
+                      <div className="space-y-2">
+                         {linkedDocs.map(d => (
+                           <div key={d.id} className="p-3 rounded-xl hover:bg-white/5 transition-colors group flex items-center gap-3">
+                              <FileText className="w-3.5 h-3.5 text-white/20 group-hover:text-primary transition-colors" />
+                              <span className="text-xs font-medium text-white/70 truncate">{d.title}</span>
+                           </div>
+                         ))}
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+
+              <div className="space-y-6">
+                 <div className="glass-card p-6 border-white/10 space-y-6">
+                    <div>
+                      <h4 className="text-[10px] font-black tracking-widest uppercase text-white/30 mb-3">Project Specs</h4>
+                      <div className="space-y-4">
+                         <div className="flex justify-between items-center">
+                            <span className="text-[11px] text-white/40 font-bold uppercase">AI Model</span>
+                            <Badge variant="outline" className="border-white/10 text-white/70">{selectedProject.preferredModel || 'Default'}</Badge>
+                         </div>
+                         <div className="flex justify-between items-center">
+                            <span className="text-[11px] text-white/40 font-bold uppercase">Last Sync</span>
+                            <span className="text-[11px] text-white/70">{formatDistanceToNow(new Date(selectedProject.updatedAt), { addSuffix: true })}</span>
                          </div>
                       </div>
-                      <ArrowRight className="w-4 h-4 text-white/10 group-hover:text-primary group-hover:translate-x-1 transition-all" />
-                   </div>
-                </div>
-              </motion.div>
-            ))}
+                    </div>
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button variant="ghost" className="w-full justify-between glass border-white/5 h-12 rounded-2xl group">
+                           <div className="flex items-center gap-2">
+                              <Activity className="w-4 h-4 text-primary" />
+                              <span className="text-xs font-black uppercase tracking-widest">Management</span>
+                           </div>
+                           <MoreVertical className="w-4 h-4 text-white/20 group-hover:text-white transition-colors" />
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end" className="glass border-white/10 w-48">
+                         <DropdownMenuItem onSelect={() => openEdit(selectedProject)} className="gap-2 py-2.5">
+                           <Edit3 className="w-4 h-4" /> {t.common.edit}
+                         </DropdownMenuItem>
+                         <DropdownMenuSeparator className="bg-white/5" />
+                         <DropdownMenuItem onSelect={() => setDeleteDialogId(selectedProject.id)} className="gap-2 py-2.5 text-destructive focus:text-destructive">
+                           <Trash2 className="w-4 h-4" /> {t.common.delete}
+                         </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                 </div>
+              </div>
+            </div>
           </motion.div>
+        ) : (
+          // ──────────────────────────────────────────
+          // Projects List View
+          // ──────────────────────────────────────────
+          <>
+            <div className="flex flex-col md:flex-row items-start md:items-end justify-between gap-6 mb-12">
+              <div className="space-y-2">
+                <h1 className="text-5xl font-black tracking-tighter uppercase italic">{t.projects.title}</h1>
+                <p className="text-lg text-white/40 font-medium italic">Organize your local AI workspaces.</p>
+              </div>
+              <Button onClick={openCreate} className="h-14 px-8 rounded-full bg-primary text-primary-foreground font-black uppercase italic tracking-tighter shadow-2xl shadow-primary/20 transition-all hover:scale-105 active:scale-95 gap-3">
+                <Plus className="w-5 h-5" /> {t.projects.newProject}
+              </Button>
+            </div>
+
+            {projects.length === 0 ? (
+              <motion.div 
+                initial={{ opacity: 0, scale: 0.95 }}
+                animate={{ opacity: 1, scale: 1 }}
+                className="flex flex-col items-center justify-center py-24 text-center glass-card border-white/10 rounded-[40px] opacity-50"
+              >
+                <div className="w-24 h-24 rounded-full bg-white/5 flex items-center justify-center mb-6">
+                   <FolderKanban className="w-10 h-10 text-white/20" />
+                </div>
+                <h3 className="text-2xl font-black uppercase italic mb-2">{t.projects.noProjects}</h3>
+                <p className="text-white/40 max-w-sm mb-10">{t.projects.noProjectsHint}</p>
+                <Button onClick={openCreate} variant="secondary" className="glass h-12 px-8 rounded-2xl font-black uppercase italic tracking-widest text-xs">
+                   Initialize First Project <ArrowRight className="ml-2 w-4 h-4" />
+                </Button>
+              </motion.div>
+            ) : (
+              <motion.div 
+                variants={containerVariants}
+                initial="hidden"
+                animate="visible"
+                className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6"
+              >
+                {projects.map(project => (
+                  <motion.div 
+                    key={project.id} 
+                    variants={itemVariants as any}
+                    whileHover={{ y: -8, scale: 1.02 }}
+                    className="group relative h-full"
+                  >
+                    <div 
+                      className="absolute inset-0 opacity-0 group-hover:opacity-10 blur-3xl rounded-[32px] transition-opacity duration-500"
+                      style={{ backgroundColor: project.color }}
+                    />
+                    <div className="glass-card border-white/10 rounded-[32px] p-6 hover:border-white/20 transition-all shadow-xl group-hover:shadow-2xl h-full flex flex-col isolation-isolate overflow-hidden relative">
+                       <div 
+                         className="absolute inset-0 z-0 cursor-pointer"
+                         onClick={() => setSelectedProjectId(project.id)}
+                       />
+                       
+                       <div className="absolute top-0 right-0 p-4 opacity-5 group-hover:opacity-10 transition-opacity pointer-events-none">
+                          <Layers className="w-20 h-20" />
+                       </div>
+                       
+                       <div className="flex items-start justify-between mb-8 relative z-10">
+                         <div 
+                            className="w-14 h-14 rounded-2xl flex items-center justify-center text-xl font-black shadow-lg pointer-events-none"
+                            style={{ backgroundColor: `${project.color}20`, color: project.color }}
+                         >
+                           {project.name[0]?.toUpperCase()}
+                         </div>
+                         <DropdownMenu modal={false}>
+                            <DropdownMenuTrigger asChild>
+                              <Button 
+                                variant="ghost" 
+                                size="icon" 
+                                className="h-10 w-10 text-white/20 hover:text-white rounded-xl hover:bg-white/5 relative z-20"
+                              >
+                                <MoreVertical className="w-4 h-4" />
+                              </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end" className="glass border-white/10 w-40 z-[200]">
+                              <DropdownMenuItem onSelect={() => openEdit(project)}>
+                                <Edit3 className="w-3.5 h-3.5 mr-2" /> {t.common.edit}
+                              </DropdownMenuItem>
+                              <DropdownMenuSeparator className="bg-white/5" />
+                              <DropdownMenuItem className="text-destructive focus:text-destructive" onSelect={() => setDeleteDialogId(project.id)}>
+                                <Trash2 className="w-3.5 h-3.5 mr-2" /> {t.common.delete}
+                              </DropdownMenuItem>
+                            </DropdownMenuContent>
+                          </DropdownMenu>
+                       </div>
+
+                       <div className="flex-1 space-y-2">
+                         <h3 className="text-xl font-black tracking-tight uppercase italic truncate">{project.name}</h3>
+                         <p className="text-sm text-white/40 font-medium line-clamp-2 italic">{project.description || 'No description provided.'}</p>
+                       </div>
+
+                       <div className="mt-8 pt-6 border-t border-white/5 flex items-center justify-between">
+                          <div className="flex items-center gap-4">
+                             {project.workspacePath && (
+                                <div className="flex items-center gap-1.5 opacity-60">
+                                   <Shield className="w-3.5 h-3.5 text-primary" />
+                                   <span className="text-[10px] font-black uppercase tracking-widest text-white">RAG</span>
+                                </div>
+                             )}
+                             <div className="text-[10px] font-black uppercase tracking-widest text-white/20">
+                               {formatDistanceToNow(new Date(project.updatedAt), { addSuffix: true })}
+                             </div>
+                          </div>
+                          <ArrowRight className="w-4 h-4 text-white/10 group-hover:text-primary group-hover:translate-x-1 transition-all" />
+                       </div>
+                    </div>
+                  </motion.div>
+                ))}
+              </motion.div>
+            )}
+          </>
         )}
 
+        {/* ──────────────────────────────────────────
+            Shared Dialogs (Outside conditional render)
+            ────────────────────────────────────────── */}
+        
         {/* Create/Edit Dialog */}
         <Dialog open={formOpen} onOpenChange={setFormOpen}>
           <DialogContent className="glass border-white/20 max-w-lg rounded-[40px] p-8 shadow-[0_0_50px_rgba(0,0,0,0.5)]">
