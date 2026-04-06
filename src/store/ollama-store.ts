@@ -44,4 +44,21 @@ export const useOllamaStore = create<OllamaState>((set, get) => ({
     }, 10000); // Check every 10 seconds
     return () => clearInterval(interval);
   },
+
+  isVisionModel: (modelName: string) => {
+    const model = get().models.find(m => m.name.split(':')[0] === modelName.split(':')[0]);
+    if (!model) return false;
+    
+    const family = model.details?.family || '';
+    const name = model.name.toLowerCase();
+    
+    return (
+      family.includes('llava') || 
+      family.includes('moondream') || 
+      name.includes('vision') || 
+      name.includes('llava') || 
+      name.includes('moondream') || 
+      name.includes('bakllava')
+    );
+  }
 }));

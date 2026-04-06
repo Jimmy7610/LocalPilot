@@ -126,6 +126,11 @@ const en = {
     terminalOpenHint: 'Open terminal in toolbar to see output.',
     aiReady: 'AI Ready',
     offline: 'Offline',
+    uploadImage: 'Upload image',
+    dragDrop: 'Drop images here',
+    removeImage: 'Remove image',
+    visionModel: 'Vision Model',
+    tooManyImages: 'Too many images (max 5)',
   },
 
   // ── Projects ──

@@ -128,6 +128,11 @@ const sv: TranslationKeys = {
     terminalOpenHint: 'Öppna terminalen i verktygsfältet för att se resultat.',
     aiReady: 'AI Redo',
     offline: 'Offline',
+    uploadImage: 'Ladda upp bild',
+    dragDrop: 'Släpp bilder här',
+    removeImage: 'Ta bort bild',
+    visionModel: 'Vision-modell',
+    tooManyImages: 'För många bilder (max 5)',
   },
 
   // ── Projects ──
