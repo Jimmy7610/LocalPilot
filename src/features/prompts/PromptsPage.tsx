@@ -22,6 +22,7 @@ import { usePromptStore } from '@/store/prompt-store';
 import { useChatStore } from '@/store/chat-store';
 import { useSettingsStore } from '@/store/settings-store';
 import { useOllamaStore } from '@/store/ollama-store';
+import { useProjectStore } from '@/store/project-store';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -47,9 +48,24 @@ import type { PromptTemplate } from '@/types';
 
 const CATEGORIES = ['general', 'coding', 'writing', 'analysis', 'creative', 'business'];
 
+// Helper to highlight variables like {{context}}
+const HighlightedText = ({ text, className }: { text: string; className?: string }) => {
+  const parts = text.split(/(\{\{[^}]+\}\})/g);
+  return (
+    <span className={className}>
+      {parts.map((part, i) => 
+        part.startsWith('{{') && part.endsWith('}}') ? (
+          <span key={i} className="text-primary font-bold italic drop-shadow-[0_0_8px_rgba(var(--color-primary),0.3)]">{part}</span>
+        ) : part
+      )}
+    </span>
+  );
+};
+
 export function PromptsPage() {
   const t = useT();
   const navigate = useNavigate();
+  const { projects } = useProjectStore();
   const { prompts, loaded, load, createPrompt, updatePrompt, deletePrompt, toggleFavorite } = usePromptStore();
   const chatStore = useChatStore();
   const { defaultModel } = useSettingsStore();
@@ -67,6 +83,7 @@ export function PromptsPage() {
   const [formCategory, setFormCategory] = useState('general');
   const [formTags, setFormTags] = useState('');
   const [formContent, setFormContent] = useState('');
+  const [formProjectIds, setFormProjectIds] = useState<string[]>([]);
 
   useEffect(() => { if (!loaded) load(); }, [loaded]);
 
@@ -87,6 +104,7 @@ export function PromptsPage() {
     setFormCategory('general');
     setFormTags('');
     setFormContent('');
+    setFormProjectIds([]);
     setFormOpen(true);
   };
 
@@ -97,6 +115,7 @@ export function PromptsPage() {
     setFormCategory(prompt.category);
     setFormTags(prompt.tags.join(', '));
     setFormContent(prompt.content);
+    setFormProjectIds(prompt.projectIds || []);
     setFormOpen(true);
   };
 
@@ -104,9 +123,9 @@ export function PromptsPage() {
     if (!formTitle.trim() || !formContent.trim()) return;
     const tags = formTags.split(',').map(t => t.trim()).filter(Boolean);
     if (editingPrompt) {
-      await updatePrompt({ ...editingPrompt, title: formTitle, description: formDesc, category: formCategory, tags, content: formContent });
+      await updatePrompt({ ...editingPrompt, title: formTitle, description: formDesc, category: formCategory, tags, content: formContent, projectIds: formProjectIds });
     } else {
-      await createPrompt({ title: formTitle, description: formDesc, category: formCategory, tags, content: formContent });
+      await createPrompt({ title: formTitle, description: formDesc, category: formCategory, tags, content: formContent, projectIds: formProjectIds });
     }
     setFormOpen(false);
   };
@@ -225,11 +244,24 @@ export function PromptsPage() {
                   </div>
 
                   <div className="flex-1 mb-6">
-                      <div className="h-24 bg-black/40 rounded-2xl p-4 border border-white/5 overflow-hidden relative">
-                         <pre className="text-[11px] font-mono leading-relaxed text-white/40 line-clamp-3 italic opacity-60">
-                            {prompt.content}
-                         </pre>
-                         <div className="absolute inset-x-0 bottom-0 h-10 bg-gradient-to-t from-black/80 to-transparent" />
+                      <div className="h-28 bg-black/40 rounded-2xl p-4 border border-white/5 overflow-hidden relative group/code hover:border-primary/20 transition-colors">
+                         <div className="text-[11px] font-mono leading-relaxed text-white/40 italic opacity-60">
+                            <HighlightedText text={prompt.content} />
+                         </div>
+                         <div className="absolute inset-x-0 bottom-0 h-12 bg-gradient-to-t from-black/80 to-transparent group-hover/code:opacity-40 transition-opacity" />
+                         
+                         {/* Project Linkage Indicators */}
+                         {prompt.projectIds && prompt.projectIds.length > 0 && (
+                            <div className="absolute top-2 right-2 flex gap-1">
+                                {prompt.projectIds.map(pid => {
+                                    const p = projects.find((proj: any) => proj.id === pid);
+                                    if (!p) return null;
+                                    return (
+                                        <div key={pid} className="w-2.5 h-2.5 rounded-full border border-white/10 shadow-sm" style={{ backgroundColor: p.color }} title={p.name} />
+                                    );
+                                })}
+                            </div>
+                         )}
                       </div>
                   </div>
 
@@ -292,12 +324,41 @@ export function PromptsPage() {
                 <Input value={formTags} onChange={e => setFormTags(e.target.value)} className="glass h-12 px-5 rounded-2xl border-white/5 font-mono text-[10px] text-primary" placeholder="coding, rust, cleanup" />
               </div>
               <div className="space-y-2">
-                <label className="text-[10px] font-black uppercase tracking-widest text-white/30 ml-2">{t.prompts.promptContent}</label>
+                <label className="text-[10px] font-black uppercase tracking-widest text-white/30 ml-2">Linked Projects</label>
+                <div className="flex flex-wrap gap-2 p-3 glass rounded-2xl border-white/5 min-h-[50px]">
+                    {projects.map((p: any) => (
+                        <button
+                            key={p.id}
+                            onClick={() => {
+                                setFormProjectIds(prev => 
+                                    prev.includes(p.id) ? prev.filter(id => id !== p.id) : [...prev, p.id]
+                                );
+                            }}
+                            className={cn(
+                                "flex items-center gap-2 px-3 py-1.5 rounded-xl border transition-all text-[10px] font-bold uppercase tracking-tight",
+                                formProjectIds.includes(p.id) 
+                                    ? "bg-primary/20 border-primary/40 text-primary shadow-lg shadow-primary/10" 
+                                    : "bg-white/5 border-white/5 text-white/40 hover:bg-white/10"
+                            )}
+                        >
+                            <div className="w-2 h-2 rounded-full" style={{ backgroundColor: p.color }} />
+                            {p.name}
+                        </button>
+                    ))}
+                    {projects.length === 0 && <span className="text-[10px] text-white/20 italic p-1">No projects available to link.</span>}
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <div className="flex items-center justify-between ml-2">
+                    <label className="text-[10px] font-black uppercase tracking-widest text-white/30">{t.prompts.promptContent}</label>
+                    <span className="text-[8px] font-bold text-primary/40 uppercase tracking-widest animate-pulse">Use {"{{variable}}"} for placeholders</span>
+                </div>
                 <Textarea
                   value={formContent}
                   onChange={e => setFormContent(e.target.value)}
                   placeholder={t.prompts.promptContentPlaceholder}
-                  className="min-h-[300px] glass p-6 rounded-[28px] border-white/5 font-mono text-[13px] leading-relaxed italic resize-none"
+                  className="min-h-[250px] glass p-6 rounded-[28px] border-white/5 font-mono text-[13px] leading-relaxed italic resize-none focus:border-primary/20"
                 />
               </div>
             </div>

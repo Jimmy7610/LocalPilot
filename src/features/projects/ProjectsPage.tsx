@@ -14,6 +14,7 @@ import {
   ChevronLeft,
   MessageSquare,
   FileText,
+  BookOpen,
   FolderOpen,
   RefreshCw,
   Loader2,
@@ -23,12 +24,16 @@ import {
   Shield,
   Activity,
   Zap,
+  Eye
 } from 'lucide-react';
 import { useT } from '@/i18n';
-import { useProjectStore } from '@/store/project-store';
-import { useChatStore } from '@/store/chat-store';
-import { useDocumentStore } from '@/store/document-store';
-import { useOllamaStore } from '@/store/ollama-store';
+import {
+  useProjectStore,
+  useChatStore,
+  useDocumentStore,
+  useOllamaStore,
+  usePromptStore
+} from '@/store';
 import { open } from '@tauri-apps/plugin-dialog';
 import { indexWorkspace, type IndexProgress } from '@/services/rag-service';
 import { workspaceFileRepo } from '@/services/storage';
@@ -94,6 +99,7 @@ export function ProjectsPage() {
   const { models, connected } = useOllamaStore();
   const { chats } = useChatStore();
   const { documents } = useDocumentStore();
+  const { prompts } = usePromptStore();
 
   const [formOpen, setFormOpen] = useState(false);
   const [deleteDialogId, setDeleteDialogId] = useState<string | null>(null);
@@ -196,6 +202,7 @@ export function ProjectsPage() {
 
   const linkedChats = selectedProject ? chats.filter(c => c.projectId === selectedProject.id) : [];
   const linkedDocs = selectedProject ? documents.filter(d => d.projectId === selectedProject.id) : [];
+  const linkedPrompts = selectedProject ? prompts.filter(p => p.projectIds?.includes(selectedProject.id)) : [];
 
   return (
     <div className="h-full overflow-y-auto px-4 py-8 md:px-8">
@@ -336,6 +343,41 @@ export function ProjectsPage() {
                       </div>
                     )}
                   </div>
+                </div>
+
+                <div className="glass-card p-6 border-white/10">
+                  <h3 className="text-xs font-black tracking-widest uppercase text-white/30 flex items-center gap-2 mb-4">
+                    <BookOpen className="w-3.5 h-3.5" /> Linked Prompts
+                  </h3>
+                  {linkedPrompts.length === 0 ? (
+                    <div className="py-8 text-center text-white/20 italic text-sm">{t.common.none}</div>
+                  ) : (
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      {linkedPrompts.map(p => (
+                        <div key={p.id} className="p-4 rounded-2xl bg-white/5 border border-white/5 hover:border-primary/20 transition-all group flex flex-col gap-3">
+                           <div className="flex items-start justify-between">
+                              <span className="text-xs font-bold text-white/70 truncate group-hover:text-primary transition-colors">{p.title}</span>
+                              <Badge variant="outline" className="text-[8px] px-1.5 opacity-40">{p.category}</Badge>
+                           </div>
+                           <p className="text-[10px] text-white/30 line-clamp-2 italic">{p.description}</p>
+                           <Button 
+                             size="sm" 
+                             variant="ghost" 
+                             className="w-full h-8 rounded-xl text-[10px] font-black uppercase tracking-widest bg-white/2 border border-white/5 hover:bg-primary/20 hover:text-primary transition-all mt-2"
+                             onClick={() => {
+                               // Start chat with this prompt and project
+                               const model = selectedProject.preferredModel || 'mistral:latest';
+                               useChatStore.getState().createChat(model, p.content, selectedProject.id).then(() => {
+                                  window.location.href = '/chat';
+                               });
+                             }}
+                            >
+                             Launch Prompt <Zap className="w-3 h-3 ml-2" />
+                           </Button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
                 </div>
               </div>
 
@@ -575,7 +617,12 @@ export function ProjectsPage() {
                   </SelectTrigger>
                   <SelectContent className="glass border-white/10 rounded-2xl">
                     {models.map(m => (
-                      <SelectItem key={m.name} value={m.name} className="py-3 rounded-xl">{m.name}</SelectItem>
+                      <SelectItem key={m.name} value={m.name} className="py-3 rounded-xl">
+                        <div className="flex items-center gap-2">
+                          {useOllamaStore.getState().isVisionModel(m.name) && <Eye className="w-3.5 h-3.5 text-primary" />}
+                          <span>{m.name}</span>
+                        </div>
+                      </SelectItem>
                     ))}
                   </SelectContent>
                 </Select>

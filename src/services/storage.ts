@@ -371,10 +371,21 @@ export const promptRepo = {
   async getAll(): Promise<PromptTemplate[]> {
     const database = await getDb();
     if (database) {
-      const rows: any[] = await database.select(
-        'SELECT id, title, description, category, tags, content, favorite, created_at as createdAt, updated_at as updatedAt FROM prompts ORDER BY updated_at DESC'
-      );
-      return rows.map(r => ({ ...r, tags: JSON.parse(r.tags || '[]'), favorite: !!r.favorite }));
+      const rows: any[] = await database.select(`
+        SELECT p.id, p.title, p.description, p.category, p.tags, p.content, p.favorite, 
+               p.created_at as createdAt, p.updated_at as updatedAt,
+               GROUP_CONCAT(pp.project_id) as projectIds
+        FROM prompts p
+        LEFT JOIN project_prompts pp ON p.id = pp.prompt_id
+        GROUP BY p.id
+        ORDER BY p.updated_at DESC
+      `);
+      return rows.map(r => ({ 
+        ...r, 
+        tags: JSON.parse(r.tags || '[]'), 
+        favorite: !!r.favorite,
+        projectIds: r.projectIds ? r.projectIds.split(',') : []
+      }));
     }
     return lsGet<PromptTemplate[]>('prompts', []);
   },
@@ -386,6 +397,11 @@ export const promptRepo = {
         'INSERT INTO prompts (id, title, description, category, tags, content, favorite, created_at, updated_at) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)',
         [prompt.id, prompt.title, prompt.description, prompt.category, JSON.stringify(prompt.tags), prompt.content, prompt.favorite ? 1 : 0, prompt.createdAt, prompt.updatedAt]
       );
+      if (prompt.projectIds && prompt.projectIds.length > 0) {
+        for (const pid of prompt.projectIds) {
+          await database.execute('INSERT INTO project_prompts (project_id, prompt_id) VALUES ($1, $2)', [pid, prompt.id]);
+        }
+      }
     } else {
       const prompts = lsGet<PromptTemplate[]>('prompts', []);
       prompts.unshift(prompt);
@@ -400,6 +416,14 @@ export const promptRepo = {
         'UPDATE prompts SET title = $1, description = $2, category = $3, tags = $4, content = $5, favorite = $6, updated_at = $7 WHERE id = $8',
         [prompt.title, prompt.description, prompt.category, JSON.stringify(prompt.tags), prompt.content, prompt.favorite ? 1 : 0, prompt.updatedAt, prompt.id]
       );
+      
+      // Update associations
+      await database.execute('DELETE FROM project_prompts WHERE prompt_id = $1', [prompt.id]);
+      if (prompt.projectIds && prompt.projectIds.length > 0) {
+        for (const pid of prompt.projectIds) {
+          await database.execute('INSERT INTO project_prompts (project_id, prompt_id) VALUES ($1, $2)', [pid, prompt.id]);
+        }
+      }
     } else {
       const prompts = lsGet<PromptTemplate[]>('prompts', []);
       const idx = prompts.findIndex(p => p.id === prompt.id);
@@ -411,6 +435,7 @@ export const promptRepo = {
   async delete(id: string): Promise<void> {
     const database = await getDb();
     if (database) {
+      await database.execute('DELETE FROM project_prompts WHERE prompt_id = $1', [id]);
       await database.execute('DELETE FROM prompts WHERE id = $1', [id]);
     } else {
       const prompts = lsGet<PromptTemplate[]>('prompts', []);

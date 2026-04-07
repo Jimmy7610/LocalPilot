@@ -79,6 +79,7 @@ export interface PromptTemplate {
   tags: string[];
   content: string;
   favorite: boolean;
+  projectIds?: string[];
   createdAt: string;
   updatedAt: string;
 }

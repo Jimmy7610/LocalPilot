@@ -25,7 +25,8 @@ import {
   Info,
   ImagePlus,
   X,
-  ShieldAlert
+  ShieldAlert,
+  Eye
 } from 'lucide-react';
 import { useT } from '@/i18n';
 import { useChatStore } from '@/store/chat-store';
@@ -84,6 +85,7 @@ export function ChatPage() {
   const [deleteDialog, setDeleteDialog] = useState<string | null>(null);
   const [showSettings, setShowSettings] = useState(false);
   const [pendingImages, setPendingImages] = useState<string[]>([]);
+  const [selectedImage, setSelectedImage] = useState<string | null>(null);
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
@@ -317,7 +319,7 @@ export function ChatPage() {
                             <span className="text-[9px] font-bold uppercase tracking-widest text-primary/60">{activeChat.model}</span>
                             {useOllamaStore.getState().isVisionModel(activeChat.model) && (
                               <div className="flex items-center gap-1 px-1.5 py-0.5 rounded-full bg-primary/10 border border-primary/20 text-primary group/vision">
-                                <Search className="w-2.5 h-2.5" />
+                                <Eye className="w-2.5 h-2.5" />
                                 <span className="text-[8px] font-black uppercase tracking-tighter">{t.chat.visionModel}</span>
                               </div>
                             )}
@@ -354,9 +356,14 @@ export function ChatPage() {
                   <SelectTrigger className="h-9 text-xs w-[160px] rounded-xl bg-white/5 border-white/5">
                     <SelectValue placeholder={t.common.selectModel} />
                   </SelectTrigger>
-                  <SelectContent className="glass">
+                  <SelectContent className="glass border-white/10 rounded-xl">
                     {models.map(m => (
-                      <SelectItem key={m.name} value={m.name} className="text-xs">{m.name}</SelectItem>
+                      <SelectItem key={m.name} value={m.name} className="rounded-lg">
+                        <div className="flex items-center gap-2">
+                          {useOllamaStore.getState().isVisionModel(m.name) && <Eye className="w-3.5 h-3.5 text-primary" />}
+                          <span>{m.name}</span>
+                        </div>
+                      </SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
@@ -394,7 +401,12 @@ export function ChatPage() {
               <div className="max-w-3xl mx-auto py-12 space-y-10">
                 <AnimatePresence initial={false}>
                 {chatMessages.map((msg) => (
-                  <ChatMessage key={msg.id} message={msg} t={t} />
+                  <ChatMessage 
+                    key={msg.id} 
+                    message={msg} 
+                    t={t} 
+                    onImageClick={(img) => setSelectedImage(img)}
+                  />
                 ))}
                 </AnimatePresence>
                 
@@ -432,33 +444,46 @@ export function ChatPage() {
                <div className="absolute inset-x-0 bottom-0 h-32 bg-gradient-to-t from-background to-transparent pointer-events-none -z-10" />
                <div className="max-w-3xl mx-auto glass rounded-2xl border-white/10 p-2 flex flex-col shadow-2xl">
                  
-                 {/* Pending Images Preview */}
                  <AnimatePresence>
                  {pendingImages.length > 0 && (
-                   <motion.div 
-                    initial={{ height: 0, opacity: 0 }}
-                    animate={{ height: 'auto', opacity: 1 }}
-                    exit={{ height: 0, opacity: 0 }}
-                    className="flex gap-2 p-3 overflow-x-auto border-b border-white/5 scrollbar-none"
-                   >
-                     {pendingImages.map((imgBase64, idx) => (
+                   <div className="flex flex-col">
+                     {/* Non-Vision Model Warning */}
+                     {!useOllamaStore.getState().isVisionModel(activeChat?.model || '') && (
                        <motion.div 
-                        key={idx}
-                        initial={{ opacity: 0, scale: 0.8 }}
-                        animate={{ opacity: 1, scale: 1 }}
-                        exit={{ opacity: 0, scale: 0.8 }}
-                        className="relative group/img w-20 h-20 rounded-xl overflow-hidden shrink-0 border border-white/10 shadow-xl"
+                        initial={{ opacity: 0, y: 5 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        className="mx-3 mb-2 flex items-center gap-2 px-3 py-1.5 rounded-lg bg-destructive/10 border border-destructive/20 text-destructive text-[10px] font-bold uppercase tracking-widest"
                        >
-                         <img src={`data:image/jpeg;base64,${imgBase64}`} alt="Attachment" className="w-full h-full object-cover" />
-                         <button 
-                           onClick={() => setPendingImages(prev => prev.filter((_, i) => i !== idx))}
-                           className="absolute top-1 right-1 bg-black/60 hover:bg-destructive rounded-full p-1 opacity-0 group-hover/img:opacity-100 transition-all shadow-lg backdrop-blur-md"
-                         >
-                           <X className="w-3.5 h-3.5 text-white" />
-                         </button>
+                         <ShieldAlert className="w-3.5 h-3.5" />
+                         <span>{activeChat?.model} supports no vision. Response might be blind.</span>
                        </motion.div>
-                     ))}
-                   </motion.div>
+                     )}
+
+                     <motion.div 
+                      initial={{ height: 0, opacity: 0 }}
+                      animate={{ height: 'auto', opacity: 1 }}
+                      exit={{ height: 0, opacity: 0 }}
+                      className="flex gap-2 p-3 overflow-x-auto border-b border-white/5 scrollbar-none"
+                     >
+                      {pendingImages.map((imgBase64, idx) => (
+                        <motion.div 
+                         key={idx}
+                         initial={{ opacity: 0, scale: 0.8 }}
+                         animate={{ opacity: 1, scale: 1 }}
+                         exit={{ opacity: 0, scale: 0.8 }}
+                         className="relative group/img w-20 h-20 rounded-xl overflow-hidden shrink-0 border border-white/10 shadow-xl"
+                        >
+                          <img src={`data:image/jpeg;base64,${imgBase64}`} alt="Attachment" className="w-full h-full object-cover" />
+                          <button 
+                            onClick={() => setPendingImages(prev => prev.filter((_, i) => i !== idx))}
+                            className="absolute top-1 right-1 bg-black/60 hover:bg-destructive rounded-full p-1 opacity-0 group-hover/img:opacity-100 transition-all shadow-lg backdrop-blur-md"
+                          >
+                            <X className="w-3.5 h-3.5 text-white" />
+                          </button>
+                        </motion.div>
+                      ))}
+                    </motion.div>
+                   </div>
                  )}
                  </AnimatePresence>
 
@@ -565,6 +590,28 @@ export function ChatPage() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+      {/* Image Lightbox */}
+      <Dialog open={!!selectedImage} onOpenChange={() => setSelectedImage(null)}>
+        <DialogContent className="max-w-[95vw] max-h-[95vh] p-0 border-none bg-transparent shadow-none flex items-center justify-center">
+          <div className="relative group/lightbox">
+            {selectedImage && (
+              <img 
+                src={`data:image/jpeg;base64,${selectedImage}`} 
+                className="max-w-full max-h-[90vh] object-contain rounded-2xl shadow-2xl border border-white/10" 
+                alt="Enlarged view" 
+              />
+            )}
+            <Button 
+              variant="ghost" 
+              size="icon" 
+              className="absolute top-4 right-4 h-10 w-10 rounded-full bg-black/50 hover:bg-black/70 text-white backdrop-blur-md opacity-0 group-hover/lightbox:opacity-100 transition-opacity"
+              onClick={() => setSelectedImage(null)}
+            >
+              <X className="w-5 h-5" />
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
@@ -640,7 +687,15 @@ function ChatItem({
 
 // ── Chat Message Component ──
 
-function ChatMessage({ message, t }: { message: any; t: any }) {
+function ChatMessage({ 
+  message, 
+  t, 
+  onImageClick 
+}: { 
+  message: any; 
+  t: any; 
+  onImageClick?: (img: string) => void 
+}) {
   const isUser = message.role === 'user';
   const [copied, setCopied] = useState(false);
   
@@ -688,7 +743,7 @@ function ChatMessage({ message, t }: { message: any; t: any }) {
                        src={`data:image/jpeg;base64,${img}`} 
                        className="w-full h-full object-cover transition-transform duration-500 group-hover/mesh:scale-110 cursor-zoom-in" 
                        alt={`Attachment ${idx + 1}`} 
-                       onClick={() => window.open(`data:image/jpeg;base64,${img}`, '_blank')}
+                       onClick={() => onImageClick?.(img)}
                      />
                    </div>
                  ))}

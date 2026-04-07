@@ -11,10 +11,12 @@ interface PromptState {
   prompts: PromptTemplate[];
   loaded: boolean;
   load: () => Promise<void>;
-  createPrompt: (data: { title: string; description: string; category: string; tags: string[]; content: string }) => Promise<PromptTemplate>;
+  createPrompt: (data: { title: string; description: string; category: string; tags: string[]; content: string; projectIds?: string[] }) => Promise<PromptTemplate>;
   updatePrompt: (prompt: PromptTemplate) => Promise<void>;
   deletePrompt: (id: string) => Promise<void>;
   toggleFavorite: (id: string) => Promise<void>;
+  linkToProject: (promptId: string, projectId: string) => Promise<void>;
+  unlinkFromProject: (promptId: string, projectId: string) => Promise<void>;
 }
 
 export const usePromptStore = create<PromptState>((set, get) => ({
@@ -57,5 +59,24 @@ export const usePromptStore = create<PromptState>((set, get) => ({
     const updated = { ...prompt, favorite: !prompt.favorite, updatedAt: new Date().toISOString() };
     await promptRepo.update(updated);
     set(s => ({ prompts: s.prompts.map(p => p.id === id ? updated : p) }));
+  },
+
+  linkToProject: async (promptId, projectId) => {
+    const prompt = get().prompts.find(p => p.id === promptId);
+    if (!prompt) return;
+    const pids = prompt.projectIds || [];
+    if (pids.includes(projectId)) return;
+    const updated = { ...prompt, projectIds: [...pids, projectId], updatedAt: new Date().toISOString() };
+    await promptRepo.update(updated);
+    set(s => ({ prompts: s.prompts.map(p => p.id === promptId ? updated : p) }));
+  },
+
+  unlinkFromProject: async (promptId, projectId) => {
+    const prompt = get().prompts.find(p => p.id === promptId);
+    if (!prompt) return;
+    const pids = prompt.projectIds || [];
+    const updated = { ...prompt, projectIds: pids.filter(id => id !== projectId), updatedAt: new Date().toISOString() };
+    await promptRepo.update(updated);
+    set(s => ({ prompts: s.prompts.map(p => p.id === promptId ? updated : p) }));
   },
 }));

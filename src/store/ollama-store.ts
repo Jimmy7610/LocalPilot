@@ -14,6 +14,7 @@ interface OllamaState {
   check: () => Promise<void>;
   fetchModels: () => Promise<void>;
   startPolling: () => () => void;
+  isVisionModel: (modelName: string) => boolean;
 }
 
 export const useOllamaStore = create<OllamaState>((set, get) => ({
