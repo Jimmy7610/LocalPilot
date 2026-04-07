@@ -69,13 +69,14 @@ export async function chatStream(
   onChunk: (text: string) => void,
   onDone: () => void,
   onError: (error: string) => void,
+  images?: string[],
   signal?: AbortSignal
 ): Promise<void> {
   try {
     const res = await fetch(`${baseUrl}/api/chat`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ model, messages, stream: true }),
+      body: JSON.stringify({ model, messages, images, stream: true }),
       signal,
     });
 
@@ -135,11 +136,13 @@ export async function generateStream(
   onChunk: (text: string) => void,
   onDone: () => void,
   onError: (error: string) => void,
+  images?: string[],
   signal?: AbortSignal
 ): Promise<void> {
   try {
     const body: any = { model, prompt, stream: true };
     if (systemPrompt) body.system = systemPrompt;
+    if (images) body.images = images;
 
     const res = await fetch(`${baseUrl}/api/generate`, {
       method: 'POST',
@@ -200,7 +203,8 @@ export async function generateStream(
 export async function generate(
   model: string,
   prompt: string,
-  systemPrompt?: string
+  systemPrompt?: string,
+  images?: string[]
 ): Promise<string> {
   const res = await fetch(`${baseUrl}/api/generate`, {
     method: 'POST',
@@ -209,6 +213,7 @@ export async function generate(
       model,
       prompt,
       system: systemPrompt,
+      images,
       stream: false,
     }),
   });

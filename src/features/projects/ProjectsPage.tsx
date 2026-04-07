@@ -280,8 +280,13 @@ export function ProjectsPage() {
 
                   {isIndexing && indexProgress && (
                     <div className="space-y-3 animate-fade-in mb-6">
-                      <div className="flex justify-between text-[10px] font-black uppercase tracking-widest text-white/40">
-                        <span className="truncate max-w-[250px]">{indexProgress.currentFile}</span>
+                      <div className="flex justify-between items-end text-[10px] font-black uppercase tracking-widest text-white/40">
+                        <div className="space-y-1">
+                           <span className="text-[8px] bg-primary/10 text-primary px-1.5 py-0.5 rounded border border-primary/10 mb-1 inline-block">
+                             {indexProgress.status || 'Processing'}
+                           </span>
+                           <div className="truncate max-w-[250px]">{indexProgress.currentFile}</div>
+                        </div>
                         <span className="text-primary">{Math.round((indexProgress.processedFiles / indexProgress.totalFiles) * 100)}%</span>
                       </div>
                       <div className="h-1.5 w-full bg-white/5 rounded-full overflow-hidden">

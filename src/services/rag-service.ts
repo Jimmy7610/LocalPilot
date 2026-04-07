@@ -2,11 +2,13 @@
 // LocalPilot — RAG Service (Indexing & Retrieval)
 // ──────────────────────────────────────────
 
-import { BaseDirectory, readDir, readTextFile, stat } from '@tauri-apps/plugin-fs';
+import { BaseDirectory, readDir, readTextFile, readFile, stat } from '@tauri-apps/plugin-fs';
 import { sep } from '@tauri-apps/api/path';
 import { v4 as uuid } from 'uuid';
 import { workspaceFileRepo, workspaceChunkRepo } from './storage';
 import { generateEmbeddings } from './ollama';
+import { describeImage } from './vision-service';
+import { extractTextFromPDF } from './pdf-service';
 import { cosineSimilarity } from '@/lib/vector-math';
 import type { WorkspaceFile, WorkspaceChunk } from '@/types';
 
@@ -14,7 +16,8 @@ const CHUNK_SIZE = 1000; // characters
 const CHUNK_OVERLAP = 200; // characters
 const ALLOWED_EXTENSIONS = [
   '.txt', '.md', '.markdown', '.js', '.ts', '.tsx', '.jsx', 
-  '.py', '.json', '.html', '.css', '.rs', '.go', '.c', '.cpp', '.java'
+  '.py', '.json', '.html', '.css', '.rs', '.go', '.c', '.cpp', '.java',
+  '.pdf', '.png', '.jpg', '.jpeg'
 ];
 const IGNORED_DIRS = ['.git', 'node_modules', 'dist', 'build', '.next', '.tauri', 'target'];
 
@@ -22,6 +25,7 @@ export interface IndexProgress {
   totalFiles: number;
   processedFiles: number;
   currentFile: string;
+  status?: string;
 }
 
 /**
@@ -70,15 +74,44 @@ export async function indexWorkspace(
   let processed = 0;
   for (const filePath of filesToIndex) {
     try {
+      const ext = filePath.slice(filePath.lastIndexOf('.')).toLowerCase();
       if (onProgress) {
         onProgress({ 
           totalFiles: filesToIndex.length, 
           processedFiles: processed, 
-          currentFile: filePath.split('/').pop() || '' 
+          currentFile: filePath.split(await sep()).pop() || '',
+          status: ['.png', '.jpg', '.jpeg', '.pdf'].includes(ext) ? 'Vision Analysis' : 'Text Indexing'
         });
       }
 
-      const content = await readTextFile(filePath);
+      let content = '';
+      let visualSummaries: string[] = [];
+
+      if (['.png', '.jpg', '.jpeg'].includes(ext)) {
+        // Direct Image Analysis
+        const bytes = await readFile(filePath);
+        const base64 = btoa(String.fromCharCode(...new Uint8Array(bytes)));
+        const summary = await describeImage(base64);
+        content = `[IMAGE ANALYSIS]: ${summary}`;
+      } else if (ext === '.pdf') {
+        // PDF with Image Support
+        const bytes = await readFile(filePath);
+        const fileObj = new File([bytes], filePath.split(await sep()).pop() || 'document.pdf', { type: 'application/pdf' });
+        const pdfResult = await extractTextFromPDF(fileObj);
+        content = pdfResult.text;
+        
+        if (pdfResult.images && pdfResult.images.length > 0) {
+           // Caption all images in the PDF
+           for (const imgBase64 of pdfResult.images) {
+             const summary = await describeImage(imgBase64);
+             visualSummaries.push(`[VISION-SUMMARY]: ${summary}`);
+           }
+        }
+      } else {
+        // Standard Text File
+        content = await readTextFile(filePath);
+      }
+
       const fileInfo = await stat(filePath);
       
       const fileRecord: WorkspaceFile = {
@@ -91,18 +124,19 @@ export async function indexWorkspace(
 
       await workspaceFileRepo.create(fileRecord);
 
-      // Chunk the content
+      // ── Text Chunking ──
       const chunks = chunkText(content, CHUNK_SIZE, CHUNK_OVERLAP);
-      const chunkRecords: WorkspaceChunk[] = [];
+      // Add visual summaries as independent chunks
+      const allTextChunks = [...chunks, ...visualSummaries];
       
-      for (let i = 0; i < chunks.length; i++) {
-        const text = chunks[i];
+      const chunkRecords: WorkspaceChunk[] = [];
+      for (let i = 0; i < allTextChunks.length; i++) {
+        const text = allTextChunks[i];
         let embedding: number[] | undefined;
         try {
-          // Attempt to vectorize the chunk
           embedding = await generateEmbeddings(embeddingModel, text);
         } catch (e) {
-          console.warn('Could not generate embedding for chunk, continuing without it:', e);
+          console.warn('Could not generate embedding for chunk:', e);
         }
         
         chunkRecords.push({

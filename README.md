@@ -82,8 +82,10 @@ npm run tauri dev
 - [x] **Action Cards:** Approval-based execution for terminal commands.
 - [x] **Library System:** Unified management for Documents, Prompts, and Tools.
 - [x] **Premium Productivity Design:** Full UI/UX overhaul to professional standards.
-- [ ] **Multi-Modal Image Support:** Native support for vision-capable models (In Progress).
-- [ ] **Global Hotkey:** Minimize to tray / background execution.
+- [x] **Multi-Modal Image Support:** Native support for vision-capable models with safety warnings and in-app lightbox.
+- [x] **Advanced Prompt Library:** Industrial-grade template management with project linkage and variable highlighting.
+- [ ] **Phase 8: Multi-Modal RAG Extension:** Vision-enabled indexing for processing images within PDFs and workspaces.
+- [ ] **Phase 9: Global Spotlight & System Tray:** Instant access via global hotkeys and background execution.
 
 ---
 

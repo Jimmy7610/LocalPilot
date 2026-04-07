@@ -38,7 +38,7 @@ interface ChatState {
   loaded: boolean;
 
   load: () => Promise<void>;
-  createChat: (model: string, systemPrompt?: string) => Promise<Chat>;
+  createChat: (model: string, systemPrompt?: string, projectId?: string | null) => Promise<Chat>;
   deleteChat: (id: string) => Promise<void>;
   renameChat: (id: string, title: string) => Promise<void>;
   togglePin: (id: string) => Promise<void>;
@@ -66,7 +66,7 @@ export const useChatStore = create<ChatState>((set, get) => ({
     set({ chats, loaded: true });
   },
 
-  createChat: async (model, systemPrompt = '') => {
+  createChat: async (model, systemPrompt = '', projectId = null) => {
     const now = new Date().toISOString();
     const chat: Chat = {
       id: uuid(),
@@ -74,7 +74,7 @@ export const useChatStore = create<ChatState>((set, get) => ({
       model,
       systemPrompt,
       pinned: false,
-      projectId: null,
+      projectId,
       createdAt: now,
       updatedAt: now,
     };
@@ -339,6 +339,7 @@ export const useChatStore = create<ChatState>((set, get) => ({
           abortController: null,
         }));
       },
+      images,
       abortController.signal
     );
   },
