@@ -42,7 +42,7 @@ export function Sidebar() {
       )}
     >
       {/* Logo */}
-      <div className={cn('flex items-center gap-2.5 px-4 h-14 border-b border-white/5', collapsed && 'justify-center px-0')}>
+      <div className={cn('flex items-center gap-2.5 px-4 h-14 border-b border-border/40', collapsed && 'justify-center px-0')}>
         <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-primary/20 shadow-[0_0_15px_rgba(var(--color-primary),0.3)]">
           <Zap className="w-4.5 h-4.5 text-primary" />
         </div>
@@ -58,7 +58,7 @@ export function Sidebar() {
         {/* Workspace */}
         <div className="space-y-1">
           {!collapsed && (
-            <p className="px-3 text-[10px] font-black uppercase tracking-[0.2em] text-white/20 mb-2">Workspace</p>
+            <p className="px-3 text-[10px] font-black uppercase tracking-[0.2em] text-foreground/30 mb-2">Workspace</p>
           )}
           {workspaceItems.map((item) => (
             <SidebarLink key={item.to} item={item} collapsed={collapsed} t={t} />
@@ -68,7 +68,7 @@ export function Sidebar() {
         {/* Library */}
         <div className="space-y-1">
           {!collapsed && (
-            <p className="px-3 text-[10px] font-black uppercase tracking-[0.2em] text-white/20 mb-2">Library</p>
+            <p className="px-3 text-[10px] font-black uppercase tracking-[0.2em] text-foreground/30 mb-2">Library</p>
           )}
           {libraryItems.map((item) => (
             <SidebarLink key={item.to} item={item} collapsed={collapsed} t={t} />
@@ -77,13 +77,13 @@ export function Sidebar() {
       </div>
 
       {/* Settings + Collapse */}
-      <div className="flex flex-col gap-1.5 px-2 pb-3 border-t border-white/5 pt-3">
+      <div className="flex flex-col gap-1.5 px-2 pb-3 border-t border-border/40 pt-3">
         <NavLink
           to="/settings"
           className={({ isActive }) =>
             cn(
               'group flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-200',
-              'text-sidebar-foreground/60 hover:text-sidebar-foreground hover:bg-white/5',
+              'text-sidebar-foreground/60 hover:text-sidebar-foreground hover:bg-muted/50',
               isActive && 'bg-primary/10 text-primary font-bold',
               collapsed && 'justify-center px-0'
             )
@@ -97,7 +97,7 @@ export function Sidebar() {
           variant="ghost"
           size="sm"
           className={cn(
-            'w-full justify-start gap-3 px-3 rounded-xl text-sidebar-foreground/40 hover:text-sidebar-foreground hover:bg-white/5',
+            'w-full justify-start gap-3 px-3 rounded-xl text-sidebar-foreground/40 hover:text-sidebar-foreground hover:bg-muted/50',
             collapsed && 'justify-center px-0'
           )}
           onClick={() => setCollapsed(!collapsed)}
@@ -127,7 +127,7 @@ function SidebarLink({ item, collapsed, t }: { item: any, collapsed: boolean, t:
       className={({ isActive }) =>
         cn(
           'group flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-200',
-          'text-sidebar-foreground/60 hover:text-sidebar-foreground hover:bg-white/5',
+          'text-sidebar-foreground/60 hover:text-sidebar-foreground hover:bg-muted/50',
           isActive && 'bg-primary/10 text-primary font-bold shadow-[inset_0_0_10px_rgba(var(--color-primary),0.1)]',
           collapsed && 'justify-center px-0'
         )
@@ -142,7 +142,7 @@ function SidebarLink({ item, collapsed, t }: { item: any, collapsed: boolean, t:
     return (
       <Tooltip delayDuration={0}>
         <TooltipTrigger asChild>{link}</TooltipTrigger>
-        <TooltipContent side="right" sideOffset={12} className="glass border-white/10">
+        <TooltipContent side="right" sideOffset={12} className="glass border-border/40">
           {label}
         </TooltipContent>
       </Tooltip>

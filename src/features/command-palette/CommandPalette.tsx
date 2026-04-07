@@ -120,7 +120,7 @@ export function CommandPalette({ open, onClose }: CommandPaletteProps) {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="absolute inset-0 bg-black/60 backdrop-blur-md"
+            className="absolute inset-0 bg-background/60 backdrop-blur-md"
             onClick={onClose}
           />
           
@@ -129,21 +129,21 @@ export function CommandPalette({ open, onClose }: CommandPaletteProps) {
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.95, y: -20 }}
             transition={{ type: 'spring', damping: 25, stiffness: 300 }}
-            className="relative w-[640px] max-w-[90vw] glass-card border-white/10 shadow-[0_32px_120px_rgba(0,0,0,0.8)] overflow-hidden"
+            className="relative w-[640px] max-w-[90vw] glass-card border-border shadow-2xl shadow-black/20 overflow-hidden"
             onKeyDown={handleKeyDown}
           >
             {/* Command Header */}
-            <div className="flex items-center px-6 py-5 border-b border-white/5 gap-4">
+            <div className="flex items-center px-6 py-5 border-b border-border gap-4">
               <Command className="w-5 h-5 text-primary opacity-50" />
               <input
                 ref={inputRef}
                 value={query}
                 onChange={e => setQuery(e.target.value)}
                 placeholder="Search everything or type a command..."
-                className="flex-1 bg-transparent border-none outline-none text-lg font-medium placeholder:text-white/20"
+                className="flex-1 bg-transparent border-none outline-none text-lg font-medium placeholder:text-foreground/40"
               />
               <div className="flex items-center gap-2">
-                <kbd className="px-2 py-1 rounded-lg bg-white/5 border border-white/10 text-[10px] font-mono text-white/40 shadow-sm">ESC</kbd>
+                <kbd className="px-2 py-1 rounded-lg bg-muted border border-border text-[10px] font-mono text-foreground/40 shadow-sm">ESC</kbd>
               </div>
             </div>
 
@@ -160,12 +160,12 @@ export function CommandPalette({ open, onClose }: CommandPaletteProps) {
                         "flex items-center gap-4 w-full p-3 rounded-xl transition-all duration-150 group text-left",
                         index === selectedIndex 
                           ? "bg-primary text-primary-foreground shadow-lg shadow-primary/20 scale-[1.02]" 
-                          : "hover:bg-white/5 text-white/60"
+                          : "hover:bg-muted/50 text-foreground/60"
                       )}
                     >
                       <div className={cn(
                         "w-10 h-10 rounded-lg flex items-center justify-center shrink-0 transition-colors",
-                        index === selectedIndex ? "bg-white/20" : "bg-white/5"
+                        index === selectedIndex ? "bg-white/20" : "bg-muted"
                       )}>
                         <item.icon className="w-5 h-5" />
                       </div>
@@ -182,7 +182,7 @@ export function CommandPalette({ open, onClose }: CommandPaletteProps) {
                         {item.subtitle && (
                           <span className={cn(
                             "text-[10px] font-bold uppercase tracking-widest opacity-40",
-                            index === selectedIndex ? "text-white" : ""
+                            index === selectedIndex ? "text-primary-foreground" : ""
                           )}>{item.subtitle}</span>
                         )}
                       </div>
@@ -196,22 +196,22 @@ export function CommandPalette({ open, onClose }: CommandPaletteProps) {
                   ))}
                 </div>
               ) : (
-                <div className="py-12 flex flex-col items-center justify-center text-white/20">
-                  <Sparkles className="w-10 h-10 mb-4 opacity-20" />
+                <div className="py-12 flex flex-col items-center justify-center text-foreground/40">
+                  <Sparkles className="w-10 h-10 mb-4 opacity-40" />
                   <p className="text-sm font-bold uppercase tracking-widest italic">No matches found</p>
                 </div>
               )}
             </div>
 
             {/* Footer / Shortcuts */}
-            <div className="flex items-center justify-between px-6 py-4 bg-black/20 border-t border-white/5">
+            <div className="flex items-center justify-between px-6 py-4 bg-muted/50 border-t border-border">
                 <div className="flex items-center gap-6">
                     <div className="flex items-center gap-2">
-                        <kbd className="px-1.5 py-0.5 rounded-md bg-white/5 border border-white/10 text-[9px] font-mono opacity-40">↑↓</kbd>
+                        <kbd className="px-1.5 py-0.5 rounded-md bg-background border border-border text-[9px] font-mono opacity-40">↑↓</kbd>
                         <span className="text-[10px] font-bold uppercase tracking-widest opacity-30">Navigate</span>
                     </div>
                     <div className="flex items-center gap-2">
-                        <kbd className="px-1.5 py-0.5 rounded-md bg-white/5 border border-white/10 text-[9px] font-mono opacity-40">ENTER</kbd>
+                        <kbd className="px-1.5 py-0.5 rounded-md bg-background border border-border text-[9px] font-mono opacity-40">ENTER</kbd>
                         <span className="text-[10px] font-bold uppercase tracking-widest opacity-30">Select</span>
                     </div>
                 </div>

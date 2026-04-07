@@ -168,7 +168,7 @@ export function DocumentsPage() {
       <div className="h-full overflow-y-auto custom-scrollbar">
         <div className="max-w-4xl mx-auto p-12 space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
           <div className="flex items-center justify-between">
-            <Button variant="ghost" size="sm" className="gap-2 text-white/40 hover:text-white" onClick={() => { setSelectedDoc(null); setEditing(false); setAiResult(''); }}>
+            <Button variant="ghost" size="sm" className="gap-2 text-foreground/40 hover:text-foreground" onClick={() => { setSelectedDoc(null); setEditing(false); setAiResult(''); }}>
               <ChevronLeft className="w-4 h-4" /> {t.common.back}
             </Button>
             {!editing && (
@@ -190,29 +190,29 @@ export function DocumentsPage() {
                 value={formContent}
                 onChange={e => setFormContent(e.target.value)}
                 placeholder={t.documents.contentPlaceholder}
-                className="min-h-[500px] glass p-6 rounded-[32px] border-white/5 font-mono text-[13px] leading-relaxed focus:border-primary/40 transition-all"
+                className="min-h-[500px] glass p-6 rounded-[32px] border-border font-mono text-[13px] leading-relaxed focus:border-primary/40 transition-all"
               />
               <div className="flex gap-3">
                 <Button onClick={handleSaveEdit} className="h-12 px-8 rounded-2xl bg-primary font-bold text-xs uppercase tracking-widest">{t.common.save}</Button>
-                <Button variant="ghost" onClick={() => setEditing(false)} className="h-12 px-8 rounded-2xl text-white/40">{t.common.cancel}</Button>
+                <Button variant="ghost" onClick={() => setEditing(false)} className="h-12 px-8 rounded-2xl text-foreground/40">{t.common.cancel}</Button>
               </div>
             </div>
           ) : (
             <div className="space-y-12">
               <div className="space-y-2">
                 <div className="flex items-center gap-2 mb-2">
-                   <div className="px-2 py-0.5 rounded bg-white/5 border border-white/10 text-[9px] font-black uppercase tracking-widest text-white/40">Knowledge Base</div>
-                   <div className="w-1 h-1 rounded-full bg-white/20" />
-                   <div className="text-[10px] font-bold uppercase tracking-widest text-white/20">Last modified {formatDistanceToNow(new Date(selectedDoc.updatedAt), { addSuffix: true })}</div>
+                   <div className="px-2 py-0.5 rounded bg-muted border border-border text-[9px] font-black uppercase tracking-widest text-foreground/40">Knowledge Base</div>
+                   <div className="w-1 h-1 rounded-full bg-foreground/20" />
+                   <div className="text-[10px] font-bold uppercase tracking-widest text-foreground/20">Last modified {formatDistanceToNow(new Date(selectedDoc.updatedAt), { addSuffix: true })}</div>
                 </div>
                 <h1 className="text-5xl font-black tracking-tighter uppercase italic">{selectedDoc.title}</h1>
               </div>
 
-              <div className="glass-card p-10 border-white/5 shadow-2xl relative">
+              <div className="glass-card p-10 border-border shadow-2xl relative">
                   <div className="absolute top-0 right-0 p-6 opacity-5">
                       <FileText className="w-32 h-32" />
                   </div>
-                  <div className="prose prose-invert max-w-none prose-sm selection:bg-primary/30 leading-relaxed text-white/80 font-medium">
+                  <div className="prose dark:prose-invert max-w-none prose-sm selection:bg-primary/30 leading-relaxed text-foreground/80 font-medium">
                       {selectedDoc.content ? (
                         <pre className="whitespace-pre-wrap font-sans !m-0 !p-0 bg-transparent">{selectedDoc.content}</pre>
                       ) : (
@@ -241,7 +241,7 @@ export function DocumentsPage() {
                       key={action.key}
                       variant="ghost"
                       size="sm"
-                      className="glass h-10 px-4 rounded-xl border-white/5 hover:bg-primary/10 hover:text-primary hover:border-primary/20 transition-all font-bold text-[10px] uppercase tracking-widest gap-2"
+                      className="glass h-10 px-4 rounded-xl border-border hover:bg-primary/10 hover:text-primary hover:border-primary/20 transition-all font-bold text-[10px] uppercase tracking-widest gap-2"
                       disabled={aiLoading || !connected || !selectedDoc.content}
                       onClick={() => runAiAction(action.key)}
                     >
@@ -256,9 +256,9 @@ export function DocumentsPage() {
                     <motion.div 
                       initial={{ opacity: 0, scale: 0.98 }}
                       animate={{ opacity: 1, scale: 1 }}
-                      className="bg-black/40 rounded-[28px] p-6 border border-white/5 relative group shadow-2xl"
+                      className="bg-muted/40 rounded-[28px] p-6 border border-border relative group shadow-2xl"
                     >
-                      <div className="prose prose-invert prose-xs max-w-none selection:bg-primary/40 leading-relaxed text-primary/90 font-medium italic">
+                      <div className="prose dark:prose-invert prose-xs max-w-none selection:bg-primary/40 leading-relaxed text-primary/90 font-medium italic">
                           <pre className="whitespace-pre-wrap font-sans !m-0 !p-0 bg-transparent">{aiResult}</pre>
                       </div>
                       <button
@@ -288,7 +288,7 @@ export function DocumentsPage() {
         <div className="flex flex-col md:flex-row items-start md:items-end justify-between gap-6">
           <div className="space-y-2">
             <h1 className="text-5xl font-black tracking-tighter uppercase italic">{t.documents.title}</h1>
-            <p className="text-lg text-white/40 font-medium italic">Build your local knowledge repository.</p>
+            <p className="text-lg text-foreground/40 font-medium italic">Build your local knowledge repository.</p>
           </div>
           <div className="flex gap-3">
             <input
@@ -314,22 +314,22 @@ export function DocumentsPage() {
         </div>
 
         <div className="relative group">
-          <Search className="absolute left-5 top-1/2 -translate-y-1/2 w-4 h-4 text-white/20 group-focus-within:text-primary transition-colors" />
+          <Search className="absolute left-5 top-1/2 -translate-y-1/2 w-4 h-4 text-foreground/20 group-focus-within:text-primary transition-colors" />
           <Input
             placeholder={t.documents.searchDocuments}
             value={searchQuery}
             onChange={e => setSearchQuery(e.target.value)}
-            className="pl-12 h-14 rounded-[20px] glass border-white/5 focus:border-primary/40 transition-all font-medium italic text-lg"
+            className="pl-12 h-14 rounded-[20px] glass border-border focus:border-primary/40 transition-all font-medium italic text-lg"
           />
         </div>
 
         {filtered.length === 0 ? (
-          <div className="flex flex-col items-center justify-center py-32 text-center glass-card border-white/5 rounded-[40px] opacity-40 group hover:opacity-60 transition-opacity">
-            <div className="w-24 h-24 rounded-full bg-white/5 flex items-center justify-center mb-6 shadow-xl border border-white/5 group-hover:scale-110 transition-transform">
-               <FileText className="w-10 h-10 text-white/20" />
+          <div className="flex flex-col items-center justify-center py-32 text-center glass-card border-border rounded-[40px] opacity-40 group hover:opacity-60 transition-opacity">
+            <div className="w-24 h-24 rounded-full bg-muted flex items-center justify-center mb-6 shadow-xl border border-border group-hover:scale-110 transition-transform">
+               <FileText className="w-10 h-10 text-foreground/20" />
             </div>
             <h3 className="text-2xl font-black uppercase italic mb-2">{t.documents.noDocuments}</h3>
-            <p className="text-white/40 max-w-sm mb-10">{t.documents.noDocumentsHint}</p>
+            <p className="text-foreground/40 max-w-sm mb-10">{t.documents.noDocumentsHint}</p>
           </div>
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -341,22 +341,22 @@ export function DocumentsPage() {
                 onClick={() => setSelectedDoc(doc)}
               >
                 <div className="absolute inset-0 opacity-0 group-hover:opacity-10 blur-3xl bg-primary rounded-[32px] transition-all duration-500" />
-                <div className="glass-card border-white/5 rounded-[32px] p-8 hover:border-white/20 transition-all shadow-xl group-hover:shadow-2xl h-full flex flex-col isolation-isolate overflow-hidden bg-white/[0.02]">
+                <div className="glass-card border-border rounded-[32px] p-8 hover:border-primary/20 transition-all shadow-xl group-hover:shadow-2xl h-full flex flex-col isolation-isolate overflow-hidden bg-background">
                   <div className="flex items-start justify-between mb-8">
-                    <div className="w-12 h-12 rounded-2xl bg-white/5 flex items-center justify-center shadow-lg border border-white/5 group-hover:bg-primary/20 group-hover:border-primary/40 transition-all">
-                        <FileText className="w-5 h-5 text-white/20 group-hover:text-primary" />
+                    <div className="w-12 h-12 rounded-2xl bg-muted/50 flex items-center justify-center shadow-lg border border-border group-hover:bg-primary/20 group-hover:border-primary/40 transition-all">
+                        <FileText className="w-5 h-5 text-foreground/20 group-hover:text-primary" />
                     </div>
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" size="icon" className="h-10 w-10 text-white/10 hover:text-white rounded-xl hover:bg-white/5" onClick={e => e.stopPropagation()}>
+                        <Button variant="ghost" size="icon" className="h-10 w-10 text-foreground/20 hover:text-foreground rounded-xl hover:bg-muted/50" onClick={e => e.stopPropagation()}>
                           <MoreVertical className="w-4 h-4" />
                         </Button>
                       </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end" className="glass border-white/10 w-40">
+                      <DropdownMenuContent align="end" className="glass border-border w-40">
                         <DropdownMenuItem onClick={(e) => { e.stopPropagation(); setSelectedDoc(doc); startEdit(); }} className="gap-2 py-2.5">
                           <Edit3 className="w-4 h-4" /> {t.common.edit}
                         </DropdownMenuItem>
-                        <DropdownMenuSeparator className="bg-white/5" />
+                        <DropdownMenuSeparator className="bg-border" />
                         <DropdownMenuItem className="text-destructive focus:text-destructive gap-2 py-2.5" onClick={(e) => { e.stopPropagation(); setDeleteDialogId(doc.id); }}>
                           <Trash2 className="w-4 h-4" /> {t.common.delete}
                         </DropdownMenuItem>
@@ -369,11 +369,11 @@ export function DocumentsPage() {
                     <p className="text-xs text-white/30 font-medium line-clamp-3 leading-relaxed italic">{doc.content || 'Indexed but empty.'}</p>
                   </div>
 
-                  <div className="mt-8 pt-6 border-t border-white/5 flex items-center justify-between">
-                     <span className="text-[10px] font-black uppercase tracking-widest text-white/10">
+                  <div className="mt-8 pt-6 border-t border-border flex items-center justify-between">
+                     <span className="text-[10px] font-black uppercase tracking-widest text-foreground/10">
                         {formatDistanceToNow(new Date(doc.updatedAt), { addSuffix: true })}
                      </span>
-                     <ArrowRight className="w-4 h-4 text-white/10 group-hover:text-primary group-hover:translate-x-1 transition-all" />
+                     <ArrowRight className="w-4 h-4 text-foreground/10 group-hover:text-primary group-hover:translate-x-1 transition-all" />
                   </div>
                 </div>
               </motion.div>
@@ -383,34 +383,34 @@ export function DocumentsPage() {
 
         {/* Create Dialog */}
         <Dialog open={formOpen} onOpenChange={setFormOpen}>
-          <DialogContent className="glass border-white/20 max-w-2xl rounded-[40px] p-10 shadow-[0_0_50px_rgba(0,0,0,0.5)]">
+          <DialogContent className="glass border-border max-w-2xl rounded-[40px] p-10 shadow-[0_0_50px_rgba(0,0,0,0.5)]">
             <DialogHeader className="mb-8">
               <DialogTitle className="text-4xl font-black uppercase italic tracking-tighter">{t.documents.newDocument}</DialogTitle>
             </DialogHeader>
             
             <div className="space-y-6">
               <div className="space-y-2">
-                <label className="text-[10px] font-black uppercase tracking-widest text-white/30 ml-2">{t.common.title}</label>
+                <label className="text-[10px] font-black uppercase tracking-widest text-foreground/30 ml-2">{t.common.title}</label>
                 <Input 
                   value={formTitle} 
                   onChange={e => setFormTitle(e.target.value)}
-                  className="glass h-14 px-6 rounded-2xl border-white/5 font-bold italic text-lg" 
+                  className="glass h-14 px-6 rounded-2xl border-border font-bold italic text-lg" 
                   placeholder="The knowledge node title..."
                 />
               </div>
               <div className="space-y-2">
-                <label className="text-[10px] font-black uppercase tracking-widest text-white/30 ml-2">{t.common.content}</label>
+                <label className="text-[10px] font-black uppercase tracking-widest text-foreground/30 ml-2">{t.common.content}</label>
                 <Textarea
                   value={formContent}
                   onChange={e => setFormContent(e.target.value)}
                   placeholder={t.documents.contentPlaceholder}
-                  className="min-h-[400px] glass p-6 rounded-[28px] border-white/5 font-mono text-[13px] leading-relaxed resize-none italic"
+                  className="min-h-[400px] glass p-6 rounded-[28px] border-border font-mono text-[13px] leading-relaxed resize-none italic"
                 />
               </div>
             </div>
 
             <DialogFooter className="mt-10 gap-3">
-              <Button variant="ghost" onClick={() => setFormOpen(false)} className="h-14 px-8 rounded-full text-white/40 hover:text-white uppercase font-black tracking-widest text-[10px]">{t.common.cancel}</Button>
+              <Button variant="ghost" onClick={() => setFormOpen(false)} className="h-14 px-8 rounded-full text-foreground/40 hover:text-foreground uppercase font-black tracking-widest text-[10px]">{t.common.cancel}</Button>
               <Button onClick={handleCreate} className="h-14 px-10 rounded-full bg-primary text-primary-foreground font-black uppercase italic tracking-tighter shadow-2xl shadow-primary/20 active:scale-95 transition-all">
                 {t.common.create}
               </Button>
@@ -420,15 +420,15 @@ export function DocumentsPage() {
 
         {/* Delete Dialog */}
         <Dialog open={!!deleteDialogId} onOpenChange={() => setDeleteDialogId(null)}>
-          <DialogContent className="glass border-white/20 max-w-sm rounded-[40px] p-10">
+          <DialogContent className="glass border-border max-w-sm rounded-[40px] p-10">
             <DialogHeader className="mb-6">
               <DialogTitle className="text-2xl font-black uppercase italic tracking-tighter flex items-center gap-3">
                 <Trash2 className="w-6 h-6 text-destructive" /> {t.documents.deleteDocument}
               </DialogTitle>
             </DialogHeader>
-            <p className="text-white/60 font-medium italic mb-10 leading-relaxed">{t.documents.deleteDocumentConfirm}</p>
+            <p className="text-foreground/60 font-medium italic mb-10 leading-relaxed text-center">{t.documents.deleteDocumentConfirm}</p>
             <DialogFooter className="gap-3">
-              <Button variant="ghost" onClick={() => setDeleteDialogId(null)} className="flex-1 h-12 rounded-2xl text-white/40 hover:text-white uppercase font-black text-[10px] tracking-widest">{t.common.cancel}</Button>
+              <Button variant="ghost" onClick={() => setDeleteDialogId(null)} className="flex-1 h-12 rounded-2xl text-foreground/40 hover:text-foreground uppercase font-black text-[10px] tracking-widest">{t.common.cancel}</Button>
               <Button variant="destructive" className="flex-1 h-12 rounded-2xl bg-destructive hover:bg-destructive/80 font-black uppercase tracking-widest text-[10px] shadow-xl shadow-destructive/20" onClick={() => { if (deleteDialogId) { deleteDocument(deleteDialogId); setDeleteDialogId(null); } }}>{t.common.delete}</Button>
             </DialogFooter>
           </DialogContent>

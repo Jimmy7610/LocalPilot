@@ -214,18 +214,18 @@ export function ChatPage() {
   return (
     <div className="flex h-full w-full overflow-hidden min-h-0 min-w-0 animate-fade-in">
       {/* Chat Sidebar */}
-      <div className="w-80 border-r border-white/5 flex flex-col bg-black/10 backdrop-blur-md min-h-0 shrink-0">
+      <div className="w-80 border-r border-border flex flex-col bg-muted/30 backdrop-blur-md min-h-0 shrink-0">
         <div className="p-4 space-y-3">
           <Button onClick={handleNewChat} className="w-full gap-2 rounded-xl h-10 font-bold shadow-lg shadow-primary/20" size="sm">
             <Plus className="w-4 h-4" /> {t.chat.newChat}
           </Button>
           <div className="relative group">
-            <Search className="absolute left-3 top-3 w-4 h-4 text-white/20 group-focus-within:text-primary transition-colors" />
+            <Search className="absolute left-3 top-3 w-4 h-4 text-foreground/20 group-focus-within:text-primary transition-colors" />
             <Input
               placeholder={t.chat.searchChats}
               value={searchQuery}
               onChange={e => setSearchQuery(e.target.value)}
-              className="pl-9 h-10 text-xs rounded-xl bg-white/5 border-white/5 focus:bg-white/10 transition-all font-medium"
+              className="pl-9 h-10 text-xs rounded-xl bg-muted/50 border-border focus:bg-muted transition-all font-medium"
             />
           </div>
         </div>
@@ -234,7 +234,7 @@ export function ChatPage() {
           <div className="px-3 pb-4 space-y-1">
             {pinnedChats.length > 0 && (
               <>
-                <p className="text-[10px] uppercase tracking-[0.2em] text-white/30 font-bold px-3 py-2">{t.chat.pinned}</p>
+                <p className="text-[10px] uppercase tracking-[0.2em] text-foreground/30 font-bold px-3 py-2">{t.chat.pinned}</p>
                 {pinnedChats.map(chat => (
                   <ChatItem
                     key={chat.id}
@@ -306,7 +306,7 @@ export function ChatPage() {
             className="flex-1 flex flex-col min-w-0 min-h-0"
           >
             {/* Chat header */}
-            <div className="flex items-center justify-between px-6 py-4 border-b border-white/5 shrink-0 bg-black/20 backdrop-blur-xl z-10 w-full shadow-sm">
+            <div className="flex items-center justify-between px-6 py-4 border-b border-border shrink-0 bg-background/80 backdrop-blur-xl z-10 w-full shadow-sm">
               <div className="flex items-center gap-3 min-w-0">
                 <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center shrink-0 border border-primary/20">
                     <MessageSquare className="w-4 h-4 text-primary" />
@@ -330,7 +330,7 @@ export function ChatPage() {
                           value={activeChat.projectId || 'none'}
                           onValueChange={(val) => store.updateChatProject(activeChatId, val === 'none' ? null : val)}
                         >
-                          <SelectTrigger className="h-4 p-0 bg-transparent border-none w-auto gap-1 focus:ring-0 text-[10px] font-bold text-white/40 hover:text-white transition-colors">
+                          <SelectTrigger className="h-4 p-0 bg-transparent border-none w-auto gap-1 focus:ring-0 text-[10px] font-bold text-foreground/40 hover:text-foreground transition-colors">
                             <SelectValue placeholder="No project" />
                           </SelectTrigger>
                           <SelectContent className="glass">
@@ -353,10 +353,10 @@ export function ChatPage() {
                   value={activeChat.model || ''}
                   onValueChange={(val) => store.updateChatModel(activeChatId, val)}
                 >
-                  <SelectTrigger className="h-9 text-xs w-[160px] rounded-xl bg-white/5 border-white/5">
+                  <SelectTrigger className="h-9 text-xs w-[160px] rounded-xl bg-muted/50 border-border">
                     <SelectValue placeholder={t.common.selectModel} />
                   </SelectTrigger>
-                  <SelectContent className="glass border-white/10 rounded-xl">
+                  <SelectContent className="glass border-border rounded-xl">
                     {models.map(m => (
                       <SelectItem key={m.name} value={m.name} className="rounded-lg">
                         <div className="flex items-center gap-2">
@@ -367,8 +367,8 @@ export function ChatPage() {
                     ))}
                   </SelectContent>
                 </Select>
-                <Button variant="ghost" size="icon" className="h-9 w-9 rounded-xl hover:bg-white/5 transition-all active:scale-90" onClick={() => setShowSettings(!showSettings)}>
-                  <Settings2 className={cn("w-4 h-4 transition-colors", showSettings ? "text-primary" : "text-white/40")} />
+                <Button variant="ghost" size="icon" className="h-9 w-9 rounded-xl hover:bg-muted transition-all active:scale-90" onClick={() => setShowSettings(!showSettings)}>
+                  <Settings2 className={cn("w-4 h-4 transition-colors", showSettings ? "text-primary" : "text-foreground/40")} />
                 </Button>
               </div>
             </div>
@@ -382,13 +382,13 @@ export function ChatPage() {
                 exit={{ height: 0, opacity: 0 }}
                 className="overflow-hidden bg-primary/5 px-6"
               >
-                  <div className="py-4 border-b border-white/5">
-                    <label className="text-[10px] font-bold uppercase tracking-[0.2em] text-white/30 mb-2 block">{t.chat.systemPrompt}</label>
+                  <div className="py-4 border-b border-border">
+                    <label className="text-[10px] font-bold uppercase tracking-[0.2em] text-foreground/30 mb-2 block">{t.chat.systemPrompt}</label>
                     <Textarea
                       value={activeChat.systemPrompt}
                       onChange={e => store.updateSystemPrompt(activeChatId, e.target.value)}
                       placeholder={t.chat.systemPromptPlaceholder}
-                      className="text-xs min-h-[80px] rounded-xl bg-black/20 border-white/5 focus:bg-black/30 transition-all font-medium leading-relaxed"
+                      className="text-xs min-h-[80px] rounded-xl bg-muted border-border focus:ring-1 focus:ring-primary/20 transition-all font-medium leading-relaxed"
                       rows={3}
                     />
                   </div>
@@ -425,12 +425,12 @@ export function ChatPage() {
                   <motion.div 
                     initial={{ opacity: 0, y: 10 }}
                     animate={{ opacity: 1, y: 0 }}
-                    className="flex items-center gap-4 text-white/20 text-[10px] font-bold uppercase tracking-[0.2em] py-3 px-6 rounded-full bg-white/5 border border-white/5 w-fit mx-auto transition-all"
+                    className="flex items-center gap-4 text-foreground/20 text-[10px] font-bold uppercase tracking-[0.2em] py-3 px-6 rounded-full bg-muted border border-border w-fit mx-auto transition-all"
                   >
                     <div className="flex gap-1">
-                        <div className="w-1 h-1 rounded-full bg-white/20 animate-bounce [animation-delay:-0.3s]" />
-                        <div className="w-1 h-1 rounded-full bg-white/20 animate-bounce [animation-delay:-0.15s]" />
-                        <div className="w-1 h-1 rounded-full bg-white/20 animate-bounce" />
+                        <div className="w-1 h-1 rounded-full bg-foreground/20 animate-bounce [animation-delay:-0.3s]" />
+                        <div className="w-1 h-1 rounded-full bg-foreground/20 animate-bounce [animation-delay:-0.15s]" />
+                        <div className="w-1 h-1 rounded-full bg-foreground/20 animate-bounce" />
                     </div>
                     {t.chat.thinking}
                   </motion.div>
@@ -442,7 +442,7 @@ export function ChatPage() {
             {/* Input Overlay Box */}
             <div className="p-6 shrink-0 min-w-0 w-full mt-auto relative z-20">
                <div className="absolute inset-x-0 bottom-0 h-32 bg-gradient-to-t from-background to-transparent pointer-events-none -z-10" />
-               <div className="max-w-3xl mx-auto glass rounded-2xl border-white/10 p-2 flex flex-col shadow-2xl">
+               <div className="max-w-3xl mx-auto glass rounded-2xl border-border p-2 flex flex-col shadow-2xl">
                  
                  <AnimatePresence>
                  {pendingImages.length > 0 && (
@@ -463,7 +463,7 @@ export function ChatPage() {
                       initial={{ height: 0, opacity: 0 }}
                       animate={{ height: 'auto', opacity: 1 }}
                       exit={{ height: 0, opacity: 0 }}
-                      className="flex gap-2 p-3 overflow-x-auto border-b border-white/5 scrollbar-none"
+                      className="flex gap-2 p-3 overflow-x-auto border-b border-border scrollbar-none"
                      >
                       {pendingImages.map((imgBase64, idx) => (
                         <motion.div 
@@ -471,7 +471,7 @@ export function ChatPage() {
                          initial={{ opacity: 0, scale: 0.8 }}
                          animate={{ opacity: 1, scale: 1 }}
                          exit={{ opacity: 0, scale: 0.8 }}
-                         className="relative group/img w-20 h-20 rounded-xl overflow-hidden shrink-0 border border-white/10 shadow-xl"
+                         className="relative group/img w-20 h-20 rounded-xl overflow-hidden shrink-0 border border-border shadow-xl"
                         >
                           <img src={`data:image/jpeg;base64,${imgBase64}`} alt="Attachment" className="w-full h-full object-cover" />
                           <button 
@@ -488,7 +488,7 @@ export function ChatPage() {
                  </AnimatePresence>
 
                  <div className="flex items-end gap-2 p-1">
-                    <label className="shrink-0 cursor-pointer p-3 rounded-xl text-white/40 hover:text-white hover:bg-white/5 transition-colors mb-0.5">
+                    <label className="shrink-0 cursor-pointer p-3 rounded-xl text-foreground/40 hover:text-foreground hover:bg-muted transition-colors mb-0.5">
                        <ImagePlus className="w-5 h-5" />
                        <input type="file" accept="image/*" multiple className="hidden" onChange={handleImageUpload} />
                     </label>
@@ -498,7 +498,7 @@ export function ChatPage() {
                       onChange={e => setInputValue(e.target.value)}
                       onKeyDown={handleKeyDown}
                       placeholder={t.chat.typeMessage || 'Type a message...'}
-                      className="min-h-[48px] max-h-[250px] resize-none text-sm bg-transparent border-none focus:ring-0 placeholder:text-white/20 font-medium py-3 px-2 flex-1"
+                      className="min-h-[48px] max-h-[250px] resize-none text-sm bg-transparent border-none focus:ring-0 placeholder:text-foreground/20 font-medium py-3 px-2 flex-1"
                       rows={1}
                       disabled={!connected}
                     />
@@ -526,8 +526,8 @@ export function ChatPage() {
                  </div>
                </div>
                <div className="max-w-3xl mx-auto flex justify-between px-4 mt-2">
-                    <span className="text-[9px] font-bold uppercase tracking-widest text-white/20">Press Enter to send • / to invoke tools</span>
-                    <span className="text-[9px] font-bold uppercase tracking-widest text-white/20">{connected ? "Connected to local node" : "Node unreachable"}</span>
+                    <span className="text-[9px] font-bold uppercase tracking-widest text-foreground/20">Press Enter to send • / to invoke tools</span>
+                    <span className="text-[9px] font-bold uppercase tracking-widest text-foreground/20">{connected ? "Connected to local node" : "Node unreachable"}</span>
                </div>
             </div>
           </motion.div>
@@ -542,8 +542,8 @@ export function ChatPage() {
                 <div className="w-20 h-20 rounded-[32px] bg-primary/10 flex items-center justify-center mx-auto mb-8 border border-primary/20 shadow-2xl shadow-primary/10 animate-pulse">
                     <MessageSquare className="w-10 h-10 text-primary" />
                 </div>
-                <h3 className="text-2xl font-bold tracking-tight lowercase italic text-white/80">{t.chat.selectChat}</h3>
-                <p className="text-sm font-medium text-white/30 italic mt-2">{t.chat.selectChatSub}</p>
+                <h3 className="text-2xl font-bold tracking-tight lowercase italic text-foreground/80">{t.chat.selectChat}</h3>
+                <p className="text-sm font-medium text-foreground/30 italic mt-2">{t.chat.selectChatSub}</p>
                 <Button onClick={handleNewChat} className="mt-8 gap-3 h-12 px-8 rounded-2xl font-bold shadow-xl shadow-primary/20 transition-all hover:scale-105 active:scale-95" size="lg">
                     <Plus className="w-5 h-5" /> {t.chat.newChat}
                 </Button>
@@ -555,14 +555,14 @@ export function ChatPage() {
 
       {/* Rename Dialog */}
       <Dialog open={!!renameDialog} onOpenChange={() => setRenameDialog(null)}>
-        <DialogContent className="glass border-white/10 rounded-3xl">
+        <DialogContent className="glass border-border rounded-3xl">
           <DialogHeader>
             <DialogTitle className="text-sm font-bold uppercase tracking-widest opacity-40">{t.chat.renameChat}</DialogTitle>
           </DialogHeader>
           <Input
             value={renameValue}
             onChange={e => setRenameValue(e.target.value)}
-            className="rounded-xl bg-white/5 border-white/5 font-bold"
+            className="rounded-xl bg-muted border-border font-bold"
             onKeyDown={e => {
               if (e.key === 'Enter' && renameDialog) {
                 store.renameChat(renameDialog, renameValue);
@@ -579,11 +579,11 @@ export function ChatPage() {
 
       {/* Delete Dialog */}
       <Dialog open={!!deleteDialog} onOpenChange={() => setDeleteDialog(null)}>
-        <DialogContent className="glass border-white/10 rounded-3xl">
+        <DialogContent className="glass border-border rounded-3xl">
           <DialogHeader>
             <DialogTitle className="text-sm font-bold uppercase tracking-widest text-destructive/80 mb-2">{t.chat.deleteChat}</DialogTitle>
           </DialogHeader>
-          <p className="text-sm font-medium text-white/40 italic">{t.chat.deleteChatConfirm}</p>
+          <p className="text-sm font-medium text-foreground/40 italic">{t.chat.deleteChatConfirm}</p>
           <DialogFooter className="mt-6 gap-2">
             <Button variant="ghost" onClick={() => setDeleteDialog(null)} className="rounded-xl font-bold text-xs">{t.common.cancel}</Button>
             <Button variant="destructive" onClick={() => { if (deleteDialog) { store.deleteChat(deleteDialog); setDeleteDialog(null); } }} className="rounded-xl font-bold text-xs px-6 shadow-lg shadow-destructive/20">{t.common.delete}</Button>
@@ -644,11 +644,11 @@ function ChatItem({
         'group flex items-center gap-3 px-3 py-3 rounded-2xl cursor-pointer transition-all duration-200 border border-transparent mb-0.5',
         isActive 
             ? 'bg-primary/15 text-primary border-primary/20 shadow-[inset_0_0_15px_rgba(var(--color-primary),0.05)]' 
-            : 'hover:bg-white/5 text-white/50 hover:text-white'
+            : 'hover:bg-muted/50 text-foreground/50 hover:text-foreground'
       )}
       onClick={onClick}
     >
-      <div className={cn("w-10 h-10 rounded-xl flex items-center justify-center shrink-0 transition-colors", isActive ? "bg-primary/20" : "bg-white/5")}>
+      <div className={cn("w-10 h-10 rounded-xl flex items-center justify-center shrink-0 transition-colors", isActive ? "bg-primary/20" : "bg-muted/50")}>
           <MessageSquare className={cn("w-4.5 h-4.5 transition-colors", isActive ? "text-primary" : "opacity-30 group-hover:opacity-100")} />
       </div>
       <div className="flex-1 min-w-0">
@@ -664,13 +664,13 @@ function ChatItem({
           <Button
             variant="ghost"
             size="icon"
-            className="h-8 w-8 opacity-0 group-hover:opacity-100 shrink-0 rounded-lg hover:bg-white/10"
+            className="h-8 w-8 opacity-0 group-hover:opacity-100 shrink-0 rounded-lg hover:bg-muted"
             onClick={e => e.stopPropagation()}
           >
             <MoreVertical className="w-4 h-4" />
           </Button>
         </DropdownMenuTrigger>
-        <DropdownMenuContent align="end" className="glass min-w-[160px] rounded-2xl border-white/10 p-1.5 shadow-2xl">
+        <DropdownMenuContent align="end" className="glass min-w-[160px] rounded-2xl border-border p-1.5 shadow-2xl">
           <DropdownMenuItem onClick={onRename} className="rounded-xl px-3 py-2 text-xs font-bold gap-2"><Edit3 className="w-3.5 h-3.5 opacity-50" />{t.common.rename}</DropdownMenuItem>
           <DropdownMenuItem onClick={onTogglePin} className="rounded-xl px-3 py-2 text-xs font-bold gap-2">
             <Pin className="w-3.5 h-3.5 opacity-50" />{chat.pinned ? t.common.unpin : t.common.pin}
@@ -722,7 +722,7 @@ function ChatMessage({
           'max-w-[100%] rounded-[24px] px-6 py-5 text-[15px] relative min-w-0 transition-all duration-300 shadow-2xl',
           isUser
             ? 'bg-primary text-primary-foreground shadow-primary/10 rounded-tr-none'
-            : 'glass border-white/5 rounded-tl-none font-medium text-white/90 shadow-black/40'
+            : 'glass border-border rounded-tl-none font-medium text-foreground/90 shadow-black/40'
         )}
       >
         {message.type === 'terminal_output' ? (
@@ -738,7 +738,7 @@ function ChatMessage({
                  "grid-cols-3"
                )}>
                  {message.images.map((img: string, idx: number) => (
-                   <div key={idx} className="group/mesh relative rounded-2xl overflow-hidden border border-white/10 shadow-2xl aspect-square bg-black/20">
+                   <div key={idx} className="group/mesh relative rounded-2xl overflow-hidden border border-border shadow-2xl aspect-square bg-muted/50">
                      <img 
                        src={`data:image/jpeg;base64,${img}`} 
                        className="w-full h-full object-cover transition-transform duration-500 group-hover/mesh:scale-110 cursor-zoom-in" 

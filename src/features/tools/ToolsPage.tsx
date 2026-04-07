@@ -141,7 +141,7 @@ export function ToolsPage() {
       <div className="h-full overflow-y-auto custom-scrollbar">
         <div className="max-w-4xl mx-auto p-12 space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
           <div className="flex items-center justify-between">
-            <Button variant="ghost" size="sm" className="gap-2 text-white/40 hover:text-white" onClick={() => { setActiveTool(null); setResult(''); setInput(''); }}>
+            <Button variant="ghost" size="sm" className="gap-2 text-foreground/40 hover:text-foreground" onClick={() => { setActiveTool(null); setResult(''); setInput(''); }}>
               <ChevronLeft className="w-4 h-4" /> {t.common.back}
             </Button>
           </div>
@@ -156,7 +156,7 @@ export function ToolsPage() {
                  <h1 className="text-4xl font-black tracking-tighter uppercase italic">{toolTitle}</h1>
                  {connected && <Badge className="bg-primary/20 text-primary border-primary/20 font-black uppercase text-[9px] tracking-widest">Node Active</Badge>}
               </div>
-              <p className="text-lg text-white/40 font-medium italic leading-relaxed">{toolDesc}</p>
+              <p className="text-lg text-foreground/40 font-medium italic leading-relaxed">{toolDesc}</p>
             </div>
           </div>
 
@@ -167,13 +167,13 @@ export function ToolsPage() {
                     value={input}
                     onChange={e => setInput(e.target.value)}
                     placeholder={tool.isCustom ? tool.inputPlaceholder : ((t.tools as any)[tool.inputPlaceholderKey!] || t.tools.inputPlaceholder)}
-                    className="min-h-[250px] glass p-6 rounded-[32px] border-white/5 font-medium italic text-lg focus:border-primary/40 transition-all shadow-2xl"
+                    className="min-h-[250px] glass p-6 rounded-[32px] border-border font-medium italic text-lg focus:border-primary/40 transition-all shadow-2xl"
                   />
                   
                   <div className="flex items-center justify-between gap-4">
                     {tool.hasTargetLanguage && (
-                        <div className="flex items-center gap-4 px-5 h-12 glass rounded-2xl border-white/5">
-                            <Languages className="w-4 h-4 text-white/20" />
+                        <div className="flex items-center gap-4 px-5 h-12 glass rounded-2xl border-border">
+                            <Languages className="w-4 h-4 text-foreground/20" />
                             <Input 
                                 value={targetLang} 
                                 onChange={e => setTargetLang(e.target.value)} 
@@ -199,15 +199,15 @@ export function ToolsPage() {
                     <motion.div 
                       initial={{ opacity: 0, x: 20 }}
                       animate={{ opacity: 1, x: 0 }}
-                      className="glass-card p-8 border-white/5 shadow-2xl bg-primary/[0.02] space-y-6"
+                      className="glass-card p-8 border-border shadow-2xl bg-primary/[0.02] space-y-6"
                     >
                         <div className="flex items-center justify-between mb-2">
                              <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-primary/60">{t.tools.result}</h3>
                              <div className="flex gap-2">
-                                <Button variant="ghost" size="icon" className="h-8 w-8 rounded-xl glass border-white/5" onClick={handleCopy}>
+                                <Button variant="ghost" size="icon" className="h-8 w-8 rounded-xl glass border-border" onClick={handleCopy}>
                                     <Copy className="w-3.5 h-3.5" />
                                 </Button>
-                                <Button variant="ghost" size="icon" className="h-8 w-8 rounded-xl glass border-white/5" onClick={handleSaveAsDoc}>
+                                <Button variant="ghost" size="icon" className="h-8 w-8 rounded-xl glass border-border" onClick={handleSaveAsDoc}>
                                     <Save className="w-3.5 h-3.5" />
                                 </Button>
                              </div>
@@ -231,7 +231,7 @@ export function ToolsPage() {
         <div className="flex flex-col md:flex-row items-start md:items-end justify-between gap-6">
           <div className="space-y-2">
             <h1 className="text-5xl font-black tracking-tighter uppercase italic">{t.tools.title}</h1>
-            <p className="text-lg text-white/40 font-medium italic">Execute task-specific agentic loops.</p>
+            <p className="text-lg text-foreground/40 font-medium italic">Execute task-specific agentic loops.</p>
           </div>
           <Button onClick={() => { setEditTarget(null); setDialogOpen(true); }} className="h-14 px-8 rounded-full bg-primary text-primary-foreground font-black uppercase italic tracking-tighter shadow-2xl shadow-primary/20 hover:scale-105 transition-all gap-3">
             <Plus className="w-5 h-5" /> Initialize Tool
@@ -252,23 +252,23 @@ export function ToolsPage() {
                 onClick={() => setActiveTool(td.id)}
               >
                 <div className="absolute inset-0 opacity-0 group-hover:opacity-10 blur-3xl bg-primary rounded-[32px] transition-all duration-500" />
-                <div className="glass-card border-white/5 rounded-[32px] p-8 hover:border-white/20 transition-all shadow-xl group-hover:shadow-2xl h-full flex flex-col isolation-isolate overflow-hidden bg-white/[0.02]">
+                <div className="glass-card border-border rounded-[32px] p-8 hover:border-primary/40 transition-all shadow-xl group-hover:shadow-2xl h-full flex flex-col isolation-isolate overflow-hidden bg-muted/20">
                     <div className="flex items-start justify-between mb-8">
-                        <div className="w-12 h-12 rounded-2xl bg-white/5 flex items-center justify-center shadow-lg border border-white/5 group-hover:bg-primary/20 group-hover:border-primary/40 transition-all">
-                            <Icon className="w-5 h-5 text-white/20 group-hover:text-primary" />
+                        <div className="w-12 h-12 rounded-2xl bg-muted flex items-center justify-center shadow-lg border border-border group-hover:bg-primary/20 group-hover:border-primary/40 transition-all">
+                            <Icon className="w-5 h-5 text-foreground/20 group-hover:text-primary" />
                         </div>
                         {td.isCustom && (
                             <DropdownMenu>
                                 <DropdownMenuTrigger asChild>
-                                    <Button variant="ghost" size="icon" className="h-10 w-10 text-white/10 hover:text-white rounded-xl hover:bg-white/5" onClick={e => e.stopPropagation()}>
+                                    <Button variant="ghost" size="icon" className="h-10 w-10 text-foreground/20 hover:text-foreground rounded-xl hover:bg-muted" onClick={e => e.stopPropagation()}>
                                         <Settings className="w-4 h-4" />
                                     </Button>
                                 </DropdownMenuTrigger>
-                                <DropdownMenuContent align="end" className="glass border-white/10 w-40">
+                                <DropdownMenuContent align="end" className="glass border-border w-40">
                                     <DropdownMenuItem onClick={(e) => { e.stopPropagation(); setEditTarget(td); setDialogOpen(true); }} className="gap-2 py-2.5">
                                         <Pencil className="w-4 h-4" /> {t.common.edit}
                                     </DropdownMenuItem>
-                                    <DropdownMenuSeparator className="bg-white/5" />
+                                    <DropdownMenuSeparator className="bg-border" />
                                     <DropdownMenuItem className="text-destructive focus:text-destructive gap-2 py-2.5" onClick={(e) => { e.stopPropagation(); toolStore.deleteTool(td.id); }}>
                                         <Trash2 className="w-4 h-4" /> {t.common.delete}
                                     </DropdownMenuItem>
@@ -279,14 +279,14 @@ export function ToolsPage() {
                     
                     <div className="flex-1 min-w-0 pr-4">
                         <h3 className="text-xl font-black tracking-tight uppercase italic truncate mb-2 group-hover:text-primary transition-colors">{toolTitle}</h3>
-                        <p className="text-sm text-white/30 font-medium line-clamp-2 leading-relaxed italic">{toolDesc}</p>
+                        <p className="text-sm text-foreground/40 font-medium line-clamp-2 leading-relaxed italic">{toolDesc}</p>
                     </div>
 
-                    <div className="mt-8 pt-6 border-t border-white/5 flex items-center justify-between">
-                         <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-white/5 border border-white/5 text-[9px] font-black uppercase tracking-widest text-white/20">
+                    <div className="mt-8 pt-6 border-t border-border flex items-center justify-between">
+                         <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-muted border border-border text-[9px] font-black uppercase tracking-widest text-foreground/20">
                             Agent Module
                          </div>
-                         <ArrowRight className="w-4 h-4 text-white/10 group-hover:text-primary group-hover:translate-x-1 transition-all" />
+                         <ArrowRight className="w-4 h-4 text-foreground/20 group-hover:text-primary group-hover:translate-x-1 transition-all" />
                     </div>
                 </div>
               </motion.div>
@@ -295,13 +295,13 @@ export function ToolsPage() {
 
           <motion.div
             whileHover={{ scale: 0.98 }}
-            className="cursor-pointer border-2 border-dashed border-white/5 hover:border-primary/20 hover:bg-primary/5 rounded-[32px] flex flex-col items-center justify-center p-12 text-center group transition-all"
+            className="cursor-pointer border-2 border-dashed border-border hover:border-primary/20 hover:bg-primary/5 rounded-[32px] flex flex-col items-center justify-center p-12 text-center group transition-all"
             onClick={() => { setEditTarget(null); setDialogOpen(true); }}
           >
-            <div className="w-16 h-16 rounded-full bg-white/5 group-hover:bg-primary/20 flex items-center justify-center mb-6 transition-all group-hover:scale-110">
-              <Plus className="w-6 h-6 text-white/20 group-hover:text-primary" />
+            <div className="w-16 h-16 rounded-full bg-muted group-hover:bg-primary/20 flex items-center justify-center mb-6 transition-all group-hover:scale-110">
+              <Plus className="w-6 h-6 text-foreground/20 group-hover:text-primary" />
             </div>
-            <p className="text-xs font-black uppercase tracking-[0.2em] text-white/20 group-hover:text-primary">
+            <p className="text-xs font-black uppercase tracking-[0.2em] text-foreground/20 group-hover:text-primary">
               Build Custom Module
             </p>
           </motion.div>

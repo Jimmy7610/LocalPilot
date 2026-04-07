@@ -247,7 +247,7 @@ export function ProjectsPage() {
                      <Badge className="bg-primary/20 text-primary border-primary/20 text-[10px] tracking-widest uppercase">RAG Enabled</Badge>
                   )}
                 </div>
-                <p className="text-lg text-white/40 font-medium leading-relaxed italic">{selectedProject.description || t.projects.noProjectsHint}</p>
+                <p className="text-lg text-foreground/40 font-medium leading-relaxed italic">{selectedProject.description || t.projects.noProjectsHint}</p>
               </div>
             </div>
 
@@ -259,10 +259,10 @@ export function ProjectsPage() {
                   </div>
                   <div className="flex items-center justify-between mb-6">
                     <div className="space-y-1">
-                      <h3 className="text-xs font-black tracking-widest uppercase text-white/30 flex items-center gap-2">
+                      <h3 className="text-xs font-black tracking-widest uppercase text-foreground/30 flex items-center gap-2">
                         <FolderOpen className="w-3.5 h-3.5" /> {t.projects.workspace}
                       </h3>
-                      <p className="text-sm font-mono text-white/60 bg-black/40 px-3 py-1.5 rounded-lg border border-white/5 truncate max-w-md">
+                      <p className="text-sm font-mono text-foreground/60 bg-muted/30 px-3 py-1.5 rounded-lg border border-border truncate max-w-md">
                         {selectedProject.workspacePath || t.projects.noWorkspace}
                       </p>
                     </div>
@@ -280,7 +280,7 @@ export function ProjectsPage() {
 
                   {isIndexing && indexProgress && (
                     <div className="space-y-3 animate-fade-in mb-6">
-                      <div className="flex justify-between items-end text-[10px] font-black uppercase tracking-widest text-white/40">
+                      <div className="flex justify-between items-end text-[10px] font-black uppercase tracking-widest text-foreground/40">
                         <div className="space-y-1">
                            <span className="text-[8px] bg-primary/10 text-primary px-1.5 py-0.5 rounded border border-primary/10 mb-1 inline-block">
                              {indexProgress.status || 'Processing'}
@@ -289,7 +289,7 @@ export function ProjectsPage() {
                         </div>
                         <span className="text-primary">{Math.round((indexProgress.processedFiles / indexProgress.totalFiles) * 100)}%</span>
                       </div>
-                      <div className="h-1.5 w-full bg-white/5 rounded-full overflow-hidden">
+                      <div className="h-1.5 w-full bg-muted/30 rounded-full overflow-hidden">
                         <motion.div 
                           initial={{ width: 0 }}
                           animate={{ width: `${(indexProgress.processedFiles / indexProgress.totalFiles) * 100}%` }}
@@ -300,15 +300,15 @@ export function ProjectsPage() {
                   )}
 
                   <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-                    <div className="p-4 rounded-2xl bg-white/5 border border-white/5 text-center space-y-1">
-                      <span className="block text-2xl font-black text-white">{fileCount ?? 0}</span>
-                      <span className="text-[10px] font-black uppercase tracking-widest text-white/20">Analyzed Files</span>
+                    <div className="p-4 rounded-2xl bg-muted/50 border border-border text-center space-y-1">
+                      <span className="block text-2xl font-black text-foreground">{fileCount ?? 0}</span>
+                      <span className="text-[10px] font-black uppercase tracking-widest text-foreground/20">Analyzed Files</span>
                     </div>
-                     <div className="p-4 rounded-2xl bg-white/5 border border-white/5 text-center space-y-1">
+                     <div className="p-4 rounded-2xl bg-muted/50 border border-border text-center space-y-1">
                        <div className="flex justify-center mb-1">
                           <div className={cn("w-2 h-2 rounded-full animate-pulse", connected ? "bg-success" : "bg-destructive")} />
                        </div>
-                      <span className="block text-[10px] font-black uppercase tracking-widest text-white/20">Local AI Status</span>
+                      <span className="block text-[10px] font-black uppercase tracking-widest text-foreground/20">Local AI Status</span>
                     </div>
                   </div>
                 </div>
@@ -433,7 +433,7 @@ export function ProjectsPage() {
             <div className="flex flex-col md:flex-row items-start md:items-end justify-between gap-6 mb-12">
               <div className="space-y-2">
                 <h1 className="text-5xl font-black tracking-tighter uppercase italic">{t.projects.title}</h1>
-                <p className="text-lg text-white/40 font-medium italic">Organize your local AI workspaces.</p>
+                <p className="text-lg text-foreground/40 font-medium italic">Organize your local AI workspaces.</p>
               </div>
               <Button onClick={openCreate} className="h-14 px-8 rounded-full bg-primary text-primary-foreground font-black uppercase italic tracking-tighter shadow-2xl shadow-primary/20 transition-all hover:scale-105 active:scale-95 gap-3">
                 <Plus className="w-5 h-5" /> {t.projects.newProject}
@@ -446,11 +446,11 @@ export function ProjectsPage() {
                 animate={{ opacity: 1, scale: 1 }}
                 className="flex flex-col items-center justify-center py-24 text-center glass-card border-white/10 rounded-[40px] opacity-50"
               >
-                <div className="w-24 h-24 rounded-full bg-white/5 flex items-center justify-center mb-6">
-                   <FolderKanban className="w-10 h-10 text-white/20" />
+                <div className="w-24 h-24 rounded-full bg-muted flex items-center justify-center mb-6">
+                   <FolderKanban className="w-10 h-10 text-foreground/20" />
                 </div>
                 <h3 className="text-2xl font-black uppercase italic mb-2">{t.projects.noProjects}</h3>
-                <p className="text-white/40 max-w-sm mb-10">{t.projects.noProjectsHint}</p>
+                <p className="text-foreground/40 max-w-sm mb-10">{t.projects.noProjectsHint}</p>
                 <Button onClick={openCreate} variant="secondary" className="glass h-12 px-8 rounded-2xl font-black uppercase italic tracking-widest text-xs">
                    Initialize First Project <ArrowRight className="ml-2 w-4 h-4" />
                 </Button>
@@ -514,7 +514,7 @@ export function ProjectsPage() {
 
                        <div className="flex-1 space-y-2">
                          <h3 className="text-xl font-black tracking-tight uppercase italic truncate">{project.name}</h3>
-                         <p className="text-sm text-white/40 font-medium line-clamp-2 italic">{project.description || 'No description provided.'}</p>
+                         <p className="text-sm text-foreground/40 font-medium line-clamp-2 italic">{project.description || 'No description provided.'}</p>
                        </div>
 
                        <div className="mt-8 pt-6 border-t border-white/5 flex items-center justify-between">
@@ -522,10 +522,10 @@ export function ProjectsPage() {
                              {project.workspacePath && (
                                 <div className="flex items-center gap-1.5 opacity-60">
                                    <Shield className="w-3.5 h-3.5 text-primary" />
-                                   <span className="text-[10px] font-black uppercase tracking-widest text-white">RAG</span>
+                                   <span className="text-[10px] font-black uppercase tracking-widest text-foreground">RAG</span>
                                 </div>
                              )}
-                             <div className="text-[10px] font-black uppercase tracking-widest text-white/20">
+                             <div className="text-[10px] font-black uppercase tracking-widest text-foreground/20">
                                {formatDistanceToNow(new Date(project.updatedAt), { addSuffix: true })}
                              </div>
                           </div>
@@ -553,20 +553,20 @@ export function ProjectsPage() {
             </DialogHeader>
             <div className="space-y-6">
               <div className="space-y-2">
-                <label className="text-[10px] font-black uppercase tracking-widest text-white/30 ml-1">{t.common.name}</label>
+                <label className="text-[10px] font-black uppercase tracking-widest text-foreground/30 ml-1">{t.common.name}</label>
                 <Input 
                   value={formName} 
                   onChange={e => setFormName(e.target.value)} 
-                  className="glass h-12 px-5 rounded-2xl border-white/5 focus:border-primary/50 transition-all font-bold"
+                  className="glass h-12 px-5 rounded-2xl border-border focus:border-primary/50 transition-all font-bold"
                   placeholder="e.g. AGENTIC OVERHAUL" 
                 />
               </div>
               <div className="space-y-2">
-                <label className="text-[10px] font-black uppercase tracking-widest text-white/30 ml-1">{t.common.description}</label>
+                <label className="text-[10px] font-black uppercase tracking-widest text-foreground/30 ml-1">{t.common.description}</label>
                 <Textarea 
                   value={formDesc} 
                   onChange={e => setFormDesc(e.target.value)} 
-                  className="glass p-5 rounded-2xl border-white/5 focus:border-primary/50 transition-all min-h-[100px] font-medium italic"
+                  className="glass p-5 rounded-2xl border-border focus:border-primary/50 transition-all min-h-[100px] font-medium italic"
                   placeholder="Brief project mission..." 
                 />
               </div>
@@ -597,7 +597,7 @@ export function ProjectsPage() {
                     <Input 
                       value={formWorkspacePath || ''} 
                       readOnly 
-                      className="glass h-12 pl-5 pr-10 rounded-2xl border-white/5 font-mono text-[10px] text-white/40" 
+                      className="glass h-12 pl-5 pr-10 rounded-2xl border-border font-mono text-[10px] text-foreground/40" 
                       placeholder={t.projects.noWorkspace} 
                     />
                   </div>
@@ -634,7 +634,7 @@ export function ProjectsPage() {
               </div>
             </div>
             <DialogFooter className="mt-10 flex gap-3">
-              <Button variant="ghost" onClick={() => setFormOpen(false)} className="h-14 px-8 rounded-full text-white/40 hover:text-white">{t.common.cancel}</Button>
+              <Button variant="ghost" onClick={() => setFormOpen(false)} className="h-14 px-8 rounded-full text-foreground/40 hover:text-foreground">{t.common.cancel}</Button>
               <Button onClick={handleSave} className="h-14 px-10 rounded-full bg-primary text-primary-foreground font-black uppercase italic tracking-tighter shadow-xl shadow-primary/20">
                 {t.common.save}
               </Button>
@@ -650,9 +650,9 @@ export function ProjectsPage() {
                  {isDeleting ? <Loader2 className="w-6 h-6 animate-spin text-primary" /> : <Trash2 className="w-6 h-6 text-destructive" />} {t.projects.deleteProject}
               </DialogTitle>
             </DialogHeader>
-            <p className="text-white/60 font-medium italic mb-8">{t.projects.deleteProjectConfirm}</p>
+            <p className="text-foreground/60 font-medium italic mb-8">{t.projects.deleteProjectConfirm}</p>
             <DialogFooter className="gap-3">
-              <Button variant="ghost" disabled={isDeleting} onClick={() => setDeleteDialogId(null)} className="flex-1 h-12 rounded-2xl text-white/40 hover:text-white uppercase font-black text-[10px] tracking-widest">
+              <Button variant="ghost" disabled={isDeleting} onClick={() => setDeleteDialogId(null)} className="flex-1 h-12 rounded-2xl text-foreground/40 hover:text-foreground uppercase font-black text-[10px] tracking-widest">
                 {t.common.cancel}
               </Button>
               <Button 
