@@ -82,7 +82,7 @@ export function ActionCard({
             <div className="absolute top-3 right-3 opacity-20 group-hover:opacity-100 transition-opacity">
                 <Code2 className="w-4 h-4" />
             </div>
-            <pre className="p-4 rounded-xl bg-black/60 border border-white/5 font-mono text-xs text-primary leading-normal overflow-x-auto shadow-inner">
+            <pre className="p-4 rounded-xl bg-black/60 border border-white/5 font-mono text-xs text-primary leading-normal whitespace-pre-wrap break-words shadow-inner">
               {code}
             </pre>
           </div>

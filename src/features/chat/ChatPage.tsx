@@ -398,7 +398,7 @@ export function ChatPage() {
 
             {/* Messages */}
             <ScrollArea className="flex-1 px-4 min-h-0 min-w-0">
-              <div className="max-w-3xl mx-auto py-12 space-y-10">
+              <div className="max-w-6xl mx-auto py-12 space-y-10">
                 <AnimatePresence initial={false}>
                 {chatMessages.map((msg) => (
                   <ChatMessage 
@@ -442,7 +442,7 @@ export function ChatPage() {
             {/* Input Overlay Box */}
             <div className="p-6 shrink-0 min-w-0 w-full mt-auto relative z-20">
                <div className="absolute inset-x-0 bottom-0 h-32 bg-gradient-to-t from-background to-transparent pointer-events-none -z-10" />
-               <div className="max-w-3xl mx-auto glass rounded-2xl border-border p-2 flex flex-col shadow-2xl">
+               <div className="max-w-6xl mx-auto glass rounded-2xl border-border p-2 flex flex-col shadow-2xl">
                  
                  <AnimatePresence>
                  {pendingImages.length > 0 && (
@@ -525,7 +525,7 @@ export function ChatPage() {
                     </div>
                  </div>
                </div>
-               <div className="max-w-3xl mx-auto flex justify-between px-4 mt-2">
+               <div className="max-w-6xl mx-auto flex justify-between px-4 mt-2">
                     <span className="text-[9px] font-bold uppercase tracking-widest text-foreground/20">Press Enter to send • / to invoke tools</span>
                     <span className="text-[9px] font-bold uppercase tracking-widest text-foreground/20">{connected ? "Connected to local node" : "Node unreachable"}</span>
                </div>
@@ -858,7 +858,7 @@ function PreBlock({ children, t, chatId, cwd }: { children: React.ReactNode; t: 
           </div>
         </div>
         <div className="p-3">
-          <pre className="!m-0 !p-0 bg-transparent">{children}</pre>
+          <pre className="!m-0 !p-0 bg-transparent whitespace-pre-wrap break-words">{children}</pre>
         </div>
       </div>
     );
@@ -866,7 +866,7 @@ function PreBlock({ children, t, chatId, cwd }: { children: React.ReactNode; t: 
 
   return (
     <div className="relative group" ref={ref}>
-      <pre>{children}</pre>
+      <pre className="whitespace-pre-wrap break-words">{children}</pre>
       <div className="absolute top-2 right-2 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
         <button
           onClick={handleRun}
